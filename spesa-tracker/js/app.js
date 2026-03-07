@@ -1,21 +1,41 @@
 /* ============================================
-   APP — Logica principale dell'applicazione
+   CHART COLORS PALETTE
    ============================================ */
+const CHART_COLORS = [
+    '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6',
+    '#ec4899', '#06b6d4', '#f97316', '#84cc16', '#6366f1',
+    '#14b8a6', '#e11d48', '#0ea5e9', '#a855f7', '#eab308',
+    '#22c55e', '#d946ef', '#64748b', '#fb923c', '#2dd4bf'
+];
 
+/* ============================================
+   APP — Logica principale
+   ============================================ */
 const App = {
 
     currentPage: 'timeline',
     editingId: null,
-    statsPeriod: 'month',
     toastTimer: null,
-    newCardId: null,  // per animazione
+    newCardId: null,
+
+    /* --- Stato Statistiche --- */
+    statsPeriod: 'month',
+    statsOffset: 0,
+    chartDoughnut: null,
+    chartBar: null,
+
+    /* --- Stato Ricerca/Filtri --- */
+    searchOpen: false,
+    searchQuery: '',
+    filterCat: '',
+    filterMet: '',
 
     /* =====================
        INIZIALIZZAZIONE
        ===================== */
     init() {
         if (!Storage.isAvailable()) {
-            document.body.innerHTML = '<div style="padding:40px;text-align:center"><h2>⚠️ Storage non disponibile</h2><p>Il tuo browser non supporta localStorage. Prova con un altro browser.</p></div>';
+            document.body.innerHTML = '<div style="padding:40px;text-align:center"><h2>⚠️ Storage non disponibile</h2><p>Il tuo browser non supporta localStorage.</p></div>';
             return;
         }
 
@@ -23,6 +43,7 @@ const App = {
         this.initNavigation();
         this.initInput();
         this.initModal();
+        this.initSearch();
         this.populateDropdowns();
         this.renderTimeline();
     },
@@ -39,11 +60,15 @@ const App = {
             const next = current === 'dark' ? 'light' : 'dark';
             this.applyTheme(next);
             Storage.updateSettings({ tema: next });
+            this.refreshChartsTheme();
             if (this.currentPage === 'settings') this.renderSettings();
         });
 
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-            if (Storage.getSettings().tema === 'auto') this.applyTheme('auto');
+            if (Storage.getSettings().tema === 'auto') {
+                this.applyTheme('auto');
+                this.refreshChartsTheme();
+            }
         });
     },
 
@@ -61,20 +86,16 @@ const App = {
        ===================== */
     initNavigation() {
         document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                this.navigateTo(btn.dataset.page);
-            });
+            btn.addEventListener('click', () => this.navigateTo(btn.dataset.page));
         });
     },
 
     navigateTo(page) {
         this.currentPage = page;
 
-        // Pagine
         document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
         document.getElementById('page-' + page).classList.remove('hidden');
 
-        // Nav attiva
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.querySelector(`.nav-btn[data-page="${page}"]`).classList.add('active');
 
@@ -89,9 +110,121 @@ const App = {
             main.classList.add('no-input-bar');
         }
 
-        // Render pagine
+        // Mostra/nascondi ricerca solo su timeline
+        const searchToggle = document.getElementById('btn-search-toggle');
+        if (page === 'timeline') {
+            searchToggle.style.display = '';
+        } else {
+            searchToggle.style.display = 'none';
+            this.closeSearch();
+        }
+
         if (page === 'stats') this.renderStats();
         if (page === 'settings') this.renderSettings();
+    },
+
+    /* =====================
+       RICERCA & FILTRI
+       ===================== */
+    initSearch() {
+        const toggleBtn = document.getElementById('btn-search-toggle');
+        const searchInput = document.getElementById('search-input');
+        const clearBtn = document.getElementById('btn-search-clear');
+        const filterCat = document.getElementById('filter-category');
+        const filterMet = document.getElementById('filter-method');
+
+        // Popola dropdown filtri
+        filterCat.innerHTML = '<option value="">Tutte le categorie</option>' +
+            CATEGORIES.map(c => `<option value="${c.id}">${c.emoji} ${c.nome}</option>`).join('');
+
+        filterMet.innerHTML = '<option value="">Tutti i pagamenti</option>' +
+            PAYMENT_METHODS.map(m => `<option value="${m.id}">${m.emoji} ${m.nome}</option>`).join('');
+
+        // Toggle ricerca
+        toggleBtn.addEventListener('click', () => {
+            if (this.searchOpen) {
+                this.closeSearch();
+            } else {
+                this.openSearch();
+            }
+        });
+
+        // Input ricerca
+        searchInput.addEventListener('input', () => {
+            this.searchQuery = searchInput.value.trim();
+            clearBtn.classList.toggle('hidden', !this.searchQuery);
+            this.renderTimeline();
+        });
+
+        // Clear
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            this.searchQuery = '';
+            clearBtn.classList.add('hidden');
+            searchInput.focus();
+            this.renderTimeline();
+        });
+
+        // Filtri
+        filterCat.addEventListener('change', () => {
+            this.filterCat = filterCat.value;
+            this.renderTimeline();
+        });
+
+        filterMet.addEventListener('change', () => {
+            this.filterMet = filterMet.value;
+            this.renderTimeline();
+        });
+    },
+
+    openSearch() {
+        this.searchOpen = true;
+        document.getElementById('search-bar').classList.remove('hidden');
+        document.getElementById('btn-search-toggle').classList.add('active');
+        // Aggiorna margine del main
+        const searchBarH = document.getElementById('search-bar').offsetHeight;
+        document.getElementById('app-main').style.marginTop = `calc(var(--header-h) + ${searchBarH}px)`;
+        document.getElementById('search-input').focus();
+    },
+
+    closeSearch() {
+        this.searchOpen = false;
+        document.getElementById('search-bar').classList.add('hidden');
+        document.getElementById('btn-search-toggle').classList.remove('active');
+        document.getElementById('app-main').style.marginTop = '';
+        // Reset filtri
+        if (this.searchQuery || this.filterCat || this.filterMet) {
+            this.searchQuery = '';
+            this.filterCat = '';
+            this.filterMet = '';
+            document.getElementById('search-input').value = '';
+            document.getElementById('filter-category').value = '';
+            document.getElementById('filter-method').value = '';
+            document.getElementById('btn-search-clear').classList.add('hidden');
+            this.renderTimeline();
+        }
+    },
+
+    hasActiveFilters() {
+        return this.searchQuery || this.filterCat || this.filterMet;
+    },
+
+    getFilteredSpese(allSpese) {
+        let spese = allSpese;
+        if (this.searchQuery) {
+            const q = this.searchQuery.toLowerCase();
+            spese = spese.filter(s =>
+                s.descrizione.toLowerCase().includes(q) ||
+                (s.nota && s.nota.toLowerCase().includes(q))
+            );
+        }
+        if (this.filterCat) {
+            spese = spese.filter(s => s.categoria === this.filterCat);
+        }
+        if (this.filterMet) {
+            spese = spese.filter(s => s.metodo === this.filterMet);
+        }
+        return spese;
     },
 
     /* =====================
@@ -109,15 +242,14 @@ const App = {
 
         // Dettatura vocale
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            this.recognition = new SpeechRecognition();
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            this.recognition = new SR();
             this.recognition.lang = 'it-IT';
             this.recognition.continuous = false;
             this.recognition.interimResults = false;
 
             this.recognition.onresult = (e) => {
-                const text = e.results[0][0].transcript;
-                input.value = text;
+                input.value = e.results[0][0].transcript;
                 btnVoice.classList.remove('recording');
                 this.submitExpense();
             };
@@ -127,9 +259,7 @@ const App = {
                 this.showToast('Non ho capito. Riprova.', 'error');
             };
 
-            this.recognition.onend = () => {
-                btnVoice.classList.remove('recording');
-            };
+            this.recognition.onend = () => btnVoice.classList.remove('recording');
 
             btnVoice.addEventListener('click', () => {
                 if (btnVoice.classList.contains('recording')) {
@@ -168,12 +298,24 @@ const App = {
        TIMELINE
        ===================== */
     renderTimeline() {
-        const spese = Storage.getSpese();
+        const allSpese = Storage.getSpese();
+        const isFiltered = this.hasActiveFilters();
+        const spese = isFiltered ? this.getFilteredSpese(allSpese) : allSpese;
         const content = document.getElementById('timeline-content');
         const empty = document.getElementById('timeline-empty');
         const summary = document.getElementById('timeline-summary');
+        const resultsInfo = document.getElementById('search-results-info');
 
-        if (spese.length === 0) {
+        // Risultati filtro
+        if (isFiltered && resultsInfo) {
+            const filteredTotal = spese.reduce((s, x) => s + x.importo, 0);
+            resultsInfo.textContent = `${spese.length} risultat${spese.length === 1 ? 'o' : 'i'} · €${filteredTotal.toFixed(2)}`;
+            resultsInfo.classList.remove('hidden');
+        } else if (resultsInfo) {
+            resultsInfo.classList.add('hidden');
+        }
+
+        if (allSpese.length === 0) {
             content.innerHTML = '';
             summary.innerHTML = '';
             empty.classList.remove('hidden');
@@ -182,19 +324,23 @@ const App = {
 
         empty.classList.add('hidden');
 
-        // Summary
+        if (spese.length === 0 && isFiltered) {
+            content.innerHTML = '<div class="stats-empty">🔍<br>Nessuna spesa trovata con questi filtri</div>';
+            summary.innerHTML = '';
+            return;
+        }
+
+        // Summary (sempre su tutti i dati)
         const oggi = new Date();
         const oggiKey = this.dateKey(oggi);
         const meseCorrente = oggi.getMonth();
         const annoCorrente = oggi.getFullYear();
-
         let totOggi = 0, totMese = 0;
-        spese.forEach(s => {
+        allSpese.forEach(s => {
             const d = new Date(s.data);
             if (this.dateKey(d) === oggiKey) totOggi += s.importo;
             if (d.getMonth() === meseCorrente && d.getFullYear() === annoCorrente) totMese += s.importo;
         });
-
         const nomeMese = oggi.toLocaleDateString('it-IT', { month: 'long' });
 
         summary.innerHTML = `
@@ -211,7 +357,7 @@ const App = {
                 <div class="summary-divider"></div>
                 <div class="summary-item">
                     <div class="summary-label">N. spese</div>
-                    <div class="summary-value">${spese.length}</div>
+                    <div class="summary-value">${allSpese.length}</div>
                 </div>
             </div>
         `;
@@ -221,24 +367,19 @@ const App = {
 
         content.innerHTML = groups.map(g => {
             const dayTotal = g.spese.reduce((s, x) => s + x.importo, 0);
-            const cards = g.spese.map(s => this.createCard(s)).join('');
-
             return `
                 <div class="day-group">
                     <div class="day-header">
                         <span class="day-date">${this.formatDayLabel(g.date)}</span>
                         <span class="day-total">€${dayTotal.toFixed(2)}</span>
                     </div>
-                    ${cards}
+                    ${g.spese.map(s => this.createCard(s)).join('')}
                 </div>
             `;
         }).join('');
 
-        // Aggiunge listener click per modifica
         content.querySelectorAll('.expense-card').forEach(card => {
-            card.addEventListener('click', () => {
-                this.openEditModal(card.dataset.id);
-            });
+            card.addEventListener('click', () => this.openEditModal(card.dataset.id));
         });
     },
 
@@ -286,34 +427,23 @@ const App = {
                 this.showToast('Spesa eliminata', 'info');
             });
         });
-
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                this.closeModal();
-                this.closeConfirm();
-            }
+            if (e.key === 'Escape') { this.closeModal(); this.closeConfirm(); }
         });
     },
 
     populateDropdowns() {
-        const catSel = document.getElementById('edit-categoria');
-        catSel.innerHTML = CATEGORIES.map(c =>
-            `<option value="${c.id}">${c.emoji} ${c.nome}</option>`
-        ).join('');
-
-        const metSel = document.getElementById('edit-metodo');
-        metSel.innerHTML = PAYMENT_METHODS.map(m =>
-            `<option value="${m.id}">${m.emoji} ${m.nome}</option>`
-        ).join('');
+        document.getElementById('edit-categoria').innerHTML =
+            CATEGORIES.map(c => `<option value="${c.id}">${c.emoji} ${c.nome}</option>`).join('');
+        document.getElementById('edit-metodo').innerHTML =
+            PAYMENT_METHODS.map(m => `<option value="${m.id}">${m.emoji} ${m.nome}</option>`).join('');
     },
 
     openEditModal(id) {
         const spesa = Storage.getSpese().find(s => s.id === id);
         if (!spesa) return;
-
         this.editingId = id;
         const d = new Date(spesa.data);
-
         document.getElementById('edit-importo').value = spesa.importo;
         document.getElementById('edit-descrizione').value = spesa.descrizione;
         document.getElementById('edit-categoria').value = spesa.categoria;
@@ -321,7 +451,6 @@ const App = {
         document.getElementById('edit-data').value = this.toInputDate(d);
         document.getElementById('edit-ora').value = this.toInputTime(d);
         document.getElementById('edit-nota').value = spesa.nota || '';
-
         document.getElementById('modal-overlay').classList.remove('hidden');
     },
 
@@ -331,15 +460,13 @@ const App = {
     },
 
     saveEdit() {
-        const dateVal = document.getElementById('edit-data').value;
-        const timeVal = document.getElementById('edit-ora').value;
         const importo = parseFloat(document.getElementById('edit-importo').value);
-
         if (!importo || importo <= 0) {
             this.showToast('Inserisci un importo valido', 'error');
             return;
         }
-
+        const dateVal = document.getElementById('edit-data').value;
+        const timeVal = document.getElementById('edit-ora').value;
         const dateTime = new Date(`${dateVal}T${timeVal || '12:00'}:00`);
 
         Storage.updateSpesa(this.editingId, {
@@ -350,45 +477,70 @@ const App = {
             data: dateTime.toISOString(),
             nota: document.getElementById('edit-nota').value
         });
-
         this.closeModal();
         this.renderTimeline();
         this.showToast('Spesa modificata ✓', 'success');
     },
 
     /* =====================
-       CONFERMA ELIMINAZIONE
+       CONFERMA
        ===================== */
     showConfirm(msg, onYes) {
         document.getElementById('confirm-message').textContent = msg;
         document.getElementById('confirm-overlay').classList.remove('hidden');
-
         const yesBtn = document.getElementById('confirm-yes');
         const noBtn = document.getElementById('confirm-no');
-
-        const cleanup = () => {
-            this.closeConfirm();
-            yesBtn.replaceWith(yesBtn.cloneNode(true));
-            noBtn.replaceWith(noBtn.cloneNode(true));
-        };
-
-        // Clona per evitare listener duplicati
         const newYes = yesBtn.cloneNode(true);
         const newNo = noBtn.cloneNode(true);
         yesBtn.replaceWith(newYes);
         noBtn.replaceWith(newNo);
-
-        newYes.addEventListener('click', () => { cleanup(); onYes(); });
-        newNo.addEventListener('click', () => cleanup());
+        newYes.addEventListener('click', () => { this.closeConfirm(); onYes(); });
+        newNo.addEventListener('click', () => this.closeConfirm());
     },
 
     closeConfirm() {
         document.getElementById('confirm-overlay').classList.add('hidden');
     },
 
-    /* =====================
-       STATISTICHE
-       ===================== */
+    /* =============================================
+       STATISTICHE — Periodo con navigazione
+       ============================================= */
+    getPeriodDates() {
+        const now = new Date();
+        let start, end, label;
+
+        switch (this.statsPeriod) {
+            case 'week': {
+                const ref = new Date(now);
+                ref.setDate(ref.getDate() + this.statsOffset * 7);
+                end = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate(), 23, 59, 59, 999);
+                start = new Date(end);
+                start.setDate(start.getDate() - 6);
+                start.setHours(0, 0, 0, 0);
+                const sl = start.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
+                const el = end.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
+                label = `${sl} — ${el}`;
+                break;
+            }
+            case 'month': {
+                const ref = new Date(now.getFullYear(), now.getMonth() + this.statsOffset, 1);
+                start = new Date(ref.getFullYear(), ref.getMonth(), 1, 0, 0, 0, 0);
+                end = new Date(ref.getFullYear(), ref.getMonth() + 1, 0, 23, 59, 59, 999);
+                label = ref.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+                break;
+            }
+            case 'year': {
+                const year = now.getFullYear() + this.statsOffset;
+                start = new Date(year, 0, 1, 0, 0, 0, 0);
+                end = new Date(year, 11, 31, 23, 59, 59, 999);
+                label = year.toString();
+                break;
+            }
+        }
+
+        return { start, end, label };
+    },
+
     renderStats() {
         const container = document.getElementById('stats-content');
         const spese = Storage.getSpese();
@@ -398,28 +550,14 @@ const App = {
             return;
         }
 
-        const now = new Date();
-        let start, periodLabel;
+        const { start, end, label } = this.getPeriodDates();
+        const filtered = spese.filter(s => {
+            const d = new Date(s.data);
+            return d >= start && d <= end;
+        });
 
-        switch (this.statsPeriod) {
-            case 'week':
-                start = new Date(now);
-                start.setDate(now.getDate() - 6);
-                start.setHours(0, 0, 0, 0);
-                periodLabel = 'Ultimi 7 giorni';
-                break;
-            case 'year':
-                start = new Date(now.getFullYear(), 0, 1);
-                periodLabel = now.getFullYear().toString();
-                break;
-            default: // month
-                start = new Date(now.getFullYear(), now.getMonth(), 1);
-                periodLabel = now.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
-        }
-
-        const filtered = spese.filter(s => new Date(s.data) >= start);
         const total = filtered.reduce((s, x) => s + x.importo, 0);
-        const days = Math.max(1, Math.ceil((now - start) / 86400000));
+        const days = Math.max(1, Math.ceil((Math.min(end, new Date()) - start) / 86400000));
         const avg = total / days;
 
         // Per categoria
@@ -433,11 +571,19 @@ const App = {
         // Top spese
         const topSpese = [...filtered].sort((a, b) => b.importo - a.importo).slice(0, 5);
 
+        const canGoNext = this.statsOffset < 0;
+
         container.innerHTML = `
             <div class="stats-period-selector">
                 <button class="period-btn ${this.statsPeriod === 'week' ? 'active' : ''}" data-period="week">Settimana</button>
                 <button class="period-btn ${this.statsPeriod === 'month' ? 'active' : ''}" data-period="month">Mese</button>
                 <button class="period-btn ${this.statsPeriod === 'year' ? 'active' : ''}" data-period="year">Anno</button>
+            </div>
+
+            <div class="stats-period-nav">
+                <button class="period-nav-btn" id="period-prev" title="Precedente">◀</button>
+                <span class="period-nav-label">${label}</span>
+                <button class="period-nav-btn" id="period-next" title="Successivo" ${canGoNext ? '' : 'disabled'}>▶</button>
             </div>
 
             <div class="stats-cards">
@@ -455,39 +601,58 @@ const App = {
                 </div>
             </div>
 
-            <div class="stats-section">
-                <div class="stats-section-title">📂 Per categoria</div>
-                ${catSorted.map(([catId, amount]) => {
-                    const cat = this.getCat(catId);
-                    const pct = total > 0 ? ((amount / total) * 100).toFixed(0) : 0;
-                    const barW = ((amount / maxCat) * 100).toFixed(1);
-                    return `
-                        <div class="cat-bar-item">
-                            <div class="cat-bar-header">
-                                <span class="cat-bar-name">${cat.emoji} ${cat.nome}</span>
-                                <span class="cat-bar-amount">€${amount.toFixed(2)} (${pct}%)</span>
+            ${filtered.length > 0 ? `
+                <div class="chart-container">
+                    <div class="chart-title">🥧 Per categoria</div>
+                    <div class="chart-wrap chart-wrap-doughnut">
+                        <canvas id="chart-doughnut"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">📊 ${this.statsPeriod === 'year' ? 'Andamento mensile' : 'Andamento giornaliero'}</div>
+                    <div class="chart-wrap">
+                        <canvas id="chart-bar"></canvas>
+                    </div>
+                </div>
+            ` : '<div class="stats-empty">Nessuna spesa in questo periodo</div>'}
+
+            ${catSorted.length > 0 ? `
+                <div class="stats-section">
+                    <div class="stats-section-title">📂 Dettaglio categorie</div>
+                    ${catSorted.map(([catId, amount], idx) => {
+                        const cat = this.getCat(catId);
+                        const pct = total > 0 ? ((amount / total) * 100).toFixed(0) : 0;
+                        const barW = ((amount / maxCat) * 100).toFixed(1);
+                        const color = CHART_COLORS[idx % CHART_COLORS.length];
+                        return `
+                            <div class="cat-bar-item">
+                                <div class="cat-bar-header">
+                                    <span class="cat-bar-name">${cat.emoji} ${cat.nome}</span>
+                                    <span class="cat-bar-amount">€${amount.toFixed(2)} (${pct}%)</span>
+                                </div>
+                                <div class="cat-bar-track">
+                                    <div class="cat-bar-fill" style="width:${barW}%;background:${color}"></div>
+                                </div>
                             </div>
-                            <div class="cat-bar-track">
-                                <div class="cat-bar-fill" style="width:${barW}%"></div>
-                            </div>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
+                        `;
+                    }).join('')}
+                </div>
+            ` : ''}
 
             ${topSpese.length > 0 ? `
                 <div class="stats-section">
                     <div class="stats-section-title">🏆 Top 5 spese</div>
-                    ${topSpese.map((s, i) => {
+                    ${topSpese.map(s => {
                         const cat = this.getCat(s.categoria);
                         const d = new Date(s.data);
                         return `
-                            <div class="expense-card" data-id="${s.id}" style="cursor:default">
+                            <div class="expense-card" style="cursor:default">
                                 <div class="expense-emoji">${cat.emoji}</div>
                                 <div class="expense-info">
                                     <div class="expense-desc">${this.esc(s.descrizione)}</div>
                                     <div class="expense-meta">
-                                        <span>${d.toLocaleDateString('it-IT', { day:'numeric', month:'short' })}</span>
+                                        <span>${d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}</span>
                                     </div>
                                 </div>
                                 <div class="expense-amount">€${s.importo.toFixed(2)}</div>
@@ -498,13 +663,215 @@ const App = {
             ` : ''}
         `;
 
-        // Listener bottoni periodo
+        // --- Event listeners ---
+
+        // Periodo
         container.querySelectorAll('.period-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 this.statsPeriod = btn.dataset.period;
+                this.statsOffset = 0;
                 this.renderStats();
             });
         });
+
+        // Navigazione prev/next
+        document.getElementById('period-prev').addEventListener('click', () => {
+            this.statsOffset--;
+            this.renderStats();
+        });
+
+        const nextBtn = document.getElementById('period-next');
+        if (canGoNext) {
+            nextBtn.addEventListener('click', () => {
+                this.statsOffset++;
+                this.renderStats();
+            });
+        }
+
+        // Crea grafici
+        if (filtered.length > 0) {
+            this.renderCharts(filtered, start, end);
+        }
+    },
+
+    /* =====================
+       GRAFICI CHART.JS
+       ===================== */
+    renderCharts(filtered, start, end) {
+        this.destroyCharts();
+
+        if (typeof Chart === 'undefined') return;
+
+        const themeColors = this.getChartThemeColors();
+
+        // --- DOUGHNUT ---
+        const byCat = {};
+        filtered.forEach(s => {
+            byCat[s.categoria] = (byCat[s.categoria] || 0) + s.importo;
+        });
+        const catSorted = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+        const doughnutLabels = catSorted.map(([id]) => {
+            const c = this.getCat(id);
+            return `${c.emoji} ${c.nome}`;
+        });
+        const doughnutData = catSorted.map(([, v]) => Math.round(v * 100) / 100);
+        const doughnutColors = catSorted.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]);
+
+        const ctxD = document.getElementById('chart-doughnut');
+        if (ctxD) {
+            this.chartDoughnut = new Chart(ctxD, {
+                type: 'doughnut',
+                data: {
+                    labels: doughnutLabels,
+                    datasets: [{
+                        data: doughnutData,
+                        backgroundColor: doughnutColors,
+                        borderColor: themeColors.cardBg,
+                        borderWidth: 3,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    cutout: '55%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: themeColors.text,
+                                padding: 12,
+                                usePointStyle: true,
+                                pointStyleWidth: 10,
+                                font: { size: 11, family: '-apple-system, sans-serif' }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => {
+                                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = ((ctx.parsed / total) * 100).toFixed(1);
+                                    return ` €${ctx.parsed.toFixed(2)} (${pct}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- BAR CHART ---
+        let barLabels, barData;
+
+        if (this.statsPeriod === 'year') {
+            // Mesi dell'anno
+            const months = Array(12).fill(0);
+            filtered.forEach(s => {
+                months[new Date(s.data).getMonth()] += s.importo;
+            });
+            barLabels = Array.from({ length: 12 }, (_, i) =>
+                new Date(2025, i, 1).toLocaleDateString('it-IT', { month: 'short' })
+            );
+            barData = months.map(v => Math.round(v * 100) / 100);
+        } else {
+            // Giorni nel periodo
+            const dayMap = new Map();
+            const cur = new Date(start);
+            while (cur <= end) {
+                dayMap.set(this.dateKey(cur), 0);
+                cur.setDate(cur.getDate() + 1);
+            }
+            filtered.forEach(s => {
+                const key = this.dateKey(new Date(s.data));
+                if (dayMap.has(key)) dayMap.set(key, dayMap.get(key) + s.importo);
+            });
+            barLabels = [];
+            barData = [];
+            for (const [key, val] of dayMap) {
+                const d = new Date(key + 'T12:00:00');
+                if (this.statsPeriod === 'week') {
+                    barLabels.push(d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric' }));
+                } else {
+                    barLabels.push(d.getDate().toString());
+                }
+                barData.push(Math.round(val * 100) / 100);
+            }
+        }
+
+        const ctxB = document.getElementById('chart-bar');
+        if (ctxB) {
+            this.chartBar = new Chart(ctxB, {
+                type: 'bar',
+                data: {
+                    labels: barLabels,
+                    datasets: [{
+                        label: 'Spese €',
+                        data: barData,
+                        backgroundColor: barData.map(v => v > 0 ? themeColors.accent + 'cc' : themeColors.accent + '33'),
+                        borderColor: themeColors.accent,
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: this.statsPeriod === 'week' ? 1.8 : 2,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => ` €${ctx.parsed.y.toFixed(2)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: themeColors.textMuted,
+                                font: { size: 10 },
+                                maxRotation: this.statsPeriod === 'month' ? 0 : 45,
+                                autoSkip: true,
+                                maxTicksLimit: this.statsPeriod === 'month' ? 15 : undefined
+                            },
+                            grid: { display: false }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: themeColors.textMuted,
+                                font: { size: 10 },
+                                callback: (v) => '€' + v
+                            },
+                            grid: { color: themeColors.grid }
+                        }
+                    }
+                }
+            });
+        }
+    },
+
+    getChartThemeColors() {
+        const style = getComputedStyle(document.documentElement);
+        return {
+            text: style.getPropertyValue('--text-primary').trim(),
+            textMuted: style.getPropertyValue('--text-tertiary').trim(),
+            accent: style.getPropertyValue('--accent').trim(),
+            cardBg: style.getPropertyValue('--bg-card').trim(),
+            grid: style.getPropertyValue('--border').trim()
+        };
+    },
+
+    destroyCharts() {
+        if (this.chartDoughnut) { this.chartDoughnut.destroy(); this.chartDoughnut = null; }
+        if (this.chartBar) { this.chartBar.destroy(); this.chartBar = null; }
+    },
+
+    refreshChartsTheme() {
+        if (this.currentPage === 'stats') {
+            this.renderStats();
+        }
     },
 
     /* =====================
@@ -518,10 +885,8 @@ const App = {
 
         let dateRange = '—';
         if (spese.length > 0) {
-            const dates = spese.map(s => new Date(s.data)).sort((a,b) => a - b);
-            const prima = dates[0].toLocaleDateString('it-IT');
-            const ultima = dates[dates.length - 1].toLocaleDateString('it-IT');
-            dateRange = `${prima} — ${ultima}`;
+            const dates = spese.map(s => new Date(s.data)).sort((a, b) => a - b);
+            dateRange = `${dates[0].toLocaleDateString('it-IT')} — ${dates[dates.length - 1].toLocaleDateString('it-IT')}`;
         }
 
         container.innerHTML = `
@@ -536,7 +901,7 @@ const App = {
 
             <div class="settings-section">
                 <h3>📤 Esporta dati</h3>
-                <p class="settings-hint">Scarica una copia dei tuoi dati. Il formato JSON è consigliato per il backup completo, il CSV è ideale per Excel/Sheets.</p>
+                <p class="settings-hint">JSON per backup completo, CSV per Excel/Sheets.</p>
                 <div class="settings-buttons">
                     <button id="btn-export-json" class="btn btn-secondary">📋 JSON</button>
                     <button id="btn-export-csv" class="btn btn-secondary">📄 CSV</button>
@@ -545,7 +910,7 @@ const App = {
 
             <div class="settings-section">
                 <h3>📥 Importa dati</h3>
-                <p class="settings-hint">Ripristina da un backup JSON o importa un file CSV. I dati importati si aggiungono a quelli esistenti (CSV) o li sostituiscono (JSON).</p>
+                <p class="settings-hint">JSON sostituisce i dati, CSV li aggiunge.</p>
                 <input type="file" id="import-file" accept=".json,.csv" hidden>
                 <button id="btn-import" class="btn btn-secondary btn-block">📁 Scegli file...</button>
             </div>
@@ -565,98 +930,75 @@ const App = {
                         <span class="info-label">Spazio usato</span>
                         <span class="info-value">${sizeKB.toFixed(1)} KB</span>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">Spazio disponibile</span>
-                        <span class="info-value">~5 MB</span>
-                    </div>
                 </div>
             </div>
 
             <div class="settings-section danger-zone">
                 <h3>⚠️ Zona pericolosa</h3>
-                <p class="settings-hint">Questa azione è irreversibile. Esporta prima i tuoi dati!</p>
+                <p class="settings-hint">Azione irreversibile. Esporta prima i tuoi dati!</p>
                 <button id="btn-clear-all" class="btn btn-danger btn-block">🗑️ Cancella tutti i dati</button>
             </div>
 
             <div class="about-section">
-                <p>💰 SpesaTracker v1.0</p>
-                <p>Dati salvati localmente nel browser</p>
-                <p>Nessun server · Nessun tracciamento · Nessun costo</p>
+                <p>💰 SpesaTracker v2.0</p>
+                <p>Dati salvati localmente · Nessun server · Nessun costo</p>
             </div>
         `;
 
-        // --- Event listeners ---
-
-        // Tema
+        // --- Listeners ---
         container.querySelectorAll('.theme-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 this.applyTheme(btn.dataset.theme);
                 Storage.updateSettings({ tema: btn.dataset.theme });
+                this.refreshChartsTheme();
                 this.renderSettings();
             });
         });
 
-        // Export JSON
         container.querySelector('#btn-export-json').addEventListener('click', () => {
-            const json = Storage.exportJSON();
-            this.download(json, `spese_backup_${this.dateStamp()}.json`, 'application/json');
+            this.download(Storage.exportJSON(), `spese_backup_${this.dateStamp()}.json`, 'application/json');
             this.showToast('Backup JSON scaricato ✓', 'success');
         });
 
-        // Export CSV
         container.querySelector('#btn-export-csv').addEventListener('click', () => {
-            const csv = '\uFEFF' + Storage.exportCSV(); // BOM per Excel
-            this.download(csv, `spese_${this.dateStamp()}.csv`, 'text/csv;charset=utf-8');
+            this.download('\uFEFF' + Storage.exportCSV(), `spese_${this.dateStamp()}.csv`, 'text/csv;charset=utf-8');
             this.showToast('File CSV scaricato ✓', 'success');
         });
 
-        // Import
         const fileInput = container.querySelector('#import-file');
         container.querySelector('#btn-import').addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = (ev) => {
                 const content = ev.target.result;
-                let result;
-
                 if (file.name.endsWith('.json')) {
-                    this.showConfirm('Importare il backup JSON? I dati attuali verranno SOSTITUITI.', () => {
-                        result = Storage.importJSON(content);
-                        if (result.success) {
-                            this.showToast(`Importate ${result.count} spese ✓`, 'success');
-                            this.renderTimeline();
-                            this.renderSettings();
-                        } else {
-                            this.showToast('Errore: ' + result.error, 'error');
-                        }
+                    this.showConfirm('Importare backup JSON? I dati attuali verranno SOSTITUITI.', () => {
+                        const r = Storage.importJSON(content);
+                        if (r.success) {
+                            this.showToast(`Importate ${r.count} spese ✓`, 'success');
+                            this.renderTimeline(); this.renderSettings();
+                        } else this.showToast('Errore: ' + r.error, 'error');
                     });
                 } else if (file.name.endsWith('.csv')) {
-                    result = Storage.importCSV(content);
-                    if (result.success) {
-                        this.showToast(`Importate ${result.count} spese da CSV ✓`, 'success');
-                        this.renderTimeline();
-                        this.renderSettings();
-                    } else {
-                        this.showToast('Errore: ' + result.error, 'error');
-                    }
+                    const r = Storage.importCSV(content);
+                    if (r.success) {
+                        this.showToast(`Importate ${r.count} spese da CSV ✓`, 'success');
+                        this.renderTimeline(); this.renderSettings();
+                    } else this.showToast('Errore: ' + r.error, 'error');
                 } else {
-                    this.showToast('Formato non supportato. Usa .json o .csv', 'error');
+                    this.showToast('Usa file .json o .csv', 'error');
                 }
-
                 fileInput.value = '';
             };
             reader.readAsText(file);
         });
 
-        // Clear all
         container.querySelector('#btn-clear-all').addEventListener('click', () => {
-            this.showConfirm('Eliminare TUTTI i dati? Questa azione è irreversibile!', () => {
+            this.showConfirm('Eliminare TUTTI i dati? Azione irreversibile!', () => {
                 Storage.clearAll();
-                this.renderTimeline();
-                this.renderSettings();
+                this.renderTimeline(); this.renderSettings();
                 this.showToast('Tutti i dati eliminati', 'info');
             });
         });
@@ -669,11 +1011,8 @@ const App = {
         const toast = document.getElementById('toast');
         toast.textContent = message;
         toast.className = 'toast ' + type;
-
         if (this.toastTimer) clearTimeout(this.toastTimer);
-        this.toastTimer = setTimeout(() => {
-            toast.classList.add('hidden');
-        }, 2800);
+        this.toastTimer = setTimeout(() => toast.classList.add('hidden'), 2800);
     },
 
     /* =====================
@@ -711,10 +1050,8 @@ const App = {
     formatDayLabel(dateKey) {
         const oggi = this.dateKey(new Date());
         const ieri = this.dateKey(new Date(Date.now() - 86400000));
-
         if (dateKey === oggi) return '📌 Oggi';
         if (dateKey === ieri) return 'Ieri';
-
         const d = new Date(dateKey + 'T12:00:00');
         return d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
     },
@@ -738,18 +1075,16 @@ const App = {
         const blob = new Blob([content], { type: mime });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     },
 
     esc(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
+        const d = document.createElement('div');
+        d.textContent = str;
+        return d.innerHTML;
     }
 };
 

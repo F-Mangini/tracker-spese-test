@@ -16,8 +16,31 @@
     <!-- Header -->
     <header id="app-header">
         <h1>💰 SpesaTracker</h1>
-        <button id="theme-toggle" aria-label="Cambia tema">🌓</button>
+        <div class="header-actions">
+            <button id="btn-search-toggle" class="header-btn" aria-label="Cerca">🔍</button>
+            <button id="theme-toggle" class="header-btn" aria-label="Cambia tema">🌓</button>
+        </div>
     </header>
+
+    <!-- Search / Filter Bar -->
+    <div id="search-bar" class="search-bar hidden">
+        <div class="search-bar-inner">
+            <div class="search-input-row">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search-input" placeholder="Cerca spese..." autocomplete="off">
+                <button id="btn-search-clear" class="search-clear-btn hidden">&times;</button>
+            </div>
+            <div class="search-filters-row">
+                <select id="filter-category">
+                    <option value="">Tutte le categorie</option>
+                </select>
+                <select id="filter-method">
+                    <option value="">Tutti i pagamenti</option>
+                </select>
+            </div>
+        </div>
+        <div id="search-results-info" class="search-results-info hidden"></div>
+    </div>
 
     <!-- Main Content -->
     <main id="app-main">
@@ -139,7 +162,10 @@
     <!-- Toast -->
     <div id="toast" class="toast hidden"></div>
 
-    <!-- Scripts -->
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+    <!-- App Scripts -->
     <script src="js/categories.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/parser.js"></script>
