@@ -64,7 +64,7 @@ const Parser = {
     },
 
     _detectPayment(text) {
-        if (/\b(contant|cash)\b/.test(text)) return 'contanti';
+        if (/\b(contanti|cash)\b/.test(text)) return 'contanti';
         if (/\b(satispay)\b/.test(text)) return 'satispay';
         if (/\b(paypal)\b/.test(text)) return 'paypal';
         if (/\b(bonifico)\b/.test(text)) return 'bonifico';
