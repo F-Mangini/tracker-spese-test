@@ -36,6 +36,7 @@ const App = {
     },
     sliderMax: 100,
     _lastSliderInput: 'max',
+    advancedFiltersOpen: false,
 
     /* =====================
        INIT
@@ -171,8 +172,33 @@ const App = {
 
         resetBtn.addEventListener('click', () => this.resetFilters());
 
+        // Advanced filters toggle
+        const advToggle = document.getElementById('btn-advanced-toggle');
+        advToggle.addEventListener('click', () => this.toggleAdvancedFilters());
+
         this.syncFilterUI();
         this.updateFilterBadge();
+    },
+
+    toggleAdvancedFilters() {
+        this.advancedFiltersOpen = !this.advancedFiltersOpen;
+        const section = document.getElementById('advanced-filters');
+        const btn = document.getElementById('btn-advanced-toggle');
+
+        if (this.advancedFiltersOpen) {
+            section.classList.remove('hidden');
+            btn.classList.add('active');
+        } else {
+            section.classList.add('hidden');
+            btn.classList.remove('active');
+        }
+
+        // Recalculate main margin
+        requestAnimationFrame(() => {
+            const panel = document.getElementById('filter-panel');
+            const h = panel.offsetHeight;
+            document.getElementById('app-main').style.marginTop = `calc(var(--header-h) + ${h}px)`;
+        });
     },
 
     buildChips(containerId, items, targetSet) {
@@ -334,8 +360,11 @@ const App = {
 
     closeFilterPanel() {
         this.filterOpen = false;
+        this.advancedFiltersOpen = false;
         document.getElementById('filter-panel').classList.add('hidden');
         document.getElementById('btn-filter-toggle').classList.remove('active');
+        document.getElementById('advanced-filters').classList.add('hidden');
+        document.getElementById('btn-advanced-toggle').classList.remove('active');
         document.getElementById('app-main').style.marginTop = '';
     },
 
@@ -979,12 +1008,12 @@ const App = {
                 <div class="stats-section">
                     <div class="stats-section-title">📂 Dettaglio categorie</div>
                     ${catSorted.map(([catId, amount], idx) => {
-                        const cat = this.getCat(catId);
-                        const pct = total > 0 ? ((amount / total) * 100).toFixed(0) : 0;
-                        const barW = ((amount / maxCat) * 100).toFixed(1);
-                        const color = CHART_COLORS[idx % CHART_COLORS.length];
+            const cat = this.getCat(catId);
+            const pct = total > 0 ? ((amount / total) * 100).toFixed(0) : 0;
+            const barW = ((amount / maxCat) * 100).toFixed(1);
+            const color = CHART_COLORS[idx % CHART_COLORS.length];
 
-                        return `
+            return `
                             <div class="cat-bar-item">
                                 <div class="cat-bar-header">
                                     <span class="cat-bar-name">${cat.emoji} ${cat.nome}</span>
@@ -995,7 +1024,7 @@ const App = {
                                 </div>
                             </div>
                         `;
-                    }).join('')}
+        }).join('')}
                 </div>
             ` : ''}
 
@@ -1003,10 +1032,10 @@ const App = {
                 <div class="stats-section">
                     <div class="stats-section-title">🏆 Top 5 spese</div>
                     ${topSpese.map(s => {
-                        const cat = this.getCat(s.categoria);
-                        const d = new Date(s.data);
+            const cat = this.getCat(s.categoria);
+            const d = new Date(s.data);
 
-                        return `
+            return `
                             <div class="expense-card" style="cursor:default">
                                 <div class="expense-emoji">${cat.emoji}</div>
                                 <div class="expense-info">
@@ -1018,7 +1047,7 @@ const App = {
                                 <div class="expense-amount">€${s.importo.toFixed(2)}</div>
                             </div>
                         `;
-                    }).join('')}
+        }).join('')}
                 </div>
             ` : ''}
         `;
@@ -1027,9 +1056,7 @@ const App = {
             btn.addEventListener('click', () => {
                 const newPeriod = btn.dataset.period;
 
-                if (newPeriod === 'custom' && !this.filters.dateFrom && !this.filters.dateTo && !this.filterOpen) {
-                    this.openFilterPanel();
-                }
+                // Custom no longer auto-opens the filter panel
 
                 this.statsPeriod = newPeriod;
                 this.statsOffset = 0;
