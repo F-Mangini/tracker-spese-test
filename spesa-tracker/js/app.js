@@ -2,17 +2,16 @@
    CHART COLORS
    ============================================ */
 const CHART_COLORS = [
-    '#10b981','#3b82f6','#f59e0b','#ef4444','#8b5cf6',
-    '#ec4899','#06b6d4','#f97316','#84cc16','#6366f1',
-    '#14b8a6','#e11d48','#0ea5e9','#a855f7','#eab308',
-    '#22c55e','#d946ef','#64748b','#fb923c','#2dd4bf'
+    '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6',
+    '#ec4899', '#06b6d4', '#f97316', '#84cc16', '#6366f1',
+    '#14b8a6', '#e11d48', '#0ea5e9', '#a855f7', '#eab308',
+    '#22c55e', '#d946ef', '#64748b', '#fb923c', '#2dd4bf'
 ];
 
 /* ============================================
    APP
    ============================================ */
 const App = {
-
     currentPage: 'timeline',
     editingId: null,
     toastTimer: null,
@@ -36,6 +35,7 @@ const App = {
         dateTo: ''
     },
     sliderMax: 100,
+    _lastSliderInput: 'max',
 
     /* =====================
        INIT
@@ -45,6 +45,7 @@ const App = {
             document.body.innerHTML = '<div style="padding:40px;text-align:center"><h2>⚠️ Storage non disponibile</h2></div>';
             return;
         }
+
         this.initTheme();
         this.initNavigation();
         this.initInput();
@@ -60,11 +61,14 @@ const App = {
     initTheme() {
         const saved = Storage.getSettings().tema || 'auto';
         this.applyTheme(saved);
+
         document.getElementById('theme-toggle').addEventListener('click', () => {
             const cur = document.documentElement.getAttribute('data-theme');
             const next = cur === 'dark' ? 'light' : 'dark';
+
             this.applyTheme(next);
             Storage.updateSettings({ tema: next });
+
             if (this.currentPage === 'stats') this.renderStats();
             if (this.currentPage === 'settings') this.renderSettings();
         });
@@ -72,8 +76,10 @@ const App = {
 
     applyTheme(theme) {
         if (theme === 'auto') {
-            document.documentElement.setAttribute('data-theme',
-                window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute(
+                'data-theme',
+                window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+            );
         } else {
             document.documentElement.setAttribute('data-theme', theme);
         }
@@ -90,13 +96,16 @@ const App = {
 
     navigateTo(page) {
         this.currentPage = page;
+
         document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
         document.getElementById('page-' + page).classList.remove('hidden');
+
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.querySelector(`.nav-btn[data-page="${page}"]`).classList.add('active');
 
         const inputBar = document.getElementById('input-bar');
         const main = document.getElementById('app-main');
+
         if (page === 'timeline') {
             inputBar.classList.remove('hidden');
             main.classList.remove('no-input-bar');
@@ -105,11 +114,12 @@ const App = {
             main.classList.add('no-input-bar');
         }
 
-        // Filter toggle visible on timeline & stats
         document.getElementById('btn-filter-toggle').style.display =
-            (page === 'settings') ? 'none' : '';
+            page === 'settings' ? 'none' : '';
 
         if (page === 'settings') this.closeFilterPanel();
+
+        if (page === 'timeline') this.renderTimeline();
         if (page === 'stats') this.renderStats();
         if (page === 'settings') this.renderSettings();
     },
@@ -122,19 +132,20 @@ const App = {
         const searchInput = document.getElementById('search-input');
         const clearBtn = document.getElementById('btn-search-clear');
         const resetBtn = document.getElementById('btn-filter-reset');
+        const dateFrom = document.getElementById('filter-date-from');
+        const dateTo = document.getElementById('filter-date-to');
 
-        // Toggle
         toggleBtn.addEventListener('click', () => {
             if (this.filterOpen) this.closeFilterPanel();
             else this.openFilterPanel();
         });
 
-        // Search
         searchInput.addEventListener('input', () => {
             this.filters.query = searchInput.value.trim();
             clearBtn.classList.toggle('hidden', !this.filters.query);
             this.onFilterChange();
         });
+
         clearBtn.addEventListener('click', () => {
             searchInput.value = '';
             this.filters.query = '';
@@ -143,33 +154,30 @@ const App = {
             this.onFilterChange();
         });
 
-        // Category chips
         this.buildChips('filter-cats', CATEGORIES, this.filters.categories);
-
-        // Payment chips
         this.buildChips('filter-methods', PAYMENT_METHODS, this.filters.methods);
 
-        // Amount slider
         this.initSlider();
 
-        // Date filters
-        const dateFrom = document.getElementById('filter-date-from');
-        const dateTo = document.getElementById('filter-date-to');
         dateFrom.addEventListener('change', () => {
             this.filters.dateFrom = dateFrom.value;
             this.onFilterChange();
         });
+
         dateTo.addEventListener('change', () => {
             this.filters.dateTo = dateTo.value;
             this.onFilterChange();
         });
 
-        // Reset
         resetBtn.addEventListener('click', () => this.resetFilters());
+
+        this.syncFilterUI();
+        this.updateFilterBadge();
     },
 
     buildChips(containerId, items, targetSet) {
         const container = document.getElementById(containerId);
+
         container.innerHTML = items.map(item =>
             `<button class="filter-chip" data-id="${item.id}">${item.emoji} ${item.nome}</button>`
         ).join('');
@@ -177,6 +185,7 @@ const App = {
         container.querySelectorAll('.filter-chip').forEach(chip => {
             chip.addEventListener('click', () => {
                 const id = chip.dataset.id;
+
                 if (targetSet.has(id)) {
                     targetSet.delete(id);
                     chip.classList.remove('active');
@@ -184,9 +193,27 @@ const App = {
                     targetSet.add(id);
                     chip.classList.add('active');
                 }
+
                 this.onFilterChange();
             });
         });
+    },
+
+    syncFilterUI() {
+        document.getElementById('search-input').value = this.filters.query;
+        document.getElementById('btn-search-clear').classList.toggle('hidden', !this.filters.query);
+        document.getElementById('filter-date-from').value = this.filters.dateFrom;
+        document.getElementById('filter-date-to').value = this.filters.dateTo;
+
+        document.querySelectorAll('#filter-cats .filter-chip').forEach(chip => {
+            chip.classList.toggle('active', this.filters.categories.has(chip.dataset.id));
+        });
+
+        document.querySelectorAll('#filter-methods .filter-chip').forEach(chip => {
+            chip.classList.toggle('active', this.filters.methods.has(chip.dataset.id));
+        });
+
+        this.recalcSliderMax();
     },
 
     /* --- Dual Range Slider --- */
@@ -197,27 +224,45 @@ const App = {
         const sMax = document.getElementById('slider-max');
 
         const update = () => {
-            let lo = parseInt(sMin.value);
-            let hi = parseInt(sMax.value);
-            if (lo > hi) { // prevent crossing
-                if (this._lastSliderInput === 'min') { sMin.value = hi; lo = hi; }
-                else { sMax.value = lo; hi = lo; }
+            let lo = Number(sMin.value);
+            let hi = Number(sMax.value);
+
+            if (lo > hi) {
+                if (this._lastSliderInput === 'min') {
+                    sMin.value = String(hi);
+                    lo = hi;
+                } else {
+                    sMax.value = String(lo);
+                    hi = lo;
+                }
             }
+
             this.filters.amountMin = lo;
             this.filters.amountMax = hi >= this.sliderMax ? Infinity : hi;
+
             this.updateSliderUI(lo, hi);
             this.onFilterChange();
         };
 
-        sMin.addEventListener('input', () => { this._lastSliderInput = 'min'; update(); });
-        sMax.addEventListener('input', () => { this._lastSliderInput = 'max'; update(); });
+        sMin.addEventListener('input', () => {
+            this._lastSliderInput = 'min';
+            update();
+        });
+
+        sMax.addEventListener('input', () => {
+            this._lastSliderInput = 'max';
+            update();
+        });
     },
 
     recalcSliderMax() {
         const spese = Storage.getSpese();
-        if (spese.length === 0) { this.sliderMax = 100; }
-        else {
-            const mx = Math.max(...spese.map(s => s.importo));
+
+        if (spese.length === 0) {
+            this.sliderMax = 100;
+        } else {
+            const mx = Math.max(...spese.map(s => Number(s.importo) || 0));
+
             if (mx <= 5) this.sliderMax = 10;
             else if (mx <= 10) this.sliderMax = 25;
             else if (mx <= 25) this.sliderMax = 50;
@@ -228,34 +273,59 @@ const App = {
             else if (mx <= 1000) this.sliderMax = 1500;
             else this.sliderMax = Math.ceil(mx / 500) * 500 + 500;
         }
+
         const sMin = document.getElementById('slider-min');
         const sMax = document.getElementById('slider-max');
-        sMin.max = this.sliderMax;
-        sMax.max = this.sliderMax;
-        sMin.value = 0;
-        sMax.value = this.sliderMax;
-        this.filters.amountMin = 0;
-        this.filters.amountMax = Infinity;
-        this.updateSliderUI(0, this.sliderMax);
+
+        if (!sMin || !sMax) return;
+
+        sMin.max = String(this.sliderMax);
+        sMax.max = String(this.sliderMax);
+
+        const hadInfinity = this.filters.amountMax === Infinity;
+
+        let lo = Number.isFinite(this.filters.amountMin) ? this.filters.amountMin : 0;
+        let hi = hadInfinity
+            ? this.sliderMax
+            : (Number.isFinite(this.filters.amountMax) ? this.filters.amountMax : this.sliderMax);
+
+        lo = Math.max(0, Math.min(lo, this.sliderMax));
+        hi = Math.max(0, Math.min(hi, this.sliderMax));
+
+        if (lo > hi) lo = hi;
+
+        this.filters.amountMin = lo;
+        this.filters.amountMax = hadInfinity ? Infinity : hi;
+
+        sMin.value = String(lo);
+        sMax.value = String(hi);
+
+        this.updateSliderUI(lo, hi);
     },
 
     updateSliderUI(lo, hi) {
         const fill = document.getElementById('ds-fill');
         const pctL = (lo / this.sliderMax) * 100;
         const pctR = (hi / this.sliderMax) * 100;
+
         fill.style.left = pctL + '%';
         fill.style.width = (pctR - pctL) + '%';
+
         document.getElementById('slider-val-min').textContent = '€' + lo;
-        document.getElementById('slider-val-max').textContent = hi >= this.sliderMax ? '€' + this.sliderMax + '+' : '€' + hi;
+
+        const isOpenEnded = this.filters.amountMax === Infinity && hi >= this.sliderMax;
+        document.getElementById('slider-val-max').textContent =
+            isOpenEnded ? `€${this.sliderMax}+` : `€${hi}`;
     },
 
-    /* --- Filter panel open/close --- */
     openFilterPanel() {
         this.filterOpen = true;
-        this.recalcSliderMax();
+        this.syncFilterUI();
+
         const panel = document.getElementById('filter-panel');
         panel.classList.remove('hidden');
         document.getElementById('btn-filter-toggle').classList.add('active');
+
         requestAnimationFrame(() => {
             const h = panel.offsetHeight;
             document.getElementById('app-main').style.marginTop = `calc(var(--header-h) + ${h}px)`;
@@ -272,17 +342,20 @@ const App = {
     /* --- Filter state --- */
     onFilterChange() {
         this.updateFilterBadge();
+
         if (this.currentPage === 'timeline') this.renderTimeline();
         if (this.currentPage === 'stats') this.renderStats();
     },
 
     getActiveFilterCount() {
         let n = 0;
+
         if (this.filters.query) n++;
         if (this.filters.categories.size > 0) n++;
         if (this.filters.methods.size > 0) n++;
         if (this.filters.amountMin > 0 || this.filters.amountMax < Infinity) n++;
         if (this.filters.dateFrom || this.filters.dateTo) n++;
+
         return n;
     },
 
@@ -313,13 +386,7 @@ const App = {
         this.filters.dateFrom = '';
         this.filters.dateTo = '';
 
-        document.getElementById('search-input').value = '';
-        document.getElementById('btn-search-clear').classList.add('hidden');
-        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-        document.getElementById('filter-date-from').value = '';
-        document.getElementById('filter-date-to').value = '';
-
-        this.recalcSliderMax();
+        this.syncFilterUI();
         this.onFilterChange();
         this.showToast('Filtri resettati', 'info');
     },
@@ -328,34 +395,35 @@ const App = {
     applyFilters(spese) {
         let result = spese;
 
-        // Search
         if (this.filters.query) {
             const q = this.filters.query.toLowerCase();
             result = result.filter(s =>
-                s.descrizione.toLowerCase().includes(q) ||
-                (s.nota && s.nota.toLowerCase().includes(q))
+                (s.descrizione || '').toLowerCase().includes(q) ||
+                (s.nota || '').toLowerCase().includes(q)
             );
         }
-        // Categories
+
         if (this.filters.categories.size > 0) {
             result = result.filter(s => this.filters.categories.has(s.categoria));
         }
-        // Methods
+
         if (this.filters.methods.size > 0) {
             result = result.filter(s => this.filters.methods.has(s.metodo));
         }
-        // Amount
+
         if (this.filters.amountMin > 0) {
             result = result.filter(s => s.importo >= this.filters.amountMin);
         }
+
         if (this.filters.amountMax < Infinity) {
             result = result.filter(s => s.importo <= this.filters.amountMax);
         }
-        // Date
+
         if (this.filters.dateFrom) {
             const from = new Date(this.filters.dateFrom + 'T00:00:00');
             result = result.filter(s => new Date(s.data) >= from);
         }
+
         if (this.filters.dateTo) {
             const to = new Date(this.filters.dateTo + 'T23:59:59');
             result = result.filter(s => new Date(s.data) <= to);
@@ -364,7 +432,24 @@ const App = {
         return result;
     },
 
-    hasActiveFilters() { return this.getActiveFilterCount() > 0; },
+    applyNonDateFilters(spese) {
+        const origFrom = this.filters.dateFrom;
+        const origTo = this.filters.dateTo;
+
+        this.filters.dateFrom = '';
+        this.filters.dateTo = '';
+
+        const result = this.applyFilters(spese);
+
+        this.filters.dateFrom = origFrom;
+        this.filters.dateTo = origTo;
+
+        return result;
+    },
+
+    hasActiveFilters() {
+        return this.getActiveFilterCount() > 0;
+    },
 
     /* =====================
        INPUT
@@ -375,41 +460,67 @@ const App = {
         const btnVoice = document.getElementById('btn-voice');
 
         btnSend.addEventListener('click', () => this.submitExpense());
-        input.addEventListener('keydown', e => { if (e.key === 'Enter') this.submitExpense(); });
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter') this.submitExpense();
+        });
 
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
             this.recognition = new SR();
             this.recognition.lang = 'it-IT';
             this.recognition.continuous = false;
             this.recognition.interimResults = false;
+
             this.recognition.onresult = e => {
                 input.value = e.results[0][0].transcript;
                 btnVoice.classList.remove('recording');
                 this.submitExpense();
             };
+
             this.recognition.onerror = () => {
                 btnVoice.classList.remove('recording');
                 this.showToast('Non ho capito. Riprova.', 'error');
             };
-            this.recognition.onend = () => btnVoice.classList.remove('recording');
+
+            this.recognition.onend = () => {
+                btnVoice.classList.remove('recording');
+            };
+
             btnVoice.addEventListener('click', () => {
-                if (btnVoice.classList.contains('recording')) this.recognition.stop();
-                else { btnVoice.classList.add('recording'); this.recognition.start(); }
+                if (btnVoice.classList.contains('recording')) {
+                    this.recognition.stop();
+                } else {
+                    btnVoice.classList.add('recording');
+                    this.recognition.start();
+                }
             });
-        } else { btnVoice.style.display = 'none'; }
+        } else {
+            btnVoice.style.display = 'none';
+        }
     },
 
     submitExpense() {
         const input = document.getElementById('expense-input');
         const text = input.value.trim();
+
         if (!text) return;
+
         const parsed = Parser.parse(text);
-        if (!parsed) { this.showToast('Non ho capito l\'importo. Prova: "caffè 1.50"', 'error'); return; }
+        if (!parsed) {
+            this.showToast('Non ho capito l\'importo. Prova: "caffè 1.50"', 'error');
+            return;
+        }
+
         const spesa = Storage.addSpesa(parsed);
         this.newCardId = spesa.id;
         input.value = '';
+
+        if (this.filterOpen) this.recalcSliderMax();
+
         this.renderTimeline();
+        if (this.currentPage === 'stats') this.renderStats();
+
         const cat = this.getCat(spesa.categoria);
         this.showToast(`${cat.emoji} ${spesa.descrizione} · €${spesa.importo.toFixed(2)}`, 'success');
     },
@@ -430,19 +541,24 @@ const App = {
             empty.classList.remove('hidden');
             return;
         }
+
         empty.classList.add('hidden');
 
-        // Summary (always from ALL data)
         const oggi = new Date();
         const oggiKey = this.dateKey(oggi);
         const meseCorrente = oggi.getMonth();
         const annoCorrente = oggi.getFullYear();
-        let totOggi = 0, totMese = 0;
+
+        let totOggi = 0;
+        let totMese = 0;
+
         allSpese.forEach(s => {
             const d = new Date(s.data);
+
             if (this.dateKey(d) === oggiKey) totOggi += s.importo;
             if (d.getMonth() === meseCorrente && d.getFullYear() === annoCorrente) totMese += s.importo;
         });
+
         const nomeMese = oggi.toLocaleDateString('it-IT', { month: 'long' });
 
         summary.innerHTML = `
@@ -470,8 +586,10 @@ const App = {
         }
 
         const groups = this.groupByDay(filtered);
+
         content.innerHTML = groups.map(g => {
-            const dayTotal = g.spese.reduce((s, x) => s + x.importo, 0);
+            const dayTotal = g.spese.reduce((sum, x) => sum + x.importo, 0);
+
             return `
                 <div class="day-group">
                     <div class="day-header">
@@ -479,7 +597,8 @@ const App = {
                         <span class="day-total">€${dayTotal.toFixed(2)}</span>
                     </div>
                     ${g.spese.map(s => this.createCard(s)).join('')}
-                </div>`;
+                </div>
+            `;
         }).join('');
 
         content.querySelectorAll('.expense-card').forEach(card => {
@@ -493,7 +612,9 @@ const App = {
         const d = new Date(s.data);
         const ora = d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
         const isNew = s.id === this.newCardId;
+
         if (isNew) this.newCardId = null;
+
         return `
             <div class="expense-card${isNew ? ' new-card' : ''}" data-id="${s.id}">
                 <div class="expense-emoji">${cat.emoji}</div>
@@ -507,7 +628,8 @@ const App = {
                     </div>
                 </div>
                 <div class="expense-amount">€${s.importo.toFixed(2)}</div>
-            </div>`;
+            </div>
+        `;
     },
 
     /* =====================
@@ -515,26 +637,38 @@ const App = {
        ===================== */
     initModal() {
         document.getElementById('modal-close').addEventListener('click', () => this.closeModal());
+
         document.getElementById('modal-overlay').addEventListener('click', e => {
             if (e.target.id === 'modal-overlay') this.closeModal();
         });
+
         document.getElementById('btn-save').addEventListener('click', () => this.saveEdit());
+
         document.getElementById('btn-delete').addEventListener('click', () => {
             this.showConfirm('Eliminare questa spesa?', () => {
                 Storage.deleteSpesa(this.editingId);
+
+                if (this.filterOpen) this.recalcSliderMax();
+
                 this.closeModal();
                 this.renderTimeline();
+                if (this.currentPage === 'stats') this.renderStats();
                 this.showToast('Spesa eliminata', 'info');
             });
         });
+
         document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') { this.closeModal(); this.closeConfirm(); }
+            if (e.key === 'Escape') {
+                this.closeModal();
+                this.closeConfirm();
+            }
         });
     },
 
     populateDropdowns() {
         document.getElementById('edit-categoria').innerHTML =
             CATEGORIES.map(c => `<option value="${c.id}">${c.emoji} ${c.nome}</option>`).join('');
+
         document.getElementById('edit-metodo').innerHTML =
             PAYMENT_METHODS.map(m => `<option value="${m.id}">${m.emoji} ${m.nome}</option>`).join('');
     },
@@ -542,7 +676,9 @@ const App = {
     openEditModal(id) {
         const spesa = Storage.getSpese().find(s => s.id === id);
         if (!spesa) return;
+
         this.editingId = id;
+
         const d = new Date(spesa.data);
         document.getElementById('edit-importo').value = spesa.importo;
         document.getElementById('edit-descrizione').value = spesa.descrizione;
@@ -561,9 +697,15 @@ const App = {
 
     saveEdit() {
         const importo = parseFloat(document.getElementById('edit-importo').value);
-        if (!importo || importo <= 0) { this.showToast('Importo non valido', 'error'); return; }
+
+        if (!importo || importo <= 0) {
+            this.showToast('Importo non valido', 'error');
+            return;
+        }
+
         const dateVal = document.getElementById('edit-data').value;
         const timeVal = document.getElementById('edit-ora').value;
+
         Storage.updateSpesa(this.editingId, {
             importo: Math.round(importo * 100) / 100,
             descrizione: document.getElementById('edit-descrizione').value || 'Spesa',
@@ -572,8 +714,12 @@ const App = {
             data: new Date(`${dateVal}T${timeVal || '12:00'}:00`).toISOString(),
             nota: document.getElementById('edit-nota').value
         });
+
+        if (this.filterOpen) this.recalcSliderMax();
+
         this.closeModal();
         this.renderTimeline();
+        if (this.currentPage === 'stats') this.renderStats();
         this.showToast('Spesa modificata ✓', 'success');
     },
 
@@ -583,56 +729,111 @@ const App = {
     showConfirm(msg, onYes) {
         document.getElementById('confirm-message').textContent = msg;
         document.getElementById('confirm-overlay').classList.remove('hidden');
+
         const yesBtn = document.getElementById('confirm-yes');
         const noBtn = document.getElementById('confirm-no');
+
         const newYes = yesBtn.cloneNode(true);
         const newNo = noBtn.cloneNode(true);
+
         yesBtn.replaceWith(newYes);
         noBtn.replaceWith(newNo);
-        newYes.addEventListener('click', () => { this.closeConfirm(); onYes(); });
+
+        newYes.addEventListener('click', () => {
+            this.closeConfirm();
+            onYes();
+        });
+
         newNo.addEventListener('click', () => this.closeConfirm());
     },
-    closeConfirm() { document.getElementById('confirm-overlay').classList.add('hidden'); },
+
+    closeConfirm() {
+        document.getElementById('confirm-overlay').classList.add('hidden');
+    },
 
     /* =============================================
        STATS
        ============================================= */
-    getPeriodDates() {
+    getDataBounds(spese) {
+        if (!spese.length) return null;
+
+        const times = spese
+            .map(s => new Date(s.data).getTime())
+            .filter(t => Number.isFinite(t));
+
+        if (!times.length) return null;
+
+        const start = new Date(Math.min(...times));
+        const end = new Date(Math.max(...times));
+
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+
+        return { start, end };
+    },
+
+    getPeriodDates(allSpese = []) {
         const now = new Date();
-        let start, end, label;
+        let start;
+        let end;
+        let label;
 
         switch (this.statsPeriod) {
             case 'week': {
                 const ref = new Date(now);
                 ref.setDate(ref.getDate() + this.statsOffset * 7);
+
                 end = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate(), 23, 59, 59, 999);
                 start = new Date(end);
                 start.setDate(start.getDate() - 6);
                 start.setHours(0, 0, 0, 0);
+
                 const sl = start.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
                 const el = end.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
                 label = `${sl} — ${el}`;
                 break;
             }
+
             case 'month': {
                 const ref = new Date(now.getFullYear(), now.getMonth() + this.statsOffset, 1);
+
                 start = new Date(ref.getFullYear(), ref.getMonth(), 1, 0, 0, 0, 0);
                 end = new Date(ref.getFullYear(), ref.getMonth() + 1, 0, 23, 59, 59, 999);
                 label = ref.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
                 break;
             }
+
             case 'year': {
                 const year = now.getFullYear() + this.statsOffset;
+
                 start = new Date(year, 0, 1, 0, 0, 0, 0);
                 end = new Date(year, 11, 31, 23, 59, 59, 999);
                 label = year.toString();
                 break;
             }
+
             case 'custom': {
                 const df = this.filters.dateFrom;
                 const dt = this.filters.dateTo;
-                start = df ? new Date(df + 'T00:00:00') : new Date(2000, 0, 1);
-                end = dt ? new Date(dt + 'T23:59:59') : new Date(2099, 11, 31);
+                const bounds = this.getDataBounds(allSpese);
+
+                if (df) {
+                    start = new Date(df + 'T00:00:00');
+                } else if (bounds) {
+                    start = new Date(bounds.start);
+                } else {
+                    start = new Date();
+                    start.setHours(0, 0, 0, 0);
+                }
+
+                if (dt) {
+                    end = new Date(dt + 'T23:59:59');
+                } else if (bounds) {
+                    end = new Date(bounds.end);
+                } else {
+                    end = new Date();
+                    end.setHours(23, 59, 59, 999);
+                }
 
                 if (df && dt) {
                     const sl = start.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -645,75 +846,92 @@ const App = {
                 } else {
                     label = 'Tutto il periodo';
                 }
+
                 break;
             }
+
+            default: {
+                start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+                end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+                label = now.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+            }
         }
+
         return { start, end, label };
+    },
+
+    getActualPeriodEnd(end) {
+        return new Date(Math.min(end.getTime(), Date.now()));
+    },
+
+    getRangeDays(start, end) {
+        const actualEnd = this.getActualPeriodEnd(end);
+        const diff = actualEnd.getTime() - start.getTime();
+        if (diff < 0) return 1;
+        return Math.max(1, Math.floor(diff / 86400000) + 1);
+    },
+
+    getBarAggregation(start, end) {
+        if (this.statsPeriod === 'year') return 'month';
+
+        const rangeDays = this.getRangeDays(start, end);
+
+        if (rangeDays > 365) return 'month';
+        if (rangeDays > 90) return 'week';
+        return 'day';
+    },
+
+    getBarChartTitle(start, end) {
+        const aggregation = this.getBarAggregation(start, end);
+
+        if (aggregation === 'month') return 'Andamento mensile';
+        if (aggregation === 'week') return 'Andamento settimanale';
+        return 'Andamento giornaliero';
     },
 
     renderStats() {
         const container = document.getElementById('stats-content');
         const allSpese = Storage.getSpese();
 
+        this.destroyCharts();
+
         if (allSpese.length === 0) {
             container.innerHTML = '<div class="stats-empty">📊<br>Aggiungi qualche spesa per vedere le statistiche</div>';
             return;
         }
 
-        const { start, end, label } = this.getPeriodDates();
+        const { start, end, label } = this.getPeriodDates(allSpese);
 
-        // Filter by period dates
         let filtered = allSpese.filter(s => {
             const d = new Date(s.data);
             return d >= start && d <= end;
         });
 
-        // Apply extra filters (category, method, amount, search)
-        const extraFilters = {
-            ...this.filters
-        };
-        // For non-custom, don't apply date filters (period controls dates)
-        if (this.statsPeriod !== 'custom') {
-            const savedDateFrom = extraFilters.dateFrom;
-            const savedDateTo = extraFilters.dateTo;
-            extraFilters.dateFrom = '';
-            extraFilters.dateTo = '';
-            // Temporarily clear date filters for applyFilters
-            const origFrom = this.filters.dateFrom;
-            const origTo = this.filters.dateTo;
-            this.filters.dateFrom = '';
-            this.filters.dateTo = '';
-            filtered = this.applyFilters(filtered);
-            this.filters.dateFrom = origFrom;
-            this.filters.dateTo = origTo;
-        } else {
-            // Custom: dates already applied via getPeriodDates, apply other filters
-            const origFrom = this.filters.dateFrom;
-            const origTo = this.filters.dateTo;
-            this.filters.dateFrom = '';
-            this.filters.dateTo = '';
-            filtered = this.applyFilters(filtered);
-            this.filters.dateFrom = origFrom;
-            this.filters.dateTo = origTo;
-        }
+        filtered = this.applyNonDateFilters(filtered);
 
-        const total = filtered.reduce((s, x) => s + x.importo, 0);
-        const days = Math.max(1, Math.ceil((Math.min(end, new Date()) - start) / 86400000));
+        const total = filtered.reduce((sum, x) => sum + x.importo, 0);
+        const days = this.getRangeDays(start, end);
         const avg = total / days;
 
-        // By category
         const byCat = {};
-        filtered.forEach(s => { byCat[s.categoria] = (byCat[s.categoria] || 0) + s.importo; });
+        filtered.forEach(s => {
+            byCat[s.categoria] = (byCat[s.categoria] || 0) + s.importo;
+        });
+
         const catSorted = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
         const maxCat = catSorted.length > 0 ? catSorted[0][1] : 1;
-
-        // Top 5
         const topSpese = [...filtered].sort((a, b) => b.importo - a.importo).slice(0, 5);
 
         const canGoNext = this.statsOffset < 0;
         const isCustom = this.statsPeriod === 'custom';
-        const hasNonDateFilters = this.filters.query || this.filters.categories.size > 0 ||
-            this.filters.methods.size > 0 || this.filters.amountMin > 0 || this.filters.amountMax < Infinity;
+        const hasNonDateFilters =
+            this.filters.query ||
+            this.filters.categories.size > 0 ||
+            this.filters.methods.size > 0 ||
+            this.filters.amountMin > 0 ||
+            this.filters.amountMax < Infinity;
+
+        const barChartTitle = this.getBarChartTitle(start, end);
 
         container.innerHTML = `
             <div class="stats-period-selector">
@@ -752,7 +970,7 @@ const App = {
                     <div class="chart-wrap chart-wrap-doughnut"><canvas id="chart-doughnut"></canvas></div>
                 </div>
                 <div class="chart-container">
-                    <div class="chart-title">📊 ${this.statsPeriod === 'year' ? 'Andamento mensile' : 'Andamento giornaliero'}</div>
+                    <div class="chart-title">📊 ${barChartTitle}</div>
                     <div class="chart-wrap"><canvas id="chart-bar"></canvas></div>
                 </div>
             ` : '<div class="stats-empty">Nessuna spesa in questo periodo</div>'}
@@ -765,17 +983,21 @@ const App = {
                         const pct = total > 0 ? ((amount / total) * 100).toFixed(0) : 0;
                         const barW = ((amount / maxCat) * 100).toFixed(1);
                         const color = CHART_COLORS[idx % CHART_COLORS.length];
-                        return `<div class="cat-bar-item">
-                            <div class="cat-bar-header">
-                                <span class="cat-bar-name">${cat.emoji} ${cat.nome}</span>
-                                <span class="cat-bar-amount">€${amount.toFixed(2)} (${pct}%)</span>
+
+                        return `
+                            <div class="cat-bar-item">
+                                <div class="cat-bar-header">
+                                    <span class="cat-bar-name">${cat.emoji} ${cat.nome}</span>
+                                    <span class="cat-bar-amount">€${amount.toFixed(2)} (${pct}%)</span>
+                                </div>
+                                <div class="cat-bar-track">
+                                    <div class="cat-bar-fill" style="width:${barW}%;background:${color}"></div>
+                                </div>
                             </div>
-                            <div class="cat-bar-track">
-                                <div class="cat-bar-fill" style="width:${barW}%;background:${color}"></div>
-                            </div>
-                        </div>`;
+                        `;
                     }).join('')}
-                </div>` : ''}
+                </div>
+            ` : ''}
 
             ${topSpese.length > 0 ? `
                 <div class="stats-section">
@@ -783,28 +1005,32 @@ const App = {
                     ${topSpese.map(s => {
                         const cat = this.getCat(s.categoria);
                         const d = new Date(s.data);
-                        return `<div class="expense-card" style="cursor:default">
-                            <div class="expense-emoji">${cat.emoji}</div>
-                            <div class="expense-info">
-                                <div class="expense-desc">${this.esc(s.descrizione)}</div>
-                                <div class="expense-meta">
-                                    <span>${d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}</span>
+
+                        return `
+                            <div class="expense-card" style="cursor:default">
+                                <div class="expense-emoji">${cat.emoji}</div>
+                                <div class="expense-info">
+                                    <div class="expense-desc">${this.esc(s.descrizione)}</div>
+                                    <div class="expense-meta">
+                                        <span>${d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}</span>
+                                    </div>
                                 </div>
+                                <div class="expense-amount">€${s.importo.toFixed(2)}</div>
                             </div>
-                            <div class="expense-amount">€${s.importo.toFixed(2)}</div>
-                        </div>`;
+                        `;
                     }).join('')}
-                </div>` : ''}
+                </div>
+            ` : ''}
         `;
 
-        // --- Listeners ---
         container.querySelectorAll('.period-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const newPeriod = btn.dataset.period;
-                if (newPeriod === 'custom' && !this.filters.dateFrom && !this.filters.dateTo) {
-                    // Auto-open filter panel when custom selected without dates
-                    if (!this.filterOpen) this.openFilterPanel();
+
+                if (newPeriod === 'custom' && !this.filters.dateFrom && !this.filters.dateTo && !this.filterOpen) {
+                    this.openFilterPanel();
                 }
+
                 this.statsPeriod = newPeriod;
                 this.statsOffset = 0;
                 this.renderStats();
@@ -813,15 +1039,24 @@ const App = {
 
         const prevBtn = document.getElementById('period-prev');
         const nextBtn = document.getElementById('period-next');
+
         if (!isCustom) {
-            prevBtn.addEventListener('click', () => { this.statsOffset--; this.renderStats(); });
+            prevBtn.addEventListener('click', () => {
+                this.statsOffset--;
+                this.renderStats();
+            });
+
             if (canGoNext) {
-                nextBtn.addEventListener('click', () => { this.statsOffset++; this.renderStats(); });
+                nextBtn.addEventListener('click', () => {
+                    this.statsOffset++;
+                    this.renderStats();
+                });
             }
         }
 
-        // Charts
-        if (filtered.length > 0) this.renderCharts(filtered, start, end);
+        if (filtered.length > 0) {
+            this.renderCharts(filtered, start, end);
+        }
     },
 
     /* =====================
@@ -829,13 +1064,16 @@ const App = {
        ===================== */
     renderCharts(filtered, start, end) {
         this.destroyCharts();
+
         if (typeof Chart === 'undefined') return;
 
         const tc = this.getChartThemeColors();
 
-        // Doughnut
         const byCat = {};
-        filtered.forEach(s => { byCat[s.categoria] = (byCat[s.categoria] || 0) + s.importo; });
+        filtered.forEach(s => {
+            byCat[s.categoria] = (byCat[s.categoria] || 0) + s.importo;
+        });
+
         const catSorted = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
 
         const ctxD = document.getElementById('chart-doughnut');
@@ -843,19 +1081,32 @@ const App = {
             this.chartDoughnut = new Chart(ctxD, {
                 type: 'doughnut',
                 data: {
-                    labels: catSorted.map(([id]) => { const c = this.getCat(id); return `${c.emoji} ${c.nome}`; }),
+                    labels: catSorted.map(([id]) => {
+                        const c = this.getCat(id);
+                        return `${c.emoji} ${c.nome}`;
+                    }),
                     datasets: [{
                         data: catSorted.map(([, v]) => Math.round(v * 100) / 100),
                         backgroundColor: catSorted.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]),
-                        borderColor: tc.cardBg, borderWidth: 3, hoverOffset: 6
+                        borderColor: tc.cardBg,
+                        borderWidth: 3,
+                        hoverOffset: 6
                     }]
                 },
                 options: {
-                    responsive: true, maintainAspectRatio: true, cutout: '55%',
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    cutout: '55%',
                     plugins: {
                         legend: {
                             position: 'bottom',
-                            labels: { color: tc.text, padding: 12, usePointStyle: true, pointStyleWidth: 10, font: { size: 11 } }
+                            labels: {
+                                color: tc.text,
+                                padding: 12,
+                                usePointStyle: true,
+                                pointStyleWidth: 10,
+                                font: { size: 11 }
+                            }
                         },
                         tooltip: {
                             callbacks: {
@@ -870,76 +1121,61 @@ const App = {
             });
         }
 
-        // Bar
-        let barLabels, barData;
-        if (this.statsPeriod === 'year') {
-            const months = Array(12).fill(0);
-            filtered.forEach(s => { months[new Date(s.data).getMonth()] += s.importo; });
-            barLabels = Array.from({ length: 12 }, (_, i) =>
-                new Date(2025, i, 1).toLocaleDateString('it-IT', { month: 'short' }));
-            barData = months.map(v => Math.round(v * 100) / 100);
-        } else {
-            const dayMap = new Map();
-            const cur = new Date(start);
-            const actualEnd = new Date(Math.min(end, new Date()));
-            while (cur <= actualEnd) {
-                dayMap.set(this.dateKey(cur), 0);
-                cur.setDate(cur.getDate() + 1);
-            }
-            filtered.forEach(s => {
-                const key = this.dateKey(new Date(s.data));
-                if (dayMap.has(key)) dayMap.set(key, dayMap.get(key) + s.importo);
-            });
-            barLabels = [];
-            barData = [];
-            for (const [key, val] of dayMap) {
-                const d = new Date(key + 'T12:00:00');
-                const numDays = dayMap.size;
-                if (numDays <= 14) {
-                    barLabels.push(d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric' }));
-                } else if (numDays <= 62) {
-                    barLabels.push(d.getDate().toString());
-                } else {
-                    barLabels.push(d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' }));
-                }
-                barData.push(Math.round(val * 100) / 100);
-            }
-        }
+        const aggregation = this.getBarAggregation(start, end);
+        let bar;
+
+        if (aggregation === 'month') bar = this.buildMonthlyBarData(filtered, start, end);
+        else if (aggregation === 'week') bar = this.buildWeeklyBarData(filtered, start, end);
+        else bar = this.buildDailyBarData(filtered, start, end);
 
         const ctxB = document.getElementById('chart-bar');
         if (ctxB) {
-            const numBars = barLabels.length;
+            const numBars = bar.labels.length;
+
             this.chartBar = new Chart(ctxB, {
                 type: 'bar',
                 data: {
-                    labels: barLabels,
+                    labels: bar.labels,
                     datasets: [{
                         label: 'Spese €',
-                        data: barData,
-                        backgroundColor: barData.map(v => v > 0 ? tc.accent + 'cc' : tc.accent + '33'),
-                        borderColor: tc.accent, borderWidth: 1,
-                        borderRadius: 4, borderSkipped: false
+                        data: bar.data,
+                        backgroundColor: bar.data.map(v => v > 0 ? tc.accent + 'cc' : tc.accent + '33'),
+                        borderColor: tc.accent,
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        borderSkipped: false
                     }]
                 },
                 options: {
-                    responsive: true, maintainAspectRatio: true,
+                    responsive: true,
+                    maintainAspectRatio: true,
                     aspectRatio: numBars <= 7 ? 1.8 : 2,
                     plugins: {
                         legend: { display: false },
-                        tooltip: { callbacks: { label: ctx => ` €${ctx.parsed.y.toFixed(2)}` } }
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ` €${ctx.parsed.y.toFixed(2)}`
+                            }
+                        }
                     },
                     scales: {
                         x: {
                             ticks: {
-                                color: tc.textMuted, font: { size: 9 },
+                                color: tc.textMuted,
+                                font: { size: 9 },
                                 maxRotation: numBars > 14 ? 45 : 0,
-                                autoSkip: true, maxTicksLimit: numBars > 60 ? 15 : undefined
+                                autoSkip: true,
+                                maxTicksLimit: numBars > 60 ? 15 : undefined
                             },
                             grid: { display: false }
                         },
                         y: {
                             beginAtZero: true,
-                            ticks: { color: tc.textMuted, font: { size: 10 }, callback: v => '€' + v },
+                            ticks: {
+                                color: tc.textMuted,
+                                font: { size: 10 },
+                                callback: v => '€' + v
+                            },
                             grid: { color: tc.grid }
                         }
                     }
@@ -948,8 +1184,137 @@ const App = {
         }
     },
 
+    buildDailyBarData(filtered, start, end) {
+        const dayMap = new Map();
+        const cur = new Date(start);
+        const actualEnd = this.getActualPeriodEnd(end);
+
+        cur.setHours(0, 0, 0, 0);
+
+        while (cur <= actualEnd) {
+            dayMap.set(this.dateKey(cur), 0);
+            cur.setDate(cur.getDate() + 1);
+        }
+
+        filtered.forEach(s => {
+            const key = this.dateKey(new Date(s.data));
+            if (dayMap.has(key)) dayMap.set(key, dayMap.get(key) + s.importo);
+        });
+
+        const labels = [];
+        const data = [];
+        const numDays = dayMap.size;
+
+        for (const [key, val] of dayMap) {
+            const d = new Date(key + 'T12:00:00');
+
+            if (numDays <= 14) {
+                labels.push(d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric' }));
+            } else if (numDays <= 62) {
+                labels.push(d.getDate().toString());
+            } else {
+                labels.push(d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' }));
+            }
+
+            data.push(Math.round(val * 100) / 100);
+        }
+
+        return { labels, data };
+    },
+
+    startOfWeek(date) {
+        const d = new Date(date);
+        const day = (d.getDay() + 6) % 7;
+        d.setDate(d.getDate() - day);
+        d.setHours(0, 0, 0, 0);
+        return d;
+    },
+
+    buildWeeklyBarData(filtered, start, end) {
+        const weekMap = new Map();
+        const actualEnd = this.getActualPeriodEnd(end);
+
+        let cur = this.startOfWeek(start);
+        const last = this.startOfWeek(actualEnd);
+
+        while (cur <= last) {
+            weekMap.set(this.dateKey(cur), 0);
+            cur.setDate(cur.getDate() + 7);
+        }
+
+        filtered.forEach(s => {
+            const weekStart = this.startOfWeek(new Date(s.data));
+            const key = this.dateKey(weekStart);
+            if (weekMap.has(key)) weekMap.set(key, weekMap.get(key) + s.importo);
+        });
+
+        const labels = [];
+        const data = [];
+        const multiYear = start.getFullYear() !== actualEnd.getFullYear();
+
+        for (const [key, val] of weekMap) {
+            const ws = new Date(key + 'T12:00:00');
+            const we = new Date(ws);
+            we.setDate(we.getDate() + 6);
+            if (we > actualEnd) we.setTime(actualEnd.getTime());
+
+            const labelStart = ws.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
+            const labelEnd = we.toLocaleDateString(
+                'it-IT',
+                multiYear
+                    ? { day: 'numeric', month: 'short', year: '2-digit' }
+                    : { day: 'numeric', month: 'short' }
+            );
+
+            labels.push(`${labelStart}–${labelEnd}`);
+            data.push(Math.round(val * 100) / 100);
+        }
+
+        return { labels, data };
+    },
+
+    buildMonthlyBarData(filtered, start, end) {
+        const monthMap = new Map();
+        const actualEnd = this.getActualPeriodEnd(end);
+
+        let cur = new Date(start.getFullYear(), start.getMonth(), 1);
+        const last = new Date(actualEnd.getFullYear(), actualEnd.getMonth(), 1);
+
+        while (cur <= last) {
+            const key = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`;
+            monthMap.set(key, 0);
+            cur.setMonth(cur.getMonth() + 1);
+        }
+
+        filtered.forEach(s => {
+            const d = new Date(s.data);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            if (monthMap.has(key)) monthMap.set(key, monthMap.get(key) + s.importo);
+        });
+
+        const labels = [];
+        const data = [];
+        const multiYear = start.getFullYear() !== actualEnd.getFullYear();
+
+        for (const [key, val] of monthMap) {
+            const [y, m] = key.split('-');
+            const d = new Date(Number(y), Number(m) - 1, 1);
+
+            labels.push(
+                d.toLocaleDateString(
+                    'it-IT',
+                    multiYear ? { month: 'short', year: '2-digit' } : { month: 'short' }
+                )
+            );
+            data.push(Math.round(val * 100) / 100);
+        }
+
+        return { labels, data };
+    },
+
     getChartThemeColors() {
         const s = getComputedStyle(document.documentElement);
+
         return {
             text: s.getPropertyValue('--text-primary').trim(),
             textMuted: s.getPropertyValue('--text-tertiary').trim(),
@@ -960,8 +1325,15 @@ const App = {
     },
 
     destroyCharts() {
-        if (this.chartDoughnut) { this.chartDoughnut.destroy(); this.chartDoughnut = null; }
-        if (this.chartBar) { this.chartBar.destroy(); this.chartBar = null; }
+        if (this.chartDoughnut) {
+            this.chartDoughnut.destroy();
+            this.chartDoughnut = null;
+        }
+
+        if (this.chartBar) {
+            this.chartBar.destroy();
+            this.chartBar = null;
+        }
     },
 
     /* =====================
@@ -988,6 +1360,7 @@ const App = {
                     <button class="theme-btn ${settings.tema === 'auto' ? 'active' : ''}" data-theme="auto">🌓 Auto</button>
                 </div>
             </div>
+
             <div class="settings-section">
                 <h3>📤 Esporta dati</h3>
                 <p class="settings-hint">JSON per backup completo, CSV per Excel/Sheets.</p>
@@ -996,12 +1369,14 @@ const App = {
                     <button id="btn-export-csv" class="btn btn-secondary">📄 CSV</button>
                 </div>
             </div>
+
             <div class="settings-section">
                 <h3>📥 Importa dati</h3>
                 <p class="settings-hint">JSON sostituisce i dati, CSV li aggiunge.</p>
                 <input type="file" id="import-file" accept=".json,.csv" hidden>
                 <button id="btn-import" class="btn btn-secondary btn-block">📁 Scegli file...</button>
             </div>
+
             <div class="settings-section">
                 <h3>📊 Informazioni</h3>
                 <div class="info-grid">
@@ -1010,15 +1385,19 @@ const App = {
                     <div class="info-item"><span class="info-label">Spazio usato</span><span class="info-value">${sizeKB.toFixed(1)} KB</span></div>
                 </div>
             </div>
+
             <div class="settings-section danger-zone">
                 <h3>⚠️ Zona pericolosa</h3>
                 <p class="settings-hint">Azione irreversibile. Esporta prima!</p>
                 <button id="btn-clear-all" class="btn btn-danger btn-block">🗑️ Cancella tutti i dati</button>
             </div>
-            <div class="about-section"><p>💰 SpesaTracker v2.1</p><p>Dati locali · Nessun server · Nessun costo</p></div>
+
+            <div class="about-section">
+                <p>💰 SpesaTracker v2.1</p>
+                <p>Dati locali · Nessun server · Nessun costo</p>
+            </div>
         `;
 
-        // Listeners
         container.querySelectorAll('.theme-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 this.applyTheme(btn.dataset.theme);
@@ -1038,32 +1417,55 @@ const App = {
         });
 
         const fileInput = container.querySelector('#import-file');
+
         container.querySelector('#btn-import').addEventListener('click', () => fileInput.click());
+
         fileInput.addEventListener('change', e => {
             const file = e.target.files[0];
             if (!file) return;
+
             const reader = new FileReader();
+
             reader.onload = ev => {
                 const content = ev.target.result;
+
                 if (file.name.endsWith('.json')) {
                     this.showConfirm('Importare backup JSON? I dati attuali verranno SOSTITUITI.', () => {
                         const r = Storage.importJSON(content);
-                        if (r.success) { this.showToast(`Importate ${r.count} spese ✓`, 'success'); this.renderTimeline(); this.renderSettings(); }
-                        else this.showToast('Errore: ' + r.error, 'error');
+
+                        if (r.success) {
+                            this.showToast(`Importate ${r.count} spese ✓`, 'success');
+                            this.renderTimeline();
+                            this.renderSettings();
+                        } else {
+                            this.showToast('Errore: ' + r.error, 'error');
+                        }
                     });
                 } else if (file.name.endsWith('.csv')) {
                     const r = Storage.importCSV(content);
-                    if (r.success) { this.showToast(`Importate ${r.count} spese ✓`, 'success'); this.renderTimeline(); this.renderSettings(); }
-                    else this.showToast('Errore: ' + r.error, 'error');
-                } else { this.showToast('Usa .json o .csv', 'error'); }
+
+                    if (r.success) {
+                        this.showToast(`Importate ${r.count} spese ✓`, 'success');
+                        this.renderTimeline();
+                        this.renderSettings();
+                    } else {
+                        this.showToast('Errore: ' + r.error, 'error');
+                    }
+                } else {
+                    this.showToast('Usa .json o .csv', 'error');
+                }
+
                 fileInput.value = '';
             };
+
             reader.readAsText(file);
         });
 
         container.querySelector('#btn-clear-all').addEventListener('click', () => {
             this.showConfirm('Eliminare TUTTI i dati?', () => {
-                Storage.clearAll(); this.renderTimeline(); this.renderSettings();
+                Storage.clearAll();
+                this.renderTimeline();
+                this.renderSettings();
                 this.showToast('Dati eliminati', 'info');
             });
         });
@@ -1076,58 +1478,105 @@ const App = {
         const toast = document.getElementById('toast');
         toast.textContent = message;
         toast.className = 'toast ' + type;
+
         if (this.toastTimer) clearTimeout(this.toastTimer);
-        this.toastTimer = setTimeout(() => toast.classList.add('hidden'), 2800);
+
+        this.toastTimer = setTimeout(() => {
+            toast.classList.add('hidden');
+        }, 2800);
     },
 
     /* =====================
        HELPERS
        ===================== */
-    getCat(id) { return CATEGORIES.find(c => c.id === id) || CATEGORIES[CATEGORIES.length - 1]; },
-    getMet(id) { return PAYMENT_METHODS.find(m => m.id === id) || PAYMENT_METHODS[0]; },
+    getCat(id) {
+        return CATEGORIES.find(c => c.id === id) || CATEGORIES[CATEGORIES.length - 1];
+    },
+
+    getMet(id) {
+        return PAYMENT_METHODS.find(m => m.id === id) || PAYMENT_METHODS[0];
+    },
 
     groupByDay(spese) {
         const groups = {};
+
         spese.forEach(s => {
             const key = this.dateKey(new Date(s.data));
             if (!groups[key]) groups[key] = [];
             groups[key].push(s);
         });
-        return Object.keys(groups).sort().reverse()
-            .map(date => ({ date, spese: groups[date].sort((a, b) => new Date(b.data) - new Date(a.data)) }));
+
+        return Object.keys(groups)
+            .sort()
+            .reverse()
+            .map(date => ({
+                date,
+                spese: groups[date].sort((a, b) => new Date(b.data) - new Date(a.data))
+            }));
     },
 
     dateKey(d) {
-        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        return (
+            d.getFullYear() +
+            '-' +
+            String(d.getMonth() + 1).padStart(2, '0') +
+            '-' +
+            String(d.getDate()).padStart(2, '0')
+        );
     },
 
     formatDayLabel(dateKey) {
         const oggi = this.dateKey(new Date());
         const ieri = this.dateKey(new Date(Date.now() - 86400000));
+
         if (dateKey === oggi) return '📌 Oggi';
         if (dateKey === ieri) return 'Ieri';
-        return new Date(dateKey + 'T12:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+
+        return new Date(dateKey + 'T12:00:00').toLocaleDateString('it-IT', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long'
+        });
     },
 
     toInputDate(d) {
-        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        return (
+            d.getFullYear() +
+            '-' +
+            String(d.getMonth() + 1).padStart(2, '0') +
+            '-' +
+            String(d.getDate()).padStart(2, '0')
+        );
     },
+
     toInputTime(d) {
         return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
     },
-    dateStamp() { return this.dateKey(new Date()); },
+
+    dateStamp() {
+        return this.dateKey(new Date());
+    },
 
     download(content, filename, mime) {
         const blob = new Blob([content], { type: mime });
         const url = URL.createObjectURL(blob);
+
         const a = document.createElement('a');
-        a.href = url; a.download = filename;
-        document.body.appendChild(a); a.click();
+        a.href = url;
+        a.download = filename;
+
+        document.body.appendChild(a);
+        a.click();
         document.body.removeChild(a);
+
         URL.revokeObjectURL(url);
     },
 
-    esc(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+    esc(str) {
+        const d = document.createElement('div');
+        d.textContent = str;
+        return d.innerHTML;
+    }
 };
 
 /* --- Boot --- */
