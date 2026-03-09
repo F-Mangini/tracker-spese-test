@@ -68,10 +68,9 @@ const App = {
             const next = cur === 'dark' ? 'light' : 'dark';
 
             this.applyTheme(next);
-            Storage.updateSettings({ tema: next });
+            // Session-only: don't persist to settings
 
             if (this.currentPage === 'stats') this.renderStats();
-            if (this.currentPage === 'settings') this.renderSettings();
         });
     },
 
@@ -198,6 +197,12 @@ const App = {
             const panel = document.getElementById('filter-panel');
             const h = panel.offsetHeight;
             document.getElementById('app-main').style.marginTop = `calc(var(--header-h) + ${h}px)`;
+
+            // Auto-scroll to bottom when opening
+            if (this.advancedFiltersOpen) {
+                const scrollContainer = panel.querySelector('.filter-panel-scroll');
+                scrollContainer.scrollTo({ top: scrollContainer.scrollHeight, behavior: 'smooth' });
+            }
         });
     },
 
@@ -398,7 +403,12 @@ const App = {
             badge.textContent = n;
             badge.classList.remove('hidden');
             resetBtn.classList.remove('hidden');
-            info.textContent = n + ' filtr' + (n === 1 ? 'o attivo' : 'i attivi');
+
+            const allSpese = Storage.getSpese();
+            const filtered = this.applyFilters(allSpese);
+            const total = filtered.reduce((sum, x) => sum + x.importo, 0);
+
+            info.textContent = `${n} filtr${n === 1 ? 'o attivo' : 'i attivi'} · ${filtered.length} risultat${filtered.length === 1 ? 'o' : 'i'} · €${total.toFixed(2)}`;
         } else {
             badge.classList.add('hidden');
             resetBtn.classList.add('hidden');
@@ -590,21 +600,42 @@ const App = {
 
         const nomeMese = oggi.toLocaleDateString('it-IT', { month: 'long' });
 
+        const isFiltered = this.hasActiveFilters();
+
+        let summaryLabel1, summaryValue1, summaryLabel2, summaryValue2, summaryLabel3, summaryValue3;
+
+        if (isFiltered) {
+            const filteredTotal = filtered.reduce((sum, x) => sum + x.importo, 0);
+            summaryLabel1 = 'Filtro Attivo';
+            summaryValue1 = '🔍';
+            summaryLabel2 = 'Totale';
+            summaryValue2 = `€${filteredTotal.toFixed(2)}`;
+            summaryLabel3 = 'N. spese';
+            summaryValue3 = filtered.length;
+        } else {
+            summaryLabel1 = 'Oggi';
+            summaryValue1 = `€${totOggi.toFixed(2)}`;
+            summaryLabel2 = nomeMese;
+            summaryValue2 = `€${totMese.toFixed(2)}`;
+            summaryLabel3 = 'N. spese';
+            summaryValue3 = allSpese.length;
+        }
+
         summary.innerHTML = `
             <div class="summary-row">
                 <div class="summary-item">
-                    <div class="summary-label">Oggi</div>
-                    <div class="summary-value">€${totOggi.toFixed(2)}</div>
+                    <div class="summary-label">${summaryLabel1}</div>
+                    <div class="summary-value">${summaryValue1}</div>
                 </div>
                 <div class="summary-divider"></div>
                 <div class="summary-item">
-                    <div class="summary-label">${nomeMese}</div>
-                    <div class="summary-value">€${totMese.toFixed(2)}</div>
+                    <div class="summary-label">${summaryLabel2}</div>
+                    <div class="summary-value">${summaryValue2}</div>
                 </div>
                 <div class="summary-divider"></div>
                 <div class="summary-item">
-                    <div class="summary-label">N. spese</div>
-                    <div class="summary-value">${allSpese.length}</div>
+                    <div class="summary-label">${summaryLabel3}</div>
+                    <div class="summary-value">${summaryValue3}</div>
                 </div>
             </div>
         `;

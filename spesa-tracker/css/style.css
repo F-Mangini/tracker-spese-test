@@ -453,10 +453,12 @@ body:has(.no-input-bar) .filter-panel-scroll {
     border-top: 1px solid var(--border);
 }
 
-.filter-footer-right {
+.filter-footer-left {
     display: flex;
     align-items: center;
     gap: 6px;
+    flex: 1;
+    min-width: 0;
 }
 
 .filter-info {
@@ -498,12 +500,8 @@ body:has(.no-input-bar) .filter-panel-scroll {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.2s;
     color: var(--text-secondary);
-}
-
-.btn-advanced-toggle:hover {
-    background: var(--border);
+    flex-shrink: 0;
 }
 
 .btn-advanced-toggle .chevron-icon {
