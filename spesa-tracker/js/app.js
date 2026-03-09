@@ -1,15 +1,15 @@
 /* ============================================
-   CHART COLORS PALETTE
+   CHART COLORS
    ============================================ */
 const CHART_COLORS = [
-    '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6',
-    '#ec4899', '#06b6d4', '#f97316', '#84cc16', '#6366f1',
-    '#14b8a6', '#e11d48', '#0ea5e9', '#a855f7', '#eab308',
-    '#22c55e', '#d946ef', '#64748b', '#fb923c', '#2dd4bf'
+    '#10b981','#3b82f6','#f59e0b','#ef4444','#8b5cf6',
+    '#ec4899','#06b6d4','#f97316','#84cc16','#6366f1',
+    '#14b8a6','#e11d48','#0ea5e9','#a855f7','#eab308',
+    '#22c55e','#d946ef','#64748b','#fb923c','#2dd4bf'
 ];
 
 /* ============================================
-   APP — Logica principale
+   APP
    ============================================ */
 const App = {
 
@@ -18,71 +18,69 @@ const App = {
     toastTimer: null,
     newCardId: null,
 
-    /* --- Stato Statistiche --- */
+    /* --- Stats --- */
     statsPeriod: 'month',
     statsOffset: 0,
     chartDoughnut: null,
     chartBar: null,
 
-    /* --- Stato Ricerca/Filtri --- */
-    searchOpen: false,
-    searchQuery: '',
-    filterCat: '',
-    filterMet: '',
+    /* --- Filters (shared across pages) --- */
+    filterOpen: false,
+    filters: {
+        query: '',
+        categories: new Set(),
+        methods: new Set(),
+        amountMin: 0,
+        amountMax: Infinity,
+        dateFrom: '',
+        dateTo: ''
+    },
+    sliderMax: 100,
 
     /* =====================
-       INIZIALIZZAZIONE
+       INIT
        ===================== */
     init() {
         if (!Storage.isAvailable()) {
-            document.body.innerHTML = '<div style="padding:40px;text-align:center"><h2>⚠️ Storage non disponibile</h2><p>Il tuo browser non supporta localStorage.</p></div>';
+            document.body.innerHTML = '<div style="padding:40px;text-align:center"><h2>⚠️ Storage non disponibile</h2></div>';
             return;
         }
-
         this.initTheme();
         this.initNavigation();
         this.initInput();
         this.initModal();
-        this.initSearch();
+        this.initFilters();
         this.populateDropdowns();
         this.renderTimeline();
     },
 
     /* =====================
-       TEMA
+       THEME
        ===================== */
     initTheme() {
         const saved = Storage.getSettings().tema || 'auto';
         this.applyTheme(saved);
-
         document.getElementById('theme-toggle').addEventListener('click', () => {
-            const current = document.documentElement.getAttribute('data-theme');
-            const next = current === 'dark' ? 'light' : 'dark';
+            const cur = document.documentElement.getAttribute('data-theme');
+            const next = cur === 'dark' ? 'light' : 'dark';
             this.applyTheme(next);
             Storage.updateSettings({ tema: next });
-            this.refreshChartsTheme();
+            if (this.currentPage === 'stats') this.renderStats();
             if (this.currentPage === 'settings') this.renderSettings();
-        });
-
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-            if (Storage.getSettings().tema === 'auto') {
-                this.applyTheme('auto');
-                this.refreshChartsTheme();
-            }
         });
     },
 
     applyTheme(theme) {
         if (theme === 'auto') {
-            const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme',
+                window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         } else {
             document.documentElement.setAttribute('data-theme', theme);
         }
     },
 
     /* =====================
-       NAVIGAZIONE
+       NAVIGATION
        ===================== */
     initNavigation() {
         document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -92,14 +90,11 @@ const App = {
 
     navigateTo(page) {
         this.currentPage = page;
-
         document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
         document.getElementById('page-' + page).classList.remove('hidden');
-
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.querySelector(`.nav-btn[data-page="${page}"]`).classList.add('active');
 
-        // Input bar solo su timeline
         const inputBar = document.getElementById('input-bar');
         const main = document.getElementById('app-main');
         if (page === 'timeline') {
@@ -110,125 +105,269 @@ const App = {
             main.classList.add('no-input-bar');
         }
 
-        // Mostra/nascondi ricerca solo su timeline
-        const searchToggle = document.getElementById('btn-search-toggle');
-        if (page === 'timeline') {
-            searchToggle.style.display = '';
-        } else {
-            searchToggle.style.display = 'none';
-            this.closeSearch();
-        }
+        // Filter toggle visible on timeline & stats
+        document.getElementById('btn-filter-toggle').style.display =
+            (page === 'settings') ? 'none' : '';
 
+        if (page === 'settings') this.closeFilterPanel();
         if (page === 'stats') this.renderStats();
         if (page === 'settings') this.renderSettings();
     },
 
     /* =====================
-       RICERCA & FILTRI
+       FILTER PANEL
        ===================== */
-    initSearch() {
-        const toggleBtn = document.getElementById('btn-search-toggle');
+    initFilters() {
+        const toggleBtn = document.getElementById('btn-filter-toggle');
         const searchInput = document.getElementById('search-input');
         const clearBtn = document.getElementById('btn-search-clear');
-        const filterCat = document.getElementById('filter-category');
-        const filterMet = document.getElementById('filter-method');
+        const resetBtn = document.getElementById('btn-filter-reset');
 
-        // Popola dropdown filtri
-        filterCat.innerHTML = '<option value="">Tutte le categorie</option>' +
-            CATEGORIES.map(c => `<option value="${c.id}">${c.emoji} ${c.nome}</option>`).join('');
-
-        filterMet.innerHTML = '<option value="">Tutti i pagamenti</option>' +
-            PAYMENT_METHODS.map(m => `<option value="${m.id}">${m.emoji} ${m.nome}</option>`).join('');
-
-        // Toggle ricerca
+        // Toggle
         toggleBtn.addEventListener('click', () => {
-            if (this.searchOpen) {
-                this.closeSearch();
-            } else {
-                this.openSearch();
-            }
+            if (this.filterOpen) this.closeFilterPanel();
+            else this.openFilterPanel();
         });
 
-        // Input ricerca
+        // Search
         searchInput.addEventListener('input', () => {
-            this.searchQuery = searchInput.value.trim();
-            clearBtn.classList.toggle('hidden', !this.searchQuery);
-            this.renderTimeline();
+            this.filters.query = searchInput.value.trim();
+            clearBtn.classList.toggle('hidden', !this.filters.query);
+            this.onFilterChange();
         });
-
-        // Clear
         clearBtn.addEventListener('click', () => {
             searchInput.value = '';
-            this.searchQuery = '';
+            this.filters.query = '';
             clearBtn.classList.add('hidden');
             searchInput.focus();
-            this.renderTimeline();
+            this.onFilterChange();
         });
 
-        // Filtri
-        filterCat.addEventListener('change', () => {
-            this.filterCat = filterCat.value;
-            this.renderTimeline();
+        // Category chips
+        this.buildChips('filter-cats', CATEGORIES, this.filters.categories);
+
+        // Payment chips
+        this.buildChips('filter-methods', PAYMENT_METHODS, this.filters.methods);
+
+        // Amount slider
+        this.initSlider();
+
+        // Date filters
+        const dateFrom = document.getElementById('filter-date-from');
+        const dateTo = document.getElementById('filter-date-to');
+        dateFrom.addEventListener('change', () => {
+            this.filters.dateFrom = dateFrom.value;
+            this.onFilterChange();
+        });
+        dateTo.addEventListener('change', () => {
+            this.filters.dateTo = dateTo.value;
+            this.onFilterChange();
         });
 
-        filterMet.addEventListener('change', () => {
-            this.filterMet = filterMet.value;
-            this.renderTimeline();
+        // Reset
+        resetBtn.addEventListener('click', () => this.resetFilters());
+    },
+
+    buildChips(containerId, items, targetSet) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = items.map(item =>
+            `<button class="filter-chip" data-id="${item.id}">${item.emoji} ${item.nome}</button>`
+        ).join('');
+
+        container.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                const id = chip.dataset.id;
+                if (targetSet.has(id)) {
+                    targetSet.delete(id);
+                    chip.classList.remove('active');
+                } else {
+                    targetSet.add(id);
+                    chip.classList.add('active');
+                }
+                this.onFilterChange();
+            });
         });
     },
 
-    openSearch() {
-        this.searchOpen = true;
-        document.getElementById('search-bar').classList.remove('hidden');
-        document.getElementById('btn-search-toggle').classList.add('active');
-        // Aggiorna margine del main
-        const searchBarH = document.getElementById('search-bar').offsetHeight;
-        document.getElementById('app-main').style.marginTop = `calc(var(--header-h) + ${searchBarH}px)`;
-        document.getElementById('search-input').focus();
+    /* --- Dual Range Slider --- */
+    initSlider() {
+        this.recalcSliderMax();
+
+        const sMin = document.getElementById('slider-min');
+        const sMax = document.getElementById('slider-max');
+
+        const update = () => {
+            let lo = parseInt(sMin.value);
+            let hi = parseInt(sMax.value);
+            if (lo > hi) { // prevent crossing
+                if (this._lastSliderInput === 'min') { sMin.value = hi; lo = hi; }
+                else { sMax.value = lo; hi = lo; }
+            }
+            this.filters.amountMin = lo;
+            this.filters.amountMax = hi >= this.sliderMax ? Infinity : hi;
+            this.updateSliderUI(lo, hi);
+            this.onFilterChange();
+        };
+
+        sMin.addEventListener('input', () => { this._lastSliderInput = 'min'; update(); });
+        sMax.addEventListener('input', () => { this._lastSliderInput = 'max'; update(); });
     },
 
-    closeSearch() {
-        this.searchOpen = false;
-        document.getElementById('search-bar').classList.add('hidden');
-        document.getElementById('btn-search-toggle').classList.remove('active');
+    recalcSliderMax() {
+        const spese = Storage.getSpese();
+        if (spese.length === 0) { this.sliderMax = 100; }
+        else {
+            const mx = Math.max(...spese.map(s => s.importo));
+            if (mx <= 5) this.sliderMax = 10;
+            else if (mx <= 10) this.sliderMax = 25;
+            else if (mx <= 25) this.sliderMax = 50;
+            else if (mx <= 50) this.sliderMax = 100;
+            else if (mx <= 100) this.sliderMax = 200;
+            else if (mx <= 250) this.sliderMax = 500;
+            else if (mx <= 500) this.sliderMax = 750;
+            else if (mx <= 1000) this.sliderMax = 1500;
+            else this.sliderMax = Math.ceil(mx / 500) * 500 + 500;
+        }
+        const sMin = document.getElementById('slider-min');
+        const sMax = document.getElementById('slider-max');
+        sMin.max = this.sliderMax;
+        sMax.max = this.sliderMax;
+        sMin.value = 0;
+        sMax.value = this.sliderMax;
+        this.filters.amountMin = 0;
+        this.filters.amountMax = Infinity;
+        this.updateSliderUI(0, this.sliderMax);
+    },
+
+    updateSliderUI(lo, hi) {
+        const fill = document.getElementById('ds-fill');
+        const pctL = (lo / this.sliderMax) * 100;
+        const pctR = (hi / this.sliderMax) * 100;
+        fill.style.left = pctL + '%';
+        fill.style.width = (pctR - pctL) + '%';
+        document.getElementById('slider-val-min').textContent = '€' + lo;
+        document.getElementById('slider-val-max').textContent = hi >= this.sliderMax ? '€' + this.sliderMax + '+' : '€' + hi;
+    },
+
+    /* --- Filter panel open/close --- */
+    openFilterPanel() {
+        this.filterOpen = true;
+        this.recalcSliderMax();
+        const panel = document.getElementById('filter-panel');
+        panel.classList.remove('hidden');
+        document.getElementById('btn-filter-toggle').classList.add('active');
+        requestAnimationFrame(() => {
+            const h = panel.offsetHeight;
+            document.getElementById('app-main').style.marginTop = `calc(var(--header-h) + ${h}px)`;
+        });
+    },
+
+    closeFilterPanel() {
+        this.filterOpen = false;
+        document.getElementById('filter-panel').classList.add('hidden');
+        document.getElementById('btn-filter-toggle').classList.remove('active');
         document.getElementById('app-main').style.marginTop = '';
-        // Reset filtri
-        if (this.searchQuery || this.filterCat || this.filterMet) {
-            this.searchQuery = '';
-            this.filterCat = '';
-            this.filterMet = '';
-            document.getElementById('search-input').value = '';
-            document.getElementById('filter-category').value = '';
-            document.getElementById('filter-method').value = '';
-            document.getElementById('btn-search-clear').classList.add('hidden');
-            this.renderTimeline();
+    },
+
+    /* --- Filter state --- */
+    onFilterChange() {
+        this.updateFilterBadge();
+        if (this.currentPage === 'timeline') this.renderTimeline();
+        if (this.currentPage === 'stats') this.renderStats();
+    },
+
+    getActiveFilterCount() {
+        let n = 0;
+        if (this.filters.query) n++;
+        if (this.filters.categories.size > 0) n++;
+        if (this.filters.methods.size > 0) n++;
+        if (this.filters.amountMin > 0 || this.filters.amountMax < Infinity) n++;
+        if (this.filters.dateFrom || this.filters.dateTo) n++;
+        return n;
+    },
+
+    updateFilterBadge() {
+        const n = this.getActiveFilterCount();
+        const badge = document.getElementById('filter-badge');
+        const resetBtn = document.getElementById('btn-filter-reset');
+        const info = document.getElementById('filter-info');
+
+        if (n > 0) {
+            badge.textContent = n;
+            badge.classList.remove('hidden');
+            resetBtn.classList.remove('hidden');
+            info.textContent = n + ' filtr' + (n === 1 ? 'o attivo' : 'i attivi');
+        } else {
+            badge.classList.add('hidden');
+            resetBtn.classList.add('hidden');
+            info.textContent = '';
         }
     },
 
-    hasActiveFilters() {
-        return this.searchQuery || this.filterCat || this.filterMet;
+    resetFilters() {
+        this.filters.query = '';
+        this.filters.categories.clear();
+        this.filters.methods.clear();
+        this.filters.amountMin = 0;
+        this.filters.amountMax = Infinity;
+        this.filters.dateFrom = '';
+        this.filters.dateTo = '';
+
+        document.getElementById('search-input').value = '';
+        document.getElementById('btn-search-clear').classList.add('hidden');
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        document.getElementById('filter-date-from').value = '';
+        document.getElementById('filter-date-to').value = '';
+
+        this.recalcSliderMax();
+        this.onFilterChange();
+        this.showToast('Filtri resettati', 'info');
     },
 
-    getFilteredSpese(allSpese) {
-        let spese = allSpese;
-        if (this.searchQuery) {
-            const q = this.searchQuery.toLowerCase();
-            spese = spese.filter(s =>
+    /* --- Apply filters --- */
+    applyFilters(spese) {
+        let result = spese;
+
+        // Search
+        if (this.filters.query) {
+            const q = this.filters.query.toLowerCase();
+            result = result.filter(s =>
                 s.descrizione.toLowerCase().includes(q) ||
                 (s.nota && s.nota.toLowerCase().includes(q))
             );
         }
-        if (this.filterCat) {
-            spese = spese.filter(s => s.categoria === this.filterCat);
+        // Categories
+        if (this.filters.categories.size > 0) {
+            result = result.filter(s => this.filters.categories.has(s.categoria));
         }
-        if (this.filterMet) {
-            spese = spese.filter(s => s.metodo === this.filterMet);
+        // Methods
+        if (this.filters.methods.size > 0) {
+            result = result.filter(s => this.filters.methods.has(s.metodo));
         }
-        return spese;
+        // Amount
+        if (this.filters.amountMin > 0) {
+            result = result.filter(s => s.importo >= this.filters.amountMin);
+        }
+        if (this.filters.amountMax < Infinity) {
+            result = result.filter(s => s.importo <= this.filters.amountMax);
+        }
+        // Date
+        if (this.filters.dateFrom) {
+            const from = new Date(this.filters.dateFrom + 'T00:00:00');
+            result = result.filter(s => new Date(s.data) >= from);
+        }
+        if (this.filters.dateTo) {
+            const to = new Date(this.filters.dateTo + 'T23:59:59');
+            result = result.filter(s => new Date(s.data) <= to);
+        }
+
+        return result;
     },
 
+    hasActiveFilters() { return this.getActiveFilterCount() > 0; },
+
     /* =====================
-       INPUT SPESE
+       INPUT
        ===================== */
     initInput() {
         const input = document.getElementById('expense-input');
@@ -236,60 +375,41 @@ const App = {
         const btnVoice = document.getElementById('btn-voice');
 
         btnSend.addEventListener('click', () => this.submitExpense());
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') this.submitExpense();
-        });
+        input.addEventListener('keydown', e => { if (e.key === 'Enter') this.submitExpense(); });
 
-        // Dettatura vocale
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
             this.recognition = new SR();
             this.recognition.lang = 'it-IT';
             this.recognition.continuous = false;
             this.recognition.interimResults = false;
-
-            this.recognition.onresult = (e) => {
+            this.recognition.onresult = e => {
                 input.value = e.results[0][0].transcript;
                 btnVoice.classList.remove('recording');
                 this.submitExpense();
             };
-
             this.recognition.onerror = () => {
                 btnVoice.classList.remove('recording');
                 this.showToast('Non ho capito. Riprova.', 'error');
             };
-
             this.recognition.onend = () => btnVoice.classList.remove('recording');
-
             btnVoice.addEventListener('click', () => {
-                if (btnVoice.classList.contains('recording')) {
-                    this.recognition.stop();
-                } else {
-                    btnVoice.classList.add('recording');
-                    this.recognition.start();
-                }
+                if (btnVoice.classList.contains('recording')) this.recognition.stop();
+                else { btnVoice.classList.add('recording'); this.recognition.start(); }
             });
-        } else {
-            btnVoice.style.display = 'none';
-        }
+        } else { btnVoice.style.display = 'none'; }
     },
 
     submitExpense() {
         const input = document.getElementById('expense-input');
         const text = input.value.trim();
         if (!text) return;
-
         const parsed = Parser.parse(text);
-        if (!parsed) {
-            this.showToast('Non ho capito l\'importo. Prova: "caffè 1.50"', 'error');
-            return;
-        }
-
+        if (!parsed) { this.showToast('Non ho capito l\'importo. Prova: "caffè 1.50"', 'error'); return; }
         const spesa = Storage.addSpesa(parsed);
         this.newCardId = spesa.id;
         input.value = '';
         this.renderTimeline();
-
         const cat = this.getCat(spesa.categoria);
         this.showToast(`${cat.emoji} ${spesa.descrizione} · €${spesa.importo.toFixed(2)}`, 'success');
     },
@@ -299,21 +419,10 @@ const App = {
        ===================== */
     renderTimeline() {
         const allSpese = Storage.getSpese();
-        const isFiltered = this.hasActiveFilters();
-        const spese = isFiltered ? this.getFilteredSpese(allSpese) : allSpese;
+        const filtered = this.hasActiveFilters() ? this.applyFilters(allSpese) : allSpese;
         const content = document.getElementById('timeline-content');
         const empty = document.getElementById('timeline-empty');
         const summary = document.getElementById('timeline-summary');
-        const resultsInfo = document.getElementById('search-results-info');
-
-        // Risultati filtro
-        if (isFiltered && resultsInfo) {
-            const filteredTotal = spese.reduce((s, x) => s + x.importo, 0);
-            resultsInfo.textContent = `${spese.length} risultat${spese.length === 1 ? 'o' : 'i'} · €${filteredTotal.toFixed(2)}`;
-            resultsInfo.classList.remove('hidden');
-        } else if (resultsInfo) {
-            resultsInfo.classList.add('hidden');
-        }
 
         if (allSpese.length === 0) {
             content.innerHTML = '';
@@ -321,16 +430,9 @@ const App = {
             empty.classList.remove('hidden');
             return;
         }
-
         empty.classList.add('hidden');
 
-        if (spese.length === 0 && isFiltered) {
-            content.innerHTML = '<div class="stats-empty">🔍<br>Nessuna spesa trovata con questi filtri</div>';
-            summary.innerHTML = '';
-            return;
-        }
-
-        // Summary (sempre su tutti i dati)
+        // Summary (always from ALL data)
         const oggi = new Date();
         const oggiKey = this.dateKey(oggi);
         const meseCorrente = oggi.getMonth();
@@ -362,9 +464,12 @@ const App = {
             </div>
         `;
 
-        // Raggruppa per giorno
-        const groups = this.groupByDay(spese);
+        if (filtered.length === 0 && this.hasActiveFilters()) {
+            content.innerHTML = '<div class="stats-empty">🔍<br>Nessuna spesa trovata con questi filtri</div>';
+            return;
+        }
 
+        const groups = this.groupByDay(filtered);
         content.innerHTML = groups.map(g => {
             const dayTotal = g.spese.reduce((s, x) => s + x.importo, 0);
             return `
@@ -374,8 +479,7 @@ const App = {
                         <span class="day-total">€${dayTotal.toFixed(2)}</span>
                     </div>
                     ${g.spese.map(s => this.createCard(s)).join('')}
-                </div>
-            `;
+                </div>`;
         }).join('');
 
         content.querySelectorAll('.expense-card').forEach(card => {
@@ -390,32 +494,28 @@ const App = {
         const ora = d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
         const isNew = s.id === this.newCardId;
         if (isNew) this.newCardId = null;
-
         return `
             <div class="expense-card${isNew ? ' new-card' : ''}" data-id="${s.id}">
                 <div class="expense-emoji">${cat.emoji}</div>
                 <div class="expense-info">
                     <div class="expense-desc">${this.esc(s.descrizione)}</div>
                     <div class="expense-meta">
-                        <span>${cat.nome}</span>
-                        <span class="dot"></span>
-                        <span>${met.emoji}</span>
-                        <span class="dot"></span>
+                        <span>${cat.nome}</span><span class="dot"></span>
+                        <span>${met.emoji}</span><span class="dot"></span>
                         <span>${ora}</span>
                         ${s.nota ? '<span class="dot"></span><span>📝</span>' : ''}
                     </div>
                 </div>
                 <div class="expense-amount">€${s.importo.toFixed(2)}</div>
-            </div>
-        `;
+            </div>`;
     },
 
     /* =====================
-       MODAL MODIFICA
+       EDIT MODAL
        ===================== */
     initModal() {
         document.getElementById('modal-close').addEventListener('click', () => this.closeModal());
-        document.getElementById('modal-overlay').addEventListener('click', (e) => {
+        document.getElementById('modal-overlay').addEventListener('click', e => {
             if (e.target.id === 'modal-overlay') this.closeModal();
         });
         document.getElementById('btn-save').addEventListener('click', () => this.saveEdit());
@@ -427,7 +527,7 @@ const App = {
                 this.showToast('Spesa eliminata', 'info');
             });
         });
-        document.addEventListener('keydown', (e) => {
+        document.addEventListener('keydown', e => {
             if (e.key === 'Escape') { this.closeModal(); this.closeConfirm(); }
         });
     },
@@ -461,20 +561,15 @@ const App = {
 
     saveEdit() {
         const importo = parseFloat(document.getElementById('edit-importo').value);
-        if (!importo || importo <= 0) {
-            this.showToast('Inserisci un importo valido', 'error');
-            return;
-        }
+        if (!importo || importo <= 0) { this.showToast('Importo non valido', 'error'); return; }
         const dateVal = document.getElementById('edit-data').value;
         const timeVal = document.getElementById('edit-ora').value;
-        const dateTime = new Date(`${dateVal}T${timeVal || '12:00'}:00`);
-
         Storage.updateSpesa(this.editingId, {
             importo: Math.round(importo * 100) / 100,
             descrizione: document.getElementById('edit-descrizione').value || 'Spesa',
             categoria: document.getElementById('edit-categoria').value,
             metodo: document.getElementById('edit-metodo').value,
-            data: dateTime.toISOString(),
+            data: new Date(`${dateVal}T${timeVal || '12:00'}:00`).toISOString(),
             nota: document.getElementById('edit-nota').value
         });
         this.closeModal();
@@ -483,7 +578,7 @@ const App = {
     },
 
     /* =====================
-       CONFERMA
+       CONFIRM
        ===================== */
     showConfirm(msg, onYes) {
         document.getElementById('confirm-message').textContent = msg;
@@ -497,13 +592,10 @@ const App = {
         newYes.addEventListener('click', () => { this.closeConfirm(); onYes(); });
         newNo.addEventListener('click', () => this.closeConfirm());
     },
-
-    closeConfirm() {
-        document.getElementById('confirm-overlay').classList.add('hidden');
-    },
+    closeConfirm() { document.getElementById('confirm-overlay').classList.add('hidden'); },
 
     /* =============================================
-       STATISTICHE — Periodo con navigazione
+       STATS
        ============================================= */
     getPeriodDates() {
         const now = new Date();
@@ -536,55 +628,108 @@ const App = {
                 label = year.toString();
                 break;
             }
-        }
+            case 'custom': {
+                const df = this.filters.dateFrom;
+                const dt = this.filters.dateTo;
+                start = df ? new Date(df + 'T00:00:00') : new Date(2000, 0, 1);
+                end = dt ? new Date(dt + 'T23:59:59') : new Date(2099, 11, 31);
 
+                if (df && dt) {
+                    const sl = start.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' });
+                    const el = end.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' });
+                    label = `${sl} — ${el}`;
+                } else if (df) {
+                    label = 'Dal ' + start.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' });
+                } else if (dt) {
+                    label = 'Fino al ' + end.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' });
+                } else {
+                    label = 'Tutto il periodo';
+                }
+                break;
+            }
+        }
         return { start, end, label };
     },
 
     renderStats() {
         const container = document.getElementById('stats-content');
-        const spese = Storage.getSpese();
+        const allSpese = Storage.getSpese();
 
-        if (spese.length === 0) {
+        if (allSpese.length === 0) {
             container.innerHTML = '<div class="stats-empty">📊<br>Aggiungi qualche spesa per vedere le statistiche</div>';
             return;
         }
 
         const { start, end, label } = this.getPeriodDates();
-        const filtered = spese.filter(s => {
+
+        // Filter by period dates
+        let filtered = allSpese.filter(s => {
             const d = new Date(s.data);
             return d >= start && d <= end;
         });
+
+        // Apply extra filters (category, method, amount, search)
+        const extraFilters = {
+            ...this.filters
+        };
+        // For non-custom, don't apply date filters (period controls dates)
+        if (this.statsPeriod !== 'custom') {
+            const savedDateFrom = extraFilters.dateFrom;
+            const savedDateTo = extraFilters.dateTo;
+            extraFilters.dateFrom = '';
+            extraFilters.dateTo = '';
+            // Temporarily clear date filters for applyFilters
+            const origFrom = this.filters.dateFrom;
+            const origTo = this.filters.dateTo;
+            this.filters.dateFrom = '';
+            this.filters.dateTo = '';
+            filtered = this.applyFilters(filtered);
+            this.filters.dateFrom = origFrom;
+            this.filters.dateTo = origTo;
+        } else {
+            // Custom: dates already applied via getPeriodDates, apply other filters
+            const origFrom = this.filters.dateFrom;
+            const origTo = this.filters.dateTo;
+            this.filters.dateFrom = '';
+            this.filters.dateTo = '';
+            filtered = this.applyFilters(filtered);
+            this.filters.dateFrom = origFrom;
+            this.filters.dateTo = origTo;
+        }
 
         const total = filtered.reduce((s, x) => s + x.importo, 0);
         const days = Math.max(1, Math.ceil((Math.min(end, new Date()) - start) / 86400000));
         const avg = total / days;
 
-        // Per categoria
+        // By category
         const byCat = {};
-        filtered.forEach(s => {
-            byCat[s.categoria] = (byCat[s.categoria] || 0) + s.importo;
-        });
+        filtered.forEach(s => { byCat[s.categoria] = (byCat[s.categoria] || 0) + s.importo; });
         const catSorted = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
         const maxCat = catSorted.length > 0 ? catSorted[0][1] : 1;
 
-        // Top spese
+        // Top 5
         const topSpese = [...filtered].sort((a, b) => b.importo - a.importo).slice(0, 5);
 
         const canGoNext = this.statsOffset < 0;
+        const isCustom = this.statsPeriod === 'custom';
+        const hasNonDateFilters = this.filters.query || this.filters.categories.size > 0 ||
+            this.filters.methods.size > 0 || this.filters.amountMin > 0 || this.filters.amountMax < Infinity;
 
         container.innerHTML = `
             <div class="stats-period-selector">
                 <button class="period-btn ${this.statsPeriod === 'week' ? 'active' : ''}" data-period="week">Settimana</button>
                 <button class="period-btn ${this.statsPeriod === 'month' ? 'active' : ''}" data-period="month">Mese</button>
                 <button class="period-btn ${this.statsPeriod === 'year' ? 'active' : ''}" data-period="year">Anno</button>
+                <button class="period-btn ${this.statsPeriod === 'custom' ? 'active' : ''}" data-period="custom">Custom</button>
             </div>
 
             <div class="stats-period-nav">
-                <button class="period-nav-btn" id="period-prev" title="Precedente">◀</button>
+                <button class="period-nav-btn" id="period-prev" title="Precedente" ${isCustom ? 'disabled' : ''}>◀</button>
                 <span class="period-nav-label">${label}</span>
-                <button class="period-nav-btn" id="period-next" title="Successivo" ${canGoNext ? '' : 'disabled'}>▶</button>
+                <button class="period-nav-btn" id="period-next" title="Successivo" ${(!canGoNext || isCustom) ? 'disabled' : ''}>▶</button>
             </div>
+
+            ${hasNonDateFilters ? '<div class="stats-filter-note">🔍 Filtri attivi applicati ai dati</div>' : ''}
 
             <div class="stats-cards">
                 <div class="stat-card">
@@ -604,16 +749,11 @@ const App = {
             ${filtered.length > 0 ? `
                 <div class="chart-container">
                     <div class="chart-title">🥧 Per categoria</div>
-                    <div class="chart-wrap chart-wrap-doughnut">
-                        <canvas id="chart-doughnut"></canvas>
-                    </div>
+                    <div class="chart-wrap chart-wrap-doughnut"><canvas id="chart-doughnut"></canvas></div>
                 </div>
-
                 <div class="chart-container">
                     <div class="chart-title">📊 ${this.statsPeriod === 'year' ? 'Andamento mensile' : 'Andamento giornaliero'}</div>
-                    <div class="chart-wrap">
-                        <canvas id="chart-bar"></canvas>
-                    </div>
+                    <div class="chart-wrap"><canvas id="chart-bar"></canvas></div>
                 </div>
             ` : '<div class="stats-empty">Nessuna spesa in questo periodo</div>'}
 
@@ -625,20 +765,17 @@ const App = {
                         const pct = total > 0 ? ((amount / total) * 100).toFixed(0) : 0;
                         const barW = ((amount / maxCat) * 100).toFixed(1);
                         const color = CHART_COLORS[idx % CHART_COLORS.length];
-                        return `
-                            <div class="cat-bar-item">
-                                <div class="cat-bar-header">
-                                    <span class="cat-bar-name">${cat.emoji} ${cat.nome}</span>
-                                    <span class="cat-bar-amount">€${amount.toFixed(2)} (${pct}%)</span>
-                                </div>
-                                <div class="cat-bar-track">
-                                    <div class="cat-bar-fill" style="width:${barW}%;background:${color}"></div>
-                                </div>
+                        return `<div class="cat-bar-item">
+                            <div class="cat-bar-header">
+                                <span class="cat-bar-name">${cat.emoji} ${cat.nome}</span>
+                                <span class="cat-bar-amount">€${amount.toFixed(2)} (${pct}%)</span>
                             </div>
-                        `;
+                            <div class="cat-bar-track">
+                                <div class="cat-bar-fill" style="width:${barW}%;background:${color}"></div>
+                            </div>
+                        </div>`;
                     }).join('')}
-                </div>
-            ` : ''}
+                </div>` : ''}
 
             ${topSpese.length > 0 ? `
                 <div class="stats-section">
@@ -646,112 +783,85 @@ const App = {
                     ${topSpese.map(s => {
                         const cat = this.getCat(s.categoria);
                         const d = new Date(s.data);
-                        return `
-                            <div class="expense-card" style="cursor:default">
-                                <div class="expense-emoji">${cat.emoji}</div>
-                                <div class="expense-info">
-                                    <div class="expense-desc">${this.esc(s.descrizione)}</div>
-                                    <div class="expense-meta">
-                                        <span>${d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}</span>
-                                    </div>
+                        return `<div class="expense-card" style="cursor:default">
+                            <div class="expense-emoji">${cat.emoji}</div>
+                            <div class="expense-info">
+                                <div class="expense-desc">${this.esc(s.descrizione)}</div>
+                                <div class="expense-meta">
+                                    <span>${d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}</span>
                                 </div>
-                                <div class="expense-amount">€${s.importo.toFixed(2)}</div>
                             </div>
-                        `;
+                            <div class="expense-amount">€${s.importo.toFixed(2)}</div>
+                        </div>`;
                     }).join('')}
-                </div>
-            ` : ''}
+                </div>` : ''}
         `;
 
-        // --- Event listeners ---
-
-        // Periodo
+        // --- Listeners ---
         container.querySelectorAll('.period-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                this.statsPeriod = btn.dataset.period;
+                const newPeriod = btn.dataset.period;
+                if (newPeriod === 'custom' && !this.filters.dateFrom && !this.filters.dateTo) {
+                    // Auto-open filter panel when custom selected without dates
+                    if (!this.filterOpen) this.openFilterPanel();
+                }
+                this.statsPeriod = newPeriod;
                 this.statsOffset = 0;
                 this.renderStats();
             });
         });
 
-        // Navigazione prev/next
-        document.getElementById('period-prev').addEventListener('click', () => {
-            this.statsOffset--;
-            this.renderStats();
-        });
-
+        const prevBtn = document.getElementById('period-prev');
         const nextBtn = document.getElementById('period-next');
-        if (canGoNext) {
-            nextBtn.addEventListener('click', () => {
-                this.statsOffset++;
-                this.renderStats();
-            });
+        if (!isCustom) {
+            prevBtn.addEventListener('click', () => { this.statsOffset--; this.renderStats(); });
+            if (canGoNext) {
+                nextBtn.addEventListener('click', () => { this.statsOffset++; this.renderStats(); });
+            }
         }
 
-        // Crea grafici
-        if (filtered.length > 0) {
-            this.renderCharts(filtered, start, end);
-        }
+        // Charts
+        if (filtered.length > 0) this.renderCharts(filtered, start, end);
     },
 
     /* =====================
-       GRAFICI CHART.JS
+       CHARTS
        ===================== */
     renderCharts(filtered, start, end) {
         this.destroyCharts();
-
         if (typeof Chart === 'undefined') return;
 
-        const themeColors = this.getChartThemeColors();
+        const tc = this.getChartThemeColors();
 
-        // --- DOUGHNUT ---
+        // Doughnut
         const byCat = {};
-        filtered.forEach(s => {
-            byCat[s.categoria] = (byCat[s.categoria] || 0) + s.importo;
-        });
+        filtered.forEach(s => { byCat[s.categoria] = (byCat[s.categoria] || 0) + s.importo; });
         const catSorted = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
-        const doughnutLabels = catSorted.map(([id]) => {
-            const c = this.getCat(id);
-            return `${c.emoji} ${c.nome}`;
-        });
-        const doughnutData = catSorted.map(([, v]) => Math.round(v * 100) / 100);
-        const doughnutColors = catSorted.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]);
 
         const ctxD = document.getElementById('chart-doughnut');
         if (ctxD) {
             this.chartDoughnut = new Chart(ctxD, {
                 type: 'doughnut',
                 data: {
-                    labels: doughnutLabels,
+                    labels: catSorted.map(([id]) => { const c = this.getCat(id); return `${c.emoji} ${c.nome}`; }),
                     datasets: [{
-                        data: doughnutData,
-                        backgroundColor: doughnutColors,
-                        borderColor: themeColors.cardBg,
-                        borderWidth: 3,
-                        hoverOffset: 6
+                        data: catSorted.map(([, v]) => Math.round(v * 100) / 100),
+                        backgroundColor: catSorted.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]),
+                        borderColor: tc.cardBg, borderWidth: 3, hoverOffset: 6
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    cutout: '55%',
+                    responsive: true, maintainAspectRatio: true, cutout: '55%',
                     plugins: {
                         legend: {
                             position: 'bottom',
-                            labels: {
-                                color: themeColors.text,
-                                padding: 12,
-                                usePointStyle: true,
-                                pointStyleWidth: 10,
-                                font: { size: 11, family: '-apple-system, sans-serif' }
-                            }
+                            labels: { color: tc.text, padding: 12, usePointStyle: true, pointStyleWidth: 10, font: { size: 11 } }
                         },
                         tooltip: {
                             callbacks: {
-                                label: (ctx) => {
-                                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                                    const pct = ((ctx.parsed / total) * 100).toFixed(1);
-                                    return ` €${ctx.parsed.toFixed(2)} (${pct}%)`;
+                                label: ctx => {
+                                    const tot = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                    return ` €${ctx.parsed.toFixed(2)} (${((ctx.parsed / tot) * 100).toFixed(1)}%)`;
                                 }
                             }
                         }
@@ -760,24 +870,19 @@ const App = {
             });
         }
 
-        // --- BAR CHART ---
+        // Bar
         let barLabels, barData;
-
         if (this.statsPeriod === 'year') {
-            // Mesi dell'anno
             const months = Array(12).fill(0);
-            filtered.forEach(s => {
-                months[new Date(s.data).getMonth()] += s.importo;
-            });
+            filtered.forEach(s => { months[new Date(s.data).getMonth()] += s.importo; });
             barLabels = Array.from({ length: 12 }, (_, i) =>
-                new Date(2025, i, 1).toLocaleDateString('it-IT', { month: 'short' })
-            );
+                new Date(2025, i, 1).toLocaleDateString('it-IT', { month: 'short' }));
             barData = months.map(v => Math.round(v * 100) / 100);
         } else {
-            // Giorni nel periodo
             const dayMap = new Map();
             const cur = new Date(start);
-            while (cur <= end) {
+            const actualEnd = new Date(Math.min(end, new Date()));
+            while (cur <= actualEnd) {
                 dayMap.set(this.dateKey(cur), 0);
                 cur.setDate(cur.getDate() + 1);
             }
@@ -789,10 +894,13 @@ const App = {
             barData = [];
             for (const [key, val] of dayMap) {
                 const d = new Date(key + 'T12:00:00');
-                if (this.statsPeriod === 'week') {
+                const numDays = dayMap.size;
+                if (numDays <= 14) {
                     barLabels.push(d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric' }));
-                } else {
+                } else if (numDays <= 62) {
                     barLabels.push(d.getDate().toString());
+                } else {
+                    barLabels.push(d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' }));
                 }
                 barData.push(Math.round(val * 100) / 100);
             }
@@ -800,6 +908,7 @@ const App = {
 
         const ctxB = document.getElementById('chart-bar');
         if (ctxB) {
+            const numBars = barLabels.length;
             this.chartBar = new Chart(ctxB, {
                 type: 'bar',
                 data: {
@@ -807,44 +916,31 @@ const App = {
                     datasets: [{
                         label: 'Spese €',
                         data: barData,
-                        backgroundColor: barData.map(v => v > 0 ? themeColors.accent + 'cc' : themeColors.accent + '33'),
-                        borderColor: themeColors.accent,
-                        borderWidth: 1,
-                        borderRadius: 4,
-                        borderSkipped: false
+                        backgroundColor: barData.map(v => v > 0 ? tc.accent + 'cc' : tc.accent + '33'),
+                        borderColor: tc.accent, borderWidth: 1,
+                        borderRadius: 4, borderSkipped: false
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    aspectRatio: this.statsPeriod === 'week' ? 1.8 : 2,
+                    responsive: true, maintainAspectRatio: true,
+                    aspectRatio: numBars <= 7 ? 1.8 : 2,
                     plugins: {
                         legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: (ctx) => ` €${ctx.parsed.y.toFixed(2)}`
-                            }
-                        }
+                        tooltip: { callbacks: { label: ctx => ` €${ctx.parsed.y.toFixed(2)}` } }
                     },
                     scales: {
                         x: {
                             ticks: {
-                                color: themeColors.textMuted,
-                                font: { size: 10 },
-                                maxRotation: this.statsPeriod === 'month' ? 0 : 45,
-                                autoSkip: true,
-                                maxTicksLimit: this.statsPeriod === 'month' ? 15 : undefined
+                                color: tc.textMuted, font: { size: 9 },
+                                maxRotation: numBars > 14 ? 45 : 0,
+                                autoSkip: true, maxTicksLimit: numBars > 60 ? 15 : undefined
                             },
                             grid: { display: false }
                         },
                         y: {
                             beginAtZero: true,
-                            ticks: {
-                                color: themeColors.textMuted,
-                                font: { size: 10 },
-                                callback: (v) => '€' + v
-                            },
-                            grid: { color: themeColors.grid }
+                            ticks: { color: tc.textMuted, font: { size: 10 }, callback: v => '€' + v },
+                            grid: { color: tc.grid }
                         }
                     }
                 }
@@ -853,13 +949,13 @@ const App = {
     },
 
     getChartThemeColors() {
-        const style = getComputedStyle(document.documentElement);
+        const s = getComputedStyle(document.documentElement);
         return {
-            text: style.getPropertyValue('--text-primary').trim(),
-            textMuted: style.getPropertyValue('--text-tertiary').trim(),
-            accent: style.getPropertyValue('--accent').trim(),
-            cardBg: style.getPropertyValue('--bg-card').trim(),
-            grid: style.getPropertyValue('--border').trim()
+            text: s.getPropertyValue('--text-primary').trim(),
+            textMuted: s.getPropertyValue('--text-tertiary').trim(),
+            accent: s.getPropertyValue('--accent').trim(),
+            cardBg: s.getPropertyValue('--bg-card').trim(),
+            grid: s.getPropertyValue('--border').trim()
         };
     },
 
@@ -868,14 +964,8 @@ const App = {
         if (this.chartBar) { this.chartBar.destroy(); this.chartBar = null; }
     },
 
-    refreshChartsTheme() {
-        if (this.currentPage === 'stats') {
-            this.renderStats();
-        }
-    },
-
     /* =====================
-       IMPOSTAZIONI
+       SETTINGS
        ===================== */
     renderSettings() {
         const settings = Storage.getSettings();
@@ -898,7 +988,6 @@ const App = {
                     <button class="theme-btn ${settings.tema === 'auto' ? 'active' : ''}" data-theme="auto">🌓 Auto</button>
                 </div>
             </div>
-
             <div class="settings-section">
                 <h3>📤 Esporta dati</h3>
                 <p class="settings-hint">JSON per backup completo, CSV per Excel/Sheets.</p>
@@ -907,50 +996,33 @@ const App = {
                     <button id="btn-export-csv" class="btn btn-secondary">📄 CSV</button>
                 </div>
             </div>
-
             <div class="settings-section">
                 <h3>📥 Importa dati</h3>
                 <p class="settings-hint">JSON sostituisce i dati, CSV li aggiunge.</p>
                 <input type="file" id="import-file" accept=".json,.csv" hidden>
                 <button id="btn-import" class="btn btn-secondary btn-block">📁 Scegli file...</button>
             </div>
-
             <div class="settings-section">
                 <h3>📊 Informazioni</h3>
                 <div class="info-grid">
-                    <div class="info-item">
-                        <span class="info-label">Spese registrate</span>
-                        <span class="info-value">${spese.length}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Periodo</span>
-                        <span class="info-value">${dateRange}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Spazio usato</span>
-                        <span class="info-value">${sizeKB.toFixed(1)} KB</span>
-                    </div>
+                    <div class="info-item"><span class="info-label">Spese registrate</span><span class="info-value">${spese.length}</span></div>
+                    <div class="info-item"><span class="info-label">Periodo</span><span class="info-value">${dateRange}</span></div>
+                    <div class="info-item"><span class="info-label">Spazio usato</span><span class="info-value">${sizeKB.toFixed(1)} KB</span></div>
                 </div>
             </div>
-
             <div class="settings-section danger-zone">
                 <h3>⚠️ Zona pericolosa</h3>
-                <p class="settings-hint">Azione irreversibile. Esporta prima i tuoi dati!</p>
+                <p class="settings-hint">Azione irreversibile. Esporta prima!</p>
                 <button id="btn-clear-all" class="btn btn-danger btn-block">🗑️ Cancella tutti i dati</button>
             </div>
-
-            <div class="about-section">
-                <p>💰 SpesaTracker v2.0</p>
-                <p>Dati salvati localmente · Nessun server · Nessun costo</p>
-            </div>
+            <div class="about-section"><p>💰 SpesaTracker v2.1</p><p>Dati locali · Nessun server · Nessun costo</p></div>
         `;
 
-        // --- Listeners ---
+        // Listeners
         container.querySelectorAll('.theme-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 this.applyTheme(btn.dataset.theme);
                 Storage.updateSettings({ tema: btn.dataset.theme });
-                this.refreshChartsTheme();
                 this.renderSettings();
             });
         });
@@ -962,44 +1034,37 @@ const App = {
 
         container.querySelector('#btn-export-csv').addEventListener('click', () => {
             this.download('\uFEFF' + Storage.exportCSV(), `spese_${this.dateStamp()}.csv`, 'text/csv;charset=utf-8');
-            this.showToast('File CSV scaricato ✓', 'success');
+            this.showToast('CSV scaricato ✓', 'success');
         });
 
         const fileInput = container.querySelector('#import-file');
         container.querySelector('#btn-import').addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => {
+        fileInput.addEventListener('change', e => {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = (ev) => {
+            reader.onload = ev => {
                 const content = ev.target.result;
                 if (file.name.endsWith('.json')) {
                     this.showConfirm('Importare backup JSON? I dati attuali verranno SOSTITUITI.', () => {
                         const r = Storage.importJSON(content);
-                        if (r.success) {
-                            this.showToast(`Importate ${r.count} spese ✓`, 'success');
-                            this.renderTimeline(); this.renderSettings();
-                        } else this.showToast('Errore: ' + r.error, 'error');
+                        if (r.success) { this.showToast(`Importate ${r.count} spese ✓`, 'success'); this.renderTimeline(); this.renderSettings(); }
+                        else this.showToast('Errore: ' + r.error, 'error');
                     });
                 } else if (file.name.endsWith('.csv')) {
                     const r = Storage.importCSV(content);
-                    if (r.success) {
-                        this.showToast(`Importate ${r.count} spese da CSV ✓`, 'success');
-                        this.renderTimeline(); this.renderSettings();
-                    } else this.showToast('Errore: ' + r.error, 'error');
-                } else {
-                    this.showToast('Usa file .json o .csv', 'error');
-                }
+                    if (r.success) { this.showToast(`Importate ${r.count} spese ✓`, 'success'); this.renderTimeline(); this.renderSettings(); }
+                    else this.showToast('Errore: ' + r.error, 'error');
+                } else { this.showToast('Usa .json o .csv', 'error'); }
                 fileInput.value = '';
             };
             reader.readAsText(file);
         });
 
         container.querySelector('#btn-clear-all').addEventListener('click', () => {
-            this.showConfirm('Eliminare TUTTI i dati? Azione irreversibile!', () => {
-                Storage.clearAll();
-                this.renderTimeline(); this.renderSettings();
-                this.showToast('Tutti i dati eliminati', 'info');
+            this.showConfirm('Eliminare TUTTI i dati?', () => {
+                Storage.clearAll(); this.renderTimeline(); this.renderSettings();
+                this.showToast('Dati eliminati', 'info');
             });
         });
     },
@@ -1016,15 +1081,10 @@ const App = {
     },
 
     /* =====================
-       HELPER
+       HELPERS
        ===================== */
-    getCat(id) {
-        return CATEGORIES.find(c => c.id === id) || CATEGORIES[CATEGORIES.length - 1];
-    },
-
-    getMet(id) {
-        return PAYMENT_METHODS.find(m => m.id === id) || PAYMENT_METHODS[0];
-    },
+    getCat(id) { return CATEGORIES.find(c => c.id === id) || CATEGORIES[CATEGORIES.length - 1]; },
+    getMet(id) { return PAYMENT_METHODS.find(m => m.id === id) || PAYMENT_METHODS[0]; },
 
     groupByDay(spese) {
         const groups = {};
@@ -1033,18 +1093,12 @@ const App = {
             if (!groups[key]) groups[key] = [];
             groups[key].push(s);
         });
-        return Object.keys(groups)
-            .sort().reverse()
-            .map(date => ({
-                date,
-                spese: groups[date].sort((a, b) => new Date(b.data) - new Date(a.data))
-            }));
+        return Object.keys(groups).sort().reverse()
+            .map(date => ({ date, spese: groups[date].sort((a, b) => new Date(b.data) - new Date(a.data)) }));
     },
 
     dateKey(d) {
-        return d.getFullYear() + '-' +
-            String(d.getMonth() + 1).padStart(2, '0') + '-' +
-            String(d.getDate()).padStart(2, '0');
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     },
 
     formatDayLabel(dateKey) {
@@ -1052,24 +1106,16 @@ const App = {
         const ieri = this.dateKey(new Date(Date.now() - 86400000));
         if (dateKey === oggi) return '📌 Oggi';
         if (dateKey === ieri) return 'Ieri';
-        const d = new Date(dateKey + 'T12:00:00');
-        return d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+        return new Date(dateKey + 'T12:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
     },
 
     toInputDate(d) {
-        return d.getFullYear() + '-' +
-            String(d.getMonth() + 1).padStart(2, '0') + '-' +
-            String(d.getDate()).padStart(2, '0');
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     },
-
     toInputTime(d) {
-        return String(d.getHours()).padStart(2, '0') + ':' +
-            String(d.getMinutes()).padStart(2, '0');
+        return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
     },
-
-    dateStamp() {
-        return this.dateKey(new Date());
-    },
+    dateStamp() { return this.dateKey(new Date()); },
 
     download(content, filename, mime) {
         const blob = new Blob([content], { type: mime });
@@ -1081,12 +1127,8 @@ const App = {
         URL.revokeObjectURL(url);
     },
 
-    esc(str) {
-        const d = document.createElement('div');
-        d.textContent = str;
-        return d.innerHTML;
-    }
+    esc(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
 };
 
-/* --- Avvio --- */
+/* --- Boot --- */
 document.addEventListener('DOMContentLoaded', () => App.init());

@@ -13,92 +13,114 @@
 </head>
 <body>
 
-    <!-- Header -->
     <header id="app-header">
         <h1>💰 SpesaTracker</h1>
         <div class="header-actions">
-            <button id="btn-search-toggle" class="header-btn" aria-label="Cerca">🔍</button>
+            <button id="btn-filter-toggle" class="header-btn" aria-label="Filtri" title="Filtri e ricerca">
+                🔍
+                <span id="filter-badge" class="filter-badge hidden">0</span>
+            </button>
             <button id="theme-toggle" class="header-btn" aria-label="Cambia tema">🌓</button>
         </div>
     </header>
 
-    <!-- Search / Filter Bar -->
-    <div id="search-bar" class="search-bar hidden">
-        <div class="search-bar-inner">
-            <div class="search-input-row">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="search-input" placeholder="Cerca spese..." autocomplete="off">
-                <button id="btn-search-clear" class="search-clear-btn hidden">&times;</button>
+    <!-- ===== FILTER PANEL ===== -->
+    <div id="filter-panel" class="filter-panel hidden">
+        <div class="filter-panel-scroll">
+
+            <div class="filter-section">
+                <div class="filter-input-row">
+                    <span class="filter-input-icon">🔍</span>
+                    <input type="text" id="search-input" placeholder="Cerca nelle spese..." autocomplete="off">
+                    <button id="btn-search-clear" class="filter-x-btn hidden">&times;</button>
+                </div>
             </div>
-            <div class="search-filters-row">
-                <select id="filter-category">
-                    <option value="">Tutte le categorie</option>
-                </select>
-                <select id="filter-method">
-                    <option value="">Tutti i pagamenti</option>
-                </select>
+
+            <div class="filter-section">
+                <div class="filter-label">📂 Categorie</div>
+                <div class="filter-chips" id="filter-cats"></div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-label">💳 Pagamento</div>
+                <div class="filter-chips" id="filter-methods"></div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-label">💰 Importo</div>
+                <div class="slider-container">
+                    <div class="slider-values">
+                        <span id="slider-val-min">€0</span>
+                        <span id="slider-val-max">€100</span>
+                    </div>
+                    <div class="dual-slider" id="dual-slider">
+                        <input type="range" id="slider-min" min="0" max="100" value="0" step="1">
+                        <input type="range" id="slider-max" min="0" max="100" value="100" step="1">
+                        <div class="ds-track"><div class="ds-fill" id="ds-fill"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-label">📅 Periodo</div>
+                <div class="date-filter-row">
+                    <div class="date-field">
+                        <label for="filter-date-from">Da</label>
+                        <input type="date" id="filter-date-from">
+                    </div>
+                    <div class="date-field">
+                        <label for="filter-date-to">A</label>
+                        <input type="date" id="filter-date-to">
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-footer">
+                <span id="filter-info" class="filter-info"></span>
+                <button id="btn-filter-reset" class="btn-filter-reset hidden">✕ Reset</button>
             </div>
         </div>
-        <div id="search-results-info" class="search-results-info hidden"></div>
     </div>
 
-    <!-- Main Content -->
     <main id="app-main">
-
-        <!-- Timeline Page -->
         <section id="page-timeline" class="page active">
             <div id="timeline-summary"></div>
             <div id="timeline-content"></div>
             <div id="timeline-empty" class="empty-state hidden">
                 <div class="empty-icon">📝</div>
                 <p class="empty-title">Nessuna spesa registrata</p>
-                <p class="empty-hint">Scrivi qualcosa come <strong>"caffè 1.50"</strong> qui sotto per iniziare!</p>
+                <p class="empty-hint">Scrivi qualcosa come <strong>"caffè 1.50"</strong> qui sotto!</p>
             </div>
         </section>
 
-        <!-- Stats Page -->
         <section id="page-stats" class="page hidden">
             <div id="stats-content"></div>
         </section>
 
-        <!-- Settings Page -->
         <section id="page-settings" class="page hidden">
             <div id="settings-content"></div>
         </section>
     </main>
 
-    <!-- Input Bar -->
     <div id="input-bar">
         <div class="input-wrapper">
-            <input
-                type="text"
-                id="expense-input"
-                placeholder='es: caffè 1.50'
-                autocomplete="off"
-                enterkeyhint="send"
-            >
-            <button id="btn-voice" aria-label="Dettatura vocale" title="Detta a voce">🎤</button>
-            <button id="btn-send" aria-label="Aggiungi spesa" title="Aggiungi">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                </svg>
+            <input type="text" id="expense-input" placeholder='es: caffè 1.50' autocomplete="off" enterkeyhint="send">
+            <button id="btn-voice" aria-label="Dettatura vocale">🎤</button>
+            <button id="btn-send" aria-label="Aggiungi spesa">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             </button>
         </div>
     </div>
 
-    <!-- Bottom Navigation -->
     <nav id="bottom-nav">
         <button class="nav-btn active" data-page="timeline">
-            <span class="nav-icon">📋</span>
-            <span class="nav-label">Timeline</span>
+            <span class="nav-icon">📋</span><span class="nav-label">Timeline</span>
         </button>
         <button class="nav-btn" data-page="stats">
-            <span class="nav-icon">📊</span>
-            <span class="nav-label">Statistiche</span>
+            <span class="nav-icon">📊</span><span class="nav-label">Statistiche</span>
         </button>
         <button class="nav-btn" data-page="settings">
-            <span class="nav-icon">⚙️</span>
-            <span class="nav-label">Impostazioni</span>
+            <span class="nav-icon">⚙️</span><span class="nav-label">Impostazioni</span>
         </button>
     </nav>
 
@@ -137,7 +159,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="edit-nota">Nota (opzionale)</label>
+                    <label for="edit-nota">Nota</label>
                     <textarea id="edit-nota" rows="2" placeholder="Aggiungi una nota..."></textarea>
                 </div>
             </div>
@@ -148,7 +170,6 @@
         </div>
     </div>
 
-    <!-- Confirm Dialog -->
     <div id="confirm-overlay" class="overlay hidden">
         <div id="confirm-dialog" class="modal modal-sm">
             <p id="confirm-message"></p>
@@ -159,13 +180,9 @@
         </div>
     </div>
 
-    <!-- Toast -->
     <div id="toast" class="toast hidden"></div>
 
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-
-    <!-- App Scripts -->
     <script src="js/categories.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/parser.js"></script>
