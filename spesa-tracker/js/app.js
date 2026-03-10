@@ -16,6 +16,7 @@ const App = {
     editingId: null,
     toastTimer: null,
     newCardId: null,
+    _modalFieldActive: false,
 
     /* --- Stats --- */
     statsPeriod: 'month',
@@ -734,25 +735,31 @@ const App = {
 
         // Back button handling
         window.addEventListener('popstate', (e) => {
-            // 1) If modal is open, handle focused fields first
+            // 1) If modal is open, handle focused fields / dropdowns first
             if (this.editingId !== null) {
                 const modal = document.getElementById('edit-modal');
-                const activeEl = document.activeElement;
 
                 // 1a) If a dropdown is open inside the modal, close it and re-push state
                 const openDropdown = modal.querySelector('.searchable-dropdown.open');
                 if (openDropdown) {
                     const inp = openDropdown.querySelector('.sd-input');
                     if (inp) inp.blur();
-                    history.pushState({ panel: 'modal' }, '');
+                    this._modalFieldActive = false;
+                    setTimeout(() => history.pushState({ panel: 'modal' }, ''), 0);
                     return;
                 }
 
-                // 1b) If any input/textarea inside the modal is focused, blur it and re-push state
-                if (activeEl && modal.contains(activeEl) &&
-                    (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
-                    activeEl.blur();
-                    history.pushState({ panel: 'modal' }, '');
+                // 1b) If any field was recently focused (flag-based, reliable on Android)
+                //     or is still focused (activeElement fallback)
+                const activeEl = document.activeElement;
+                const stillFocused = activeEl && modal.contains(activeEl) &&
+                    (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+
+                if (this._modalFieldActive || stillFocused) {
+                    // Blur all inputs/textareas in the modal to be safe
+                    modal.querySelectorAll('input, textarea').forEach(el => el.blur());
+                    this._modalFieldActive = false;
+                    setTimeout(() => history.pushState({ panel: 'modal' }, ''), 0);
                     return;
                 }
 
@@ -1131,11 +1138,44 @@ const App = {
 
         document.getElementById('modal-overlay').classList.remove('hidden');
         history.pushState({ panel: 'modal' }, '');
+
+        // Track field focus inside the modal for robust back-button handling
+        this._modalFieldActive = false;
+        const modal = document.getElementById('edit-modal');
+        // Remove old listeners (avoid duplicates) by using named handler
+        modal.removeEventListener('focusin', this._onModalFocusIn);
+        modal.removeEventListener('focusout', this._onModalFocusOut);
+        this._onModalFocusIn = (e) => {
+            const tag = e.target.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA') {
+                this._modalFieldActive = true;
+            }
+        };
+        this._onModalFocusOut = (e) => {
+            const tag = e.target.tagName;
+            // Only clear the flag if it's not a dropdown input (those are handled separately)
+            if ((tag === 'INPUT' || tag === 'TEXTAREA') &&
+                !e.target.closest('.searchable-dropdown')) {
+                // Delay clearing so the popstate handler can still see the flag
+                setTimeout(() => {
+                    // Only clear if no other modal field gained focus in the meantime
+                    const nowActive = document.activeElement;
+                    const stillInModal = nowActive && modal.contains(nowActive) &&
+                        (nowActive.tagName === 'INPUT' || nowActive.tagName === 'TEXTAREA');
+                    if (!stillInModal) {
+                        this._modalFieldActive = false;
+                    }
+                }, 150);
+            }
+        };
+        modal.addEventListener('focusin', this._onModalFocusIn);
+        modal.addEventListener('focusout', this._onModalFocusOut);
     },
 
     closeModal(fromPopstate) {
         document.getElementById('modal-overlay').classList.add('hidden');
         this.editingId = null;
+        this._modalFieldActive = false;
         if (!fromPopstate) {
             // Go back so popstate won't fire again
             try { history.back(); } catch (_) { }
