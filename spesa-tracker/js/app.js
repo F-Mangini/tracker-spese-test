@@ -187,6 +187,7 @@ const App = {
         if (this.advancedFiltersOpen) {
             section.classList.remove('hidden');
             btn.classList.add('active');
+            history.pushState({ panel: 'advanced-filters' }, '');
         } else {
             section.classList.add('hidden');
             btn.classList.remove('active');
@@ -357,13 +358,15 @@ const App = {
         panel.classList.remove('hidden');
         document.getElementById('btn-filter-toggle').classList.add('active');
 
+        history.pushState({ panel: 'filter' }, '');
+
         requestAnimationFrame(() => {
             const h = panel.offsetHeight;
             document.getElementById('app-main').style.marginTop = `calc(var(--header-h) + ${h}px)`;
         });
     },
 
-    closeFilterPanel() {
+    closeFilterPanel(fromPopstate) {
         this.filterOpen = false;
         this.advancedFiltersOpen = false;
         document.getElementById('filter-panel').classList.add('hidden');
@@ -371,6 +374,9 @@ const App = {
         document.getElementById('advanced-filters').classList.add('hidden');
         document.getElementById('btn-advanced-toggle').classList.remove('active');
         document.getElementById('app-main').style.marginTop = '';
+        if (!fromPopstate) {
+            try { history.back(); } catch (_) { }
+        }
     },
 
     /* --- Filter state --- */
@@ -725,6 +731,42 @@ const App = {
                 this.closeConfirm();
             }
         });
+
+        // Back button handling
+        window.addEventListener('popstate', (e) => {
+            // 1) If a dropdown is open in the modal, close it
+            const openDropdown = document.querySelector('.searchable-dropdown.open');
+            if (openDropdown) {
+                const inp = openDropdown.querySelector('.sd-input');
+                if (inp) inp.blur();
+                return;
+            }
+
+            // 2) If modal is open, close it
+            if (this.editingId !== null) {
+                this.closeModal(true);
+                return;
+            }
+
+            // 3) If advanced filters open, close them
+            if (this.advancedFiltersOpen) {
+                this.advancedFiltersOpen = false;
+                document.getElementById('advanced-filters').classList.add('hidden');
+                document.getElementById('btn-advanced-toggle').classList.remove('active');
+                requestAnimationFrame(() => {
+                    const panel = document.getElementById('filter-panel');
+                    const h = panel.offsetHeight;
+                    document.getElementById('app-main').style.marginTop = `calc(var(--header-h) + ${h}px)`;
+                });
+                return;
+            }
+
+            // 4) If base filter panel open, close it
+            if (this.filterOpen) {
+                this.closeFilterPanel(true);
+                return;
+            }
+        });
     },
 
     /* --- Searchable Dropdown --- */
@@ -807,6 +849,10 @@ const App = {
                 input.readOnly = false;
                 input.value = '';
                 input.focus();
+                // Scroll so dropdown is visible above mobile keyboard
+                setTimeout(() => {
+                    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
             }
         });
 
@@ -936,29 +982,35 @@ const App = {
                 !this._editTags.includes(t) && (q ? t.toLowerCase().includes(q) : true)
             );
 
-            // Sort: most recent first (🕐), then by frequency (⭐)
-            const sorted = available.slice().sort((a, b) => {
-                return (lastUsed[b] || 0) - (lastUsed[a] || 0);
-            });
-
-            // Pick top items: 1 most recent + 2 most used (deduplicated)
-            let topItems = [];
-            if (sorted.length > 0 && !q) {
+            // Build full sorted list: most recent (🕐) first, then by frequency (⭐), then rest
+            let orderedItems = [];
+            if (available.length > 0 && !q) {
+                const sorted = available.slice().sort((a, b) => (lastUsed[b] || 0) - (lastUsed[a] || 0));
                 const mostRecent = sorted[0];
-                topItems.push({ tag: mostRecent, icon: '🕐' });
+                orderedItems.push({ tag: mostRecent, icon: '🕐' });
 
                 const byFreq = available.slice().sort((a, b) => (freq[b] || 0) - (freq[a] || 0));
+                const starItems = [];
                 for (const t of byFreq) {
-                    if (t !== mostRecent && topItems.length < 3) {
-                        topItems.push({ tag: t, icon: '⭐' });
+                    if (t !== mostRecent && starItems.length < 2) {
+                        starItems.push({ tag: t, icon: '⭐' });
+                    }
+                }
+                orderedItems.push(...starItems);
+
+                // Add remaining items
+                const usedTags = new Set(orderedItems.map(i => i.tag));
+                for (const t of sorted) {
+                    if (!usedTags.has(t)) {
+                        orderedItems.push({ tag: t, icon: '' });
                     }
                 }
             } else {
-                // When searching, just show filtered results (max 3)
-                topItems = available.slice(0, 3).map(t => ({ tag: t, icon: '' }));
+                // When searching, show all filtered results
+                orderedItems = available.map(t => ({ tag: t, icon: '' }));
             }
 
-            let html = topItems.map(({ tag, icon }) =>
+            let html = orderedItems.map(({ tag, icon }) =>
                 `<div class="sd-item" data-tag="${this.esc(tag)}"><span>#${this.esc(tag)}</span>${icon ? `<span class="tag-hint-icon">${icon}</span>` : ''}</div>`
             ).join('');
 
@@ -1065,11 +1117,16 @@ const App = {
         this.initTagInput();
 
         document.getElementById('modal-overlay').classList.remove('hidden');
+        history.pushState({ panel: 'modal' }, '');
     },
 
-    closeModal() {
+    closeModal(fromPopstate) {
         document.getElementById('modal-overlay').classList.add('hidden');
         this.editingId = null;
+        if (!fromPopstate) {
+            // Go back so popstate won't fire again
+            try { history.back(); } catch (_) { }
+        }
     },
 
     saveEdit() {
