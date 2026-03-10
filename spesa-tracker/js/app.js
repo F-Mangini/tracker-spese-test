@@ -438,7 +438,8 @@ const App = {
             const q = this.filters.query.toLowerCase();
             result = result.filter(s =>
                 (s.descrizione || '').toLowerCase().includes(q) ||
-                (s.nota || '').toLowerCase().includes(q)
+                (s.nota || '').toLowerCase().includes(q) ||
+                (s.tags && s.tags.some(t => t.toLowerCase().includes(q)))
             );
         }
 
@@ -672,6 +673,7 @@ const App = {
         const d = new Date(s.data);
         const ora = d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
         const isNew = s.id === this.newCardId;
+        const hasTags = s.tags && s.tags.length > 0;
 
         if (isNew) this.newCardId = null;
 
@@ -679,11 +681,11 @@ const App = {
             <div class="expense-card${isNew ? ' new-card' : ''}" data-id="${s.id}">
                 <div class="expense-emoji">${cat.emoji}</div>
                 <div class="expense-info">
-                    <div class="expense-desc">${this.esc(s.descrizione)}</div>
+                    <div class="expense-desc"><span class="expense-met-icon">${met.emoji}</span>${this.esc(s.descrizione)}</div>
                     <div class="expense-meta">
-                        <span>${cat.nome}</span><span class="dot"></span>
-                        <span>${met.emoji}</span><span class="dot"></span>
-                        <span>${ora}</span>
+                        <span>${ora}</span><span class="dot"></span>
+                        <span>${cat.nome}</span>
+                        ${hasTags ? '<span class="dot"></span><span>🏷️</span>' : ''}
                         ${s.nota ? '<span class="dot"></span><span>📝</span>' : ''}
                     </div>
                 </div>
@@ -794,6 +796,9 @@ const App = {
         });
 
         input.addEventListener('input', () => {
+            if (!container.classList.contains('open')) {
+                open();
+            }
             renderList(input.value);
         });
 

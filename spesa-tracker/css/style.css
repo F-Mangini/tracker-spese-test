@@ -666,6 +666,11 @@ body:has(.no-input-bar) .filter-panel-scroll {
     text-overflow: ellipsis;
 }
 
+.expense-met-icon {
+    margin-right: 6px;
+    font-size: 0.85rem;
+}
+
 .expense-meta {
     font-size: 0.75rem;
     color: var(--text-tertiary);
@@ -1117,8 +1122,15 @@ body:has(.no-input-bar) .filter-panel-scroll {
 }
 
 @keyframes sdSlideIn {
-    from { opacity: 0; transform: translateY(-6px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .sd-item {
