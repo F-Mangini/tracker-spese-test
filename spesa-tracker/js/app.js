@@ -734,21 +734,34 @@ const App = {
 
         // Back button handling
         window.addEventListener('popstate', (e) => {
-            // 1) If a dropdown is open in the modal, close it
-            const openDropdown = document.querySelector('.searchable-dropdown.open');
-            if (openDropdown) {
-                const inp = openDropdown.querySelector('.sd-input');
-                if (inp) inp.blur();
-                return;
-            }
-
-            // 2) If modal is open, close it
+            // 1) If modal is open, handle focused fields first
             if (this.editingId !== null) {
+                const modal = document.getElementById('edit-modal');
+                const activeEl = document.activeElement;
+
+                // 1a) If a dropdown is open inside the modal, close it and re-push state
+                const openDropdown = modal.querySelector('.searchable-dropdown.open');
+                if (openDropdown) {
+                    const inp = openDropdown.querySelector('.sd-input');
+                    if (inp) inp.blur();
+                    history.pushState({ panel: 'modal' }, '');
+                    return;
+                }
+
+                // 1b) If any input/textarea inside the modal is focused, blur it and re-push state
+                if (activeEl && modal.contains(activeEl) &&
+                    (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+                    activeEl.blur();
+                    history.pushState({ panel: 'modal' }, '');
+                    return;
+                }
+
+                // 1c) Nothing focused — close the modal
                 this.closeModal(true);
                 return;
             }
 
-            // 3) If advanced filters open, close them
+            // 2) If advanced filters open, close them
             if (this.advancedFiltersOpen) {
                 this.advancedFiltersOpen = false;
                 document.getElementById('advanced-filters').classList.add('hidden');
@@ -761,7 +774,7 @@ const App = {
                 return;
             }
 
-            // 4) If base filter panel open, close it
+            // 3) If base filter panel open, close it
             if (this.filterOpen) {
                 this.closeFilterPanel(true);
                 return;
