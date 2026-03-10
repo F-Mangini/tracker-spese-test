@@ -737,7 +737,7 @@ const App = {
         const selected = items.find(i => i.id === currentValue) || items[0];
 
         container.innerHTML = `
-            <input type="text" class="sd-input" autocomplete="off"
+            <input type="text" class="sd-input" autocomplete="off" readOnly
                    value="${selected.emoji} ${selected.nome}" data-value="${selected.id}">
             <span class="sd-arrow">▼</span>
             <div class="sd-list"></div>
@@ -746,6 +746,7 @@ const App = {
         const input = container.querySelector('.sd-input');
         const list = container.querySelector('.sd-list');
         let highlightIdx = -1;
+        let isEditable = false;
 
         const renderList = (filter = '') => {
             const q = filter.toLowerCase();
@@ -785,14 +786,34 @@ const App = {
 
         const close = () => {
             container.classList.remove('open');
-            // Reset display to selected value
+            input.readOnly = true;
+            isEditable = false;
             const sel = items.find(i => i.id === input.dataset.value) || items[0];
             input.value = `${sel.emoji} ${sel.nome}`;
         };
 
+        // First tap: open dropdown (readOnly, no keyboard)
+        // Second tap: enable typing (remove readOnly, keyboard opens)
+        input.addEventListener('mousedown', e => {
+            if (!container.classList.contains('open')) {
+                // First tap – open dropdown without keyboard
+                e.preventDefault();
+                input.focus();
+                open();
+            } else if (!isEditable) {
+                // Second tap – enable typing
+                e.preventDefault();
+                isEditable = true;
+                input.readOnly = false;
+                input.value = '';
+                input.focus();
+            }
+        });
+
         input.addEventListener('focus', () => {
-            input.value = '';
-            open();
+            if (!container.classList.contains('open')) {
+                open();
+            }
         });
 
         input.addEventListener('input', () => {
@@ -853,18 +874,37 @@ const App = {
         return [...tagSet].sort();
     },
 
+    getTagStats() {
+        const spese = Storage.getSpese();
+        const freq = {};
+        const lastUsed = {};
+
+        // Spese are stored newest-first
+        spese.forEach(s => {
+            if (!s.tags || !Array.isArray(s.tags)) return;
+            const ts = new Date(s.data).getTime();
+            s.tags.forEach(t => {
+                freq[t] = (freq[t] || 0) + 1;
+                if (!lastUsed[t] || ts > lastUsed[t]) lastUsed[t] = ts;
+            });
+        });
+
+        return { freq, lastUsed };
+    },
+
     initTagInput() {
         const container = document.getElementById('sd-tags');
         const chipsEl = document.getElementById('tag-chips');
         if (!container) return;
 
         container.innerHTML = `
-            <input type="text" class="sd-input" placeholder="Aggiungi tag..." autocomplete="off">
+            <input type="text" class="sd-input" placeholder="Aggiungi tag..." autocomplete="off" readOnly>
             <div class="sd-list"></div>
         `;
 
         const input = container.querySelector('.sd-input');
         const list = container.querySelector('.sd-list');
+        let isEditable = false;
 
         const renderChips = () => {
             chipsEl.innerHTML = this._editTags.map(tag =>
@@ -872,26 +912,57 @@ const App = {
             ).join('');
 
             chipsEl.querySelectorAll('.tag-remove').forEach(btn => {
+                btn.addEventListener('mousedown', e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
                 btn.addEventListener('click', e => {
                     e.stopPropagation();
                     this._editTags = this._editTags.filter(t => t !== btn.dataset.tag);
                     renderChips();
+                    if (isEditable) {
+                        input.focus();
+                        renderList(input.value);
+                    }
                 });
             });
         };
 
         const renderList = (filter = '') => {
             const allTags = this.getAllTags();
+            const { freq, lastUsed } = this.getTagStats();
             const q = filter.toLowerCase().replace(/^#/, '');
             const available = allTags.filter(t =>
                 !this._editTags.includes(t) && (q ? t.toLowerCase().includes(q) : true)
             );
 
-            let html = available.map(tag =>
-                `<div class="sd-item" data-tag="${this.esc(tag)}">#${this.esc(tag)}</div>`
+            // Sort: most recent first (🕐), then by frequency (⭐)
+            const sorted = available.slice().sort((a, b) => {
+                return (lastUsed[b] || 0) - (lastUsed[a] || 0);
+            });
+
+            // Pick top items: 1 most recent + 2 most used (deduplicated)
+            let topItems = [];
+            if (sorted.length > 0 && !q) {
+                const mostRecent = sorted[0];
+                topItems.push({ tag: mostRecent, icon: '🕐' });
+
+                const byFreq = available.slice().sort((a, b) => (freq[b] || 0) - (freq[a] || 0));
+                for (const t of byFreq) {
+                    if (t !== mostRecent && topItems.length < 3) {
+                        topItems.push({ tag: t, icon: '⭐' });
+                    }
+                }
+            } else {
+                // When searching, just show filtered results (max 3)
+                topItems = available.slice(0, 3).map(t => ({ tag: t, icon: '' }));
+            }
+
+            let html = topItems.map(({ tag, icon }) =>
+                `<div class="sd-item" data-tag="${this.esc(tag)}"><span>#${this.esc(tag)}</span>${icon ? `<span class="tag-hint-icon">${icon}</span>` : ''}</div>`
             ).join('');
 
-            // Show "create new" option if typed text is not empty and doesn't match existing
+            // Show "create new" option
             const cleanTag = q.trim();
             if (cleanTag && !allTags.includes(cleanTag) && !this._editTags.includes(cleanTag)) {
                 html += `<div class="sd-item create-new" data-tag="${this.esc(cleanTag)}">+ Crea "#${this.esc(cleanTag)}"</div>`;
@@ -927,10 +998,30 @@ const App = {
 
         const close = () => {
             container.classList.remove('open');
+            input.readOnly = true;
+            isEditable = false;
             input.value = '';
         };
 
-        input.addEventListener('focus', () => open());
+        // First tap: open dropdown without keyboard
+        // Second tap: enable typing
+        input.addEventListener('mousedown', e => {
+            if (!container.classList.contains('open')) {
+                e.preventDefault();
+                input.focus();
+                open();
+            } else if (!isEditable) {
+                e.preventDefault();
+                isEditable = true;
+                input.readOnly = false;
+                input.value = '';
+                input.focus();
+            }
+        });
+
+        input.addEventListener('focus', () => {
+            if (!container.classList.contains('open')) open();
+        });
         input.addEventListener('input', () => renderList(input.value));
         input.addEventListener('blur', () => close());
 

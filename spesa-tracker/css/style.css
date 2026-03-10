@@ -1232,6 +1232,19 @@ body:has(.no-input-bar) .filter-panel-scroll {
 .tag-dropdown .sd-list {
     left: -10px;
     right: -10px;
+    max-height: 132px;
+}
+
+.tag-dropdown .sd-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tag-hint-icon {
+    font-size: 0.75rem;
+    opacity: 0.5;
+    flex-shrink: 0;
 }
 
 .sd-item.create-new {
