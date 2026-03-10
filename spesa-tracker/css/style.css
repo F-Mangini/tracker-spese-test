@@ -1056,6 +1056,178 @@ body:has(.no-input-bar) .filter-panel-scroll {
     flex: 1;
 }
 
+/* ============================================
+   SEARCHABLE DROPDOWN
+   ============================================ */
+.searchable-dropdown {
+    position: relative;
+}
+
+.sd-input {
+    width: 100%;
+    padding: 10px 32px 10px 14px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: var(--bg-input);
+    transition: border-color 0.2s;
+    outline: none;
+    cursor: pointer;
+}
+
+.sd-input:focus {
+    border-color: var(--accent);
+}
+
+.sd-arrow {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    transition: transform 0.2s;
+}
+
+.searchable-dropdown.open .sd-arrow {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+.sd-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--bg-secondary);
+    border: 2px solid var(--accent);
+    border-radius: var(--radius-sm);
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 210;
+    box-shadow: var(--shadow-lg);
+    display: none;
+}
+
+.searchable-dropdown.open .sd-list {
+    display: block;
+    animation: sdSlideIn 0.15s ease;
+}
+
+@keyframes sdSlideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.sd-item {
+    padding: 9px 14px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.1s;
+}
+
+.sd-item:hover,
+.sd-item.highlighted {
+    background: var(--accent-light);
+}
+
+.sd-item.selected {
+    font-weight: 600;
+    color: var(--accent-text, var(--accent));
+}
+
+.sd-empty {
+    padding: 12px 14px;
+    font-size: 0.85rem;
+    color: var(--text-tertiary);
+    text-align: center;
+}
+
+/* ============================================
+   TAG INPUT
+   ============================================ */
+.tag-input-container {
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-input);
+    padding: 6px 8px;
+    transition: border-color 0.2s;
+}
+
+.tag-input-container:focus-within {
+    border-color: var(--accent);
+}
+
+.tag-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.tag-chips:empty {
+    margin-bottom: 0;
+}
+
+.tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--accent-light);
+    color: var(--accent-text, var(--accent));
+    padding: 3px 8px 3px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.tag-chip .tag-remove {
+    border: none;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1;
+    padding: 0 2px;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+}
+
+.tag-chip .tag-remove:hover {
+    opacity: 1;
+}
+
+.tag-dropdown {
+    position: relative;
+}
+
+.tag-dropdown .sd-input {
+    border: none;
+    padding: 6px 8px;
+    background: transparent;
+    font-size: 0.88rem;
+}
+
+.tag-dropdown .sd-input:focus {
+    border-color: transparent;
+}
+
+.tag-dropdown .sd-list {
+    left: -10px;
+    right: -10px;
+}
+
+.sd-item.create-new {
+    color: var(--accent);
+    font-weight: 600;
+    border-top: 1px solid var(--border);
+}
+
 #confirm-message {
     font-size: 1rem;
     font-weight: 500;

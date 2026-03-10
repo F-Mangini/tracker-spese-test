@@ -148,21 +148,23 @@
                 <button id="modal-close" class="modal-close-btn">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label for="edit-importo">Importo (€)</label>
-                    <input type="number" id="edit-importo" step="0.01" min="0" inputmode="decimal">
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label for="edit-importo">Importo (€)</label>
+                        <input type="number" id="edit-importo" step="0.01" min="0" inputmode="decimal">
+                    </div>
+                    <div class="form-group flex-1">
+                        <label>Pagamento</label>
+                        <div class="searchable-dropdown" id="sd-metodo"></div>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="edit-descrizione">Descrizione</label>
                     <input type="text" id="edit-descrizione">
                 </div>
                 <div class="form-group">
-                    <label for="edit-categoria">Categoria</label>
-                    <select id="edit-categoria"></select>
-                </div>
-                <div class="form-group">
-                    <label for="edit-metodo">Pagamento</label>
-                    <select id="edit-metodo"></select>
+                    <label>Categoria</label>
+                    <div class="searchable-dropdown" id="sd-categoria"></div>
                 </div>
                 <div class="form-row">
                     <div class="form-group flex-1">
@@ -177,6 +179,14 @@
                 <div class="form-group">
                     <label for="edit-nota">Nota</label>
                     <textarea id="edit-nota" rows="2" placeholder="Aggiungi una nota..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Tag</label>
+                    <div class="tag-input-container" id="tag-container">
+                        <div class="tag-chips" id="tag-chips"></div>
+                        <div class="searchable-dropdown tag-dropdown" id="sd-tags">
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">

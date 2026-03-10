@@ -725,12 +725,226 @@ const App = {
         });
     },
 
-    populateDropdowns() {
-        document.getElementById('edit-categoria').innerHTML =
-            CATEGORIES.map(c => `<option value="${c.id}">${c.emoji} ${c.nome}</option>`).join('');
+    /* --- Searchable Dropdown --- */
+    _sdInstances: {},
 
-        document.getElementById('edit-metodo').innerHTML =
-            PAYMENT_METHODS.map(m => `<option value="${m.id}">${m.emoji} ${m.nome}</option>`).join('');
+    initSearchableDropdown(containerId, items, currentValue) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        const selected = items.find(i => i.id === currentValue) || items[0];
+
+        container.innerHTML = `
+            <input type="text" class="sd-input" autocomplete="off"
+                   value="${selected.emoji} ${selected.nome}" data-value="${selected.id}">
+            <span class="sd-arrow">▼</span>
+            <div class="sd-list"></div>
+        `;
+
+        const input = container.querySelector('.sd-input');
+        const list = container.querySelector('.sd-list');
+        let highlightIdx = -1;
+
+        const renderList = (filter = '') => {
+            const q = filter.toLowerCase();
+            const filtered = q
+                ? items.filter(i => i.nome.toLowerCase().includes(q) || (i.emoji + ' ' + i.nome).toLowerCase().includes(q))
+                : items;
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<div class="sd-empty">Nessun risultato</div>';
+                highlightIdx = -1;
+                return;
+            }
+
+            highlightIdx = -1;
+            list.innerHTML = filtered.map((item, idx) =>
+                `<div class="sd-item${item.id === input.dataset.value ? ' selected' : ''}" data-id="${item.id}" data-idx="${idx}">${item.emoji} ${item.nome}</div>`
+            ).join('');
+
+            list.querySelectorAll('.sd-item').forEach(el => {
+                el.addEventListener('mousedown', e => {
+                    e.preventDefault();
+                    selectItem(items.find(i => i.id === el.dataset.id));
+                });
+            });
+        };
+
+        const selectItem = (item) => {
+            input.value = `${item.emoji} ${item.nome}`;
+            input.dataset.value = item.id;
+            close();
+        };
+
+        const open = () => {
+            container.classList.add('open');
+            renderList();
+        };
+
+        const close = () => {
+            container.classList.remove('open');
+            // Reset display to selected value
+            const sel = items.find(i => i.id === input.dataset.value) || items[0];
+            input.value = `${sel.emoji} ${sel.nome}`;
+        };
+
+        input.addEventListener('focus', () => {
+            input.value = '';
+            open();
+        });
+
+        input.addEventListener('input', () => {
+            renderList(input.value);
+        });
+
+        input.addEventListener('blur', () => {
+            close();
+        });
+
+        input.addEventListener('keydown', e => {
+            const items_in_list = list.querySelectorAll('.sd-item');
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                highlightIdx = Math.min(highlightIdx + 1, items_in_list.length - 1);
+                items_in_list.forEach((el, i) => el.classList.toggle('highlighted', i === highlightIdx));
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                highlightIdx = Math.max(highlightIdx - 1, 0);
+                items_in_list.forEach((el, i) => el.classList.toggle('highlighted', i === highlightIdx));
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (highlightIdx >= 0 && highlightIdx < items_in_list.length) {
+                    const id = items_in_list[highlightIdx].dataset.id;
+                    selectItem(items.find(i => i.id === id));
+                }
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                close();
+                input.blur();
+            }
+        });
+
+        this._sdInstances[containerId] = {
+            getValue: () => input.dataset.value,
+            setValue: (val) => {
+                const item = items.find(i => i.id === val) || items[0];
+                input.dataset.value = item.id;
+                input.value = `${item.emoji} ${item.nome}`;
+            }
+        };
+    },
+
+    /* --- Tags --- */
+    _editTags: [],
+
+    getAllTags() {
+        const spese = Storage.getSpese();
+        const tagSet = new Set();
+        spese.forEach(s => {
+            if (s.tags && Array.isArray(s.tags)) {
+                s.tags.forEach(t => tagSet.add(t));
+            }
+        });
+        return [...tagSet].sort();
+    },
+
+    initTagInput() {
+        const container = document.getElementById('sd-tags');
+        const chipsEl = document.getElementById('tag-chips');
+        if (!container) return;
+
+        container.innerHTML = `
+            <input type="text" class="sd-input" placeholder="Aggiungi tag..." autocomplete="off">
+            <div class="sd-list"></div>
+        `;
+
+        const input = container.querySelector('.sd-input');
+        const list = container.querySelector('.sd-list');
+
+        const renderChips = () => {
+            chipsEl.innerHTML = this._editTags.map(tag =>
+                `<span class="tag-chip">#${this.esc(tag)}<button class="tag-remove" data-tag="${this.esc(tag)}">&times;</button></span>`
+            ).join('');
+
+            chipsEl.querySelectorAll('.tag-remove').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    this._editTags = this._editTags.filter(t => t !== btn.dataset.tag);
+                    renderChips();
+                });
+            });
+        };
+
+        const renderList = (filter = '') => {
+            const allTags = this.getAllTags();
+            const q = filter.toLowerCase().replace(/^#/, '');
+            const available = allTags.filter(t =>
+                !this._editTags.includes(t) && (q ? t.toLowerCase().includes(q) : true)
+            );
+
+            let html = available.map(tag =>
+                `<div class="sd-item" data-tag="${this.esc(tag)}">#${this.esc(tag)}</div>`
+            ).join('');
+
+            // Show "create new" option if typed text is not empty and doesn't match existing
+            const cleanTag = q.trim();
+            if (cleanTag && !allTags.includes(cleanTag) && !this._editTags.includes(cleanTag)) {
+                html += `<div class="sd-item create-new" data-tag="${this.esc(cleanTag)}">+ Crea "#${this.esc(cleanTag)}"</div>`;
+            }
+
+            if (!html) {
+                list.innerHTML = '<div class="sd-empty">Nessun tag</div>';
+            } else {
+                list.innerHTML = html;
+            }
+
+            list.querySelectorAll('.sd-item').forEach(el => {
+                el.addEventListener('mousedown', e => {
+                    e.preventDefault();
+                    addTag(el.dataset.tag);
+                });
+            });
+        };
+
+        const addTag = (tag) => {
+            tag = tag.trim();
+            if (!tag || this._editTags.includes(tag)) return;
+            this._editTags.push(tag);
+            input.value = '';
+            renderChips();
+            renderList();
+        };
+
+        const open = () => {
+            container.classList.add('open');
+            renderList();
+        };
+
+        const close = () => {
+            container.classList.remove('open');
+            input.value = '';
+        };
+
+        input.addEventListener('focus', () => open());
+        input.addEventListener('input', () => renderList(input.value));
+        input.addEventListener('blur', () => close());
+
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const val = input.value.trim().replace(/^#/, '').trim();
+                if (val) addTag(val);
+            } else if (e.key === 'Backspace' && !input.value && this._editTags.length > 0) {
+                this._editTags.pop();
+                renderChips();
+            }
+        });
+
+        renderChips();
+    },
+
+    populateDropdowns() {
+        // Dropdowns are now initialized per-open in openEditModal
     },
 
     openEditModal(id) {
@@ -742,11 +956,18 @@ const App = {
         const d = new Date(spesa.data);
         document.getElementById('edit-importo').value = spesa.importo;
         document.getElementById('edit-descrizione').value = spesa.descrizione;
-        document.getElementById('edit-categoria').value = spesa.categoria;
-        document.getElementById('edit-metodo').value = spesa.metodo || 'carta';
         document.getElementById('edit-data').value = this.toInputDate(d);
         document.getElementById('edit-ora').value = this.toInputTime(d);
         document.getElementById('edit-nota').value = spesa.nota || '';
+
+        // Init searchable dropdowns
+        this.initSearchableDropdown('sd-categoria', CATEGORIES, spesa.categoria || 'altro');
+        this.initSearchableDropdown('sd-metodo', PAYMENT_METHODS, spesa.metodo || 'carta');
+
+        // Init tags
+        this._editTags = Array.isArray(spesa.tags) ? [...spesa.tags] : [];
+        this.initTagInput();
+
         document.getElementById('modal-overlay').classList.remove('hidden');
     },
 
@@ -766,13 +987,17 @@ const App = {
         const dateVal = document.getElementById('edit-data').value;
         const timeVal = document.getElementById('edit-ora').value;
 
+        const catValue = this._sdInstances['sd-categoria'] ? this._sdInstances['sd-categoria'].getValue() : 'altro';
+        const metValue = this._sdInstances['sd-metodo'] ? this._sdInstances['sd-metodo'].getValue() : 'carta';
+
         Storage.updateSpesa(this.editingId, {
             importo: Math.round(importo * 100) / 100,
             descrizione: document.getElementById('edit-descrizione').value || 'Spesa',
-            categoria: document.getElementById('edit-categoria').value,
-            metodo: document.getElementById('edit-metodo').value,
+            categoria: catValue,
+            metodo: metValue,
             data: new Date(`${dateVal}T${timeVal || '12:00'}:00`).toISOString(),
-            nota: document.getElementById('edit-nota').value
+            nota: document.getElementById('edit-nota').value,
+            tags: [...this._editTags]
         });
 
         if (this.filterOpen) this.recalcSliderMax();
