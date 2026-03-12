@@ -16,7 +16,6 @@ const App = {
     editingId: null,
     toastTimer: null,
     newCardId: null,
-    _modalFieldActive: false,
 
     /* --- Stats --- */
     statsPeriod: 'month',
@@ -39,22 +38,186 @@ const App = {
     _lastSliderInput: 'max',
     advancedFiltersOpen: false,
 
+    /* --- Edit modal: back/focus helpers --- */
+    _lastViewportHeight: 0,
+
+    isModalOpen() {
+        const overlay = document.getElementById('modal-overlay');
+        return this.editingId !== null && overlay && !overlay.classList.contains('hidden');
+    },
+
+    getOpenModalDropdown() {
+        return document.querySelector('#edit-modal .searchable-dropdown.open');
+    },
+
+    getActivePlainModalField() {
+        const modal = document.getElementById('edit-modal');
+        const el = document.activeElement;
+
+        if (!this.isModalOpen() || !modal || !el || !modal.contains(el)) return null;
+        if (el.closest('.searchable-dropdown')) return null;
+
+        return el.matches('input, textarea, select') ? el : null;
+    },
+
+    clearModalSelection() {
+        let hadInteraction = false;
+
+        const openDropdown = this.getOpenModalDropdown();
+        if (openDropdown) {
+            const input = openDropdown.querySelector('.sd-input');
+            if (input) {
+                try { input.blur(); } catch (_) { }
+                hadInteraction = true;
+            }
+        }
+
+        const active = this.getActivePlainModalField();
+        if (active) {
+            try { active.blur(); } catch (_) { }
+            hadInteraction = true;
+        }
+
+        const sel = window.getSelection ? window.getSelection() : null;
+        if (sel && sel.rangeCount > 0) {
+            try { sel.removeAllRanges(); } catch (_) { }
+        }
+
+        return hadInteraction;
+    },
+
+    keepModalBackState() {
+        if (!this.isModalOpen()) return;
+        try { history.pushState({ panel: 'modal' }, ''); } catch (_) { }
+    },
+
     /* =====================
        INIT
        ===================== */
-    init() {
-        if (!Storage.isAvailable()) {
-            document.body.innerHTML = '<div style="padding:40px;text-align:center"><h2>⚠️ Storage non disponibile</h2></div>';
-            return;
+    initModal() {
+        document.getElementById('modal-close').addEventListener('click', () => this.closeModal());
+
+        document.getElementById('modal-overlay').addEventListener('click', e => {
+            if (e.target.id === 'modal-overlay') this.closeModal();
+        });
+
+        document.getElementById('btn-save').addEventListener('click', () => this.saveEdit());
+
+        document.getElementById('btn-delete').addEventListener('click', () => {
+            this.showConfirm('Eliminare questa spesa?', () => {
+                Storage.deleteSpesa(this.editingId);
+
+                if (this.filterOpen) this.recalcSliderMax();
+
+                this.closeModal();
+                this.renderTimeline();
+                if (this.currentPage === 'stats') this.renderStats();
+                this.showToast('Spesa eliminata', 'info');
+            });
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                this.closeModal();
+                this.closeConfirm();
+            }
+        });
+
+        // Se l'utente sceglie una data/ora, tolgo il focus subito dopo
+        ['edit-data', 'edit-ora'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+
+            el.addEventListener('change', () => {
+                setTimeout(() => {
+                    if (document.activeElement === el) el.blur();
+                }, 0);
+            });
+        });
+
+        // Su Android spesso il back chiude la tastiera ma lascia il campo focusato:
+        // quando il viewport torna alto, tolgo il focus dal campo.
+        this._lastViewportHeight = window.visualViewport
+            ? window.visualViewport.height
+            : window.innerHeight;
+
+        const handleViewportResize = () => {
+            const currentHeight = window.visualViewport
+                ? window.visualViewport.height
+                : window.innerHeight;
+
+            const delta = currentHeight - this._lastViewportHeight;
+
+            if (delta > 120 && this.isModalOpen()) {
+                const active = this.getActivePlainModalField();
+                if (active && active.type !== 'date' && active.type !== 'time') {
+                    this.clearModalSelection();
+                }
+            }
+
+            this._lastViewportHeight = currentHeight;
+        };
+
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', handleViewportResize);
+        } else {
+            window.addEventListener('resize', handleViewportResize);
         }
 
-        this.initTheme();
-        this.initNavigation();
-        this.initInput();
-        this.initModal();
-        this.initFilters();
-        this.populateDropdowns();
-        this.renderTimeline();
+        // Alcuni picker nativi (data/ora) al rientro lasciano ancora il focus:
+        // quando la finestra torna attiva, lo rimuovo.
+        window.addEventListener('focus', () => {
+            if (!this.isModalOpen()) return;
+
+            const active = document.activeElement;
+            if (active && (active.id === 'edit-data' || active.id === 'edit-ora')) {
+                setTimeout(() => {
+                    if (document.activeElement === active) {
+                        try { active.blur(); } catch (_) { }
+                    }
+                }, 0);
+            }
+        });
+
+        // Back button handling
+        window.addEventListener('popstate', () => {
+            // 1) Se nel modal c'è qualcosa di "attivo" (dropdown/input/textarea/date/time),
+            //    il primo back deve solo deselezionare/chiudere tastiera o picker
+            //    e mantenere aperto il modal.
+            if (this.isModalOpen()) {
+                const hadDropdownOpen = !!this.getOpenModalDropdown();
+                const hadActiveField = !!this.getActivePlainModalField();
+
+                if (hadDropdownOpen || hadActiveField) {
+                    this.clearModalSelection();
+                    this.keepModalBackState();
+                    return;
+                }
+
+                // 2) Se non c'è più niente di attivo, il secondo back chiude solo il modal
+                this.closeModal(true);
+                return;
+            }
+
+            // 3) If advanced filters open, close them
+            if (this.advancedFiltersOpen) {
+                this.advancedFiltersOpen = false;
+                document.getElementById('advanced-filters').classList.add('hidden');
+                document.getElementById('btn-advanced-toggle').classList.remove('active');
+                requestAnimationFrame(() => {
+                    const panel = document.getElementById('filter-panel');
+                    const h = panel.offsetHeight;
+                    document.getElementById('app-main').style.marginTop = `calc(var(--header-h) + ${h}px)`;
+                });
+                return;
+            }
+
+            // 4) If base filter panel open, close it
+            if (this.filterOpen) {
+                this.closeFilterPanel(true);
+                return;
+            }
+        });
     },
 
     /* =====================
@@ -735,40 +898,21 @@ const App = {
 
         // Back button handling
         window.addEventListener('popstate', (e) => {
-            // 1) If modal is open, handle focused fields / dropdowns first
+            // 1) If a dropdown is open in the modal, close it
+            const openDropdown = document.querySelector('.searchable-dropdown.open');
+            if (openDropdown) {
+                const inp = openDropdown.querySelector('.sd-input');
+                if (inp) inp.blur();
+                return;
+            }
+
+            // 2) If modal is open, close it
             if (this.editingId !== null) {
-                const modal = document.getElementById('edit-modal');
-
-                // 1a) If a dropdown is open inside the modal, close it and re-push state
-                const openDropdown = modal.querySelector('.searchable-dropdown.open');
-                if (openDropdown) {
-                    const inp = openDropdown.querySelector('.sd-input');
-                    if (inp) inp.blur();
-                    this._modalFieldActive = false;
-                    setTimeout(() => history.pushState({ panel: 'modal' }, ''), 0);
-                    return;
-                }
-
-                // 1b) If any field was recently focused (flag-based, reliable on Android)
-                //     or is still focused (activeElement fallback)
-                const activeEl = document.activeElement;
-                const stillFocused = activeEl && modal.contains(activeEl) &&
-                    (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
-
-                if (this._modalFieldActive || stillFocused) {
-                    // Blur all inputs/textareas in the modal to be safe
-                    modal.querySelectorAll('input, textarea').forEach(el => el.blur());
-                    this._modalFieldActive = false;
-                    setTimeout(() => history.pushState({ panel: 'modal' }, ''), 0);
-                    return;
-                }
-
-                // 1c) Nothing focused — close the modal
                 this.closeModal(true);
                 return;
             }
 
-            // 2) If advanced filters open, close them
+            // 3) If advanced filters open, close them
             if (this.advancedFiltersOpen) {
                 this.advancedFiltersOpen = false;
                 document.getElementById('advanced-filters').classList.add('hidden');
@@ -781,7 +925,7 @@ const App = {
                 return;
             }
 
-            // 3) If base filter panel open, close it
+            // 4) If base filter panel open, close it
             if (this.filterOpen) {
                 this.closeFilterPanel(true);
                 return;
@@ -1136,48 +1280,20 @@ const App = {
         this._editTags = Array.isArray(spesa.tags) ? [...spesa.tags] : [];
         this.initTagInput();
 
+        this._lastViewportHeight = window.visualViewport
+            ? window.visualViewport.height
+            : window.innerHeight;
+
         document.getElementById('modal-overlay').classList.remove('hidden');
         history.pushState({ panel: 'modal' }, '');
-
-        // Track field focus inside the modal for robust back-button handling
-        this._modalFieldActive = false;
-        const modal = document.getElementById('edit-modal');
-        // Remove old listeners (avoid duplicates) by using named handler
-        modal.removeEventListener('focusin', this._onModalFocusIn);
-        modal.removeEventListener('focusout', this._onModalFocusOut);
-        this._onModalFocusIn = (e) => {
-            const tag = e.target.tagName;
-            if (tag === 'INPUT' || tag === 'TEXTAREA') {
-                this._modalFieldActive = true;
-            }
-        };
-        this._onModalFocusOut = (e) => {
-            const tag = e.target.tagName;
-            // Only clear the flag if it's not a dropdown input (those are handled separately)
-            if ((tag === 'INPUT' || tag === 'TEXTAREA') &&
-                !e.target.closest('.searchable-dropdown')) {
-                // Delay clearing so the popstate handler can still see the flag
-                setTimeout(() => {
-                    // Only clear if no other modal field gained focus in the meantime
-                    const nowActive = document.activeElement;
-                    const stillInModal = nowActive && modal.contains(nowActive) &&
-                        (nowActive.tagName === 'INPUT' || nowActive.tagName === 'TEXTAREA');
-                    if (!stillInModal) {
-                        this._modalFieldActive = false;
-                    }
-                }, 150);
-            }
-        };
-        modal.addEventListener('focusin', this._onModalFocusIn);
-        modal.addEventListener('focusout', this._onModalFocusOut);
     },
 
-    closeModal(fromPopstate) {
+    closeModal(fromPopstate = false) {
+        this.clearModalSelection();
         document.getElementById('modal-overlay').classList.add('hidden');
         this.editingId = null;
-        this._modalFieldActive = false;
+
         if (!fromPopstate) {
-            // Go back so popstate won't fire again
             try { history.back(); } catch (_) { }
         }
     },
