@@ -38,7 +38,11 @@ const App = {
     _lastSliderInput: 'max',
     advancedFiltersOpen: false,
 
-    /* --- Edit modal: back/focus helpers --- */
+    /* --- Edit modal history/focus --- */
+    _modalInteractionActive: false,
+    _suppressNextPopstate: false,
+    _suspendInteractionRelease: false,
+    _keyboardWatchTimer: null,
     _lastViewportHeight: 0,
 
     isModalOpen() {
@@ -867,6 +871,120 @@ const App = {
     /* =====================
        EDIT MODAL
        ===================== */
+    isModalOpen() {
+        const overlay = document.getElementById('modal-overlay');
+        return !!overlay && !overlay.classList.contains('hidden') && this.editingId !== null;
+    },
+
+    getViewportHeight() {
+        if (window.visualViewport && Number.isFinite(window.visualViewport.height)) {
+            return window.visualViewport.height;
+        }
+        return window.innerHeight || document.documentElement.clientHeight || 0;
+    },
+
+    getOpenModalDropdown() {
+        return document.querySelector('#edit-modal .searchable-dropdown.open');
+    },
+
+    getActivePlainModalField() {
+        const modal = document.getElementById('edit-modal');
+        const el = document.activeElement;
+
+        if (!this.isModalOpen() || !modal || !el || !modal.contains(el)) return null;
+        if (el.closest('.searchable-dropdown')) return null;
+
+        return el.matches('input, textarea, select') ? el : null;
+    },
+
+    pushModalHistoryState() {
+        try {
+            history.pushState({ panel: 'modal' }, '');
+        } catch (_) { }
+    },
+
+    ensureModalInteractionState() {
+        if (!this.isModalOpen() || this._modalInteractionActive) return;
+
+        this._modalInteractionActive = true;
+
+        try {
+            history.pushState({ panel: 'modal-interaction' }, '');
+        } catch (_) { }
+    },
+
+    releaseModalInteractionState() {
+        if (!this._modalInteractionActive) return;
+
+        this._modalInteractionActive = false;
+        this._suppressNextPopstate = true;
+
+        try {
+            history.back();
+        } catch (_) { }
+    },
+
+    clearModalSelection() {
+        const dropdown = this.getOpenModalDropdown();
+        if (dropdown) {
+            const sdInput = dropdown.querySelector('.sd-input');
+            if (sdInput) {
+                try { sdInput.blur(); } catch (_) { }
+            } else {
+                dropdown.classList.remove('open');
+            }
+        }
+
+        const active = this.getActivePlainModalField();
+        if (active) {
+            try { active.blur(); } catch (_) { }
+        }
+
+        const sel = window.getSelection ? window.getSelection() : null;
+        if (sel && sel.rangeCount > 0) {
+            try { sel.removeAllRanges(); } catch (_) { }
+        }
+    },
+
+    handleModalViewportChange() {
+        const currentHeight = this.getViewportHeight();
+
+        if (this.isModalOpen()) {
+            const active = this.getActivePlainModalField();
+
+            if (active) {
+                const type = (active.type || '').toLowerCase();
+                const isTextLike =
+                    active.tagName === 'TEXTAREA' ||
+                    ['text', 'number', 'search', 'email', 'tel', 'url', 'password'].includes(type);
+                const isPicker = type === 'date' || type === 'time';
+
+                // Se il viewport aumenta molto, di solito tastiera/picker si è chiuso
+                if ((isTextLike || isPicker) && currentHeight - this._lastViewportHeight > 100) {
+                    try { active.blur(); } catch (_) { }
+                }
+            }
+        }
+
+        this._lastViewportHeight = currentHeight;
+    },
+
+    startModalViewportWatch() {
+        this.stopModalViewportWatch();
+        this._lastViewportHeight = this.getViewportHeight();
+
+        this._keyboardWatchTimer = setInterval(() => {
+            this.handleModalViewportChange();
+        }, 120);
+    },
+
+    stopModalViewportWatch() {
+        if (this._keyboardWatchTimer) {
+            clearInterval(this._keyboardWatchTimer);
+            this._keyboardWatchTimer = null;
+        }
+    },
+
     initModal() {
         document.getElementById('modal-close').addEventListener('click', () => this.closeModal());
 
@@ -896,23 +1014,95 @@ const App = {
             }
         });
 
+        // Blur automatico per date/time dopo scelta
+        ['edit-data', 'edit-ora'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+
+            el.addEventListener('change', () => {
+                setTimeout(() => {
+                    if (document.activeElement === el) {
+                        try { el.blur(); } catch (_) { }
+                    }
+                }, 0);
+            });
+
+            el.addEventListener('focus', () => {
+                this._lastViewportHeight = this.getViewportHeight();
+            });
+        });
+
+        // Tiene traccia delle variazioni viewport per chiusura tastiera/picker
+        const handleViewportResize = () => this.handleModalViewportChange();
+
+        window.addEventListener('resize', handleViewportResize);
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', handleViewportResize);
+        }
+
+        // Alcuni picker nativi tornano con focus ancora attivo
+        const blurPickerOnReturn = () => {
+            if (!this.isModalOpen()) return;
+
+            const active = this.getActivePlainModalField();
+            if (!active) return;
+
+            const type = (active.type || '').toLowerCase();
+            if (type === 'date' || type === 'time') {
+                setTimeout(() => {
+                    if (document.activeElement === active) {
+                        try { active.blur(); } catch (_) { }
+                    }
+                }, 0);
+            }
+        };
+
+        window.addEventListener('focus', blurPickerOnReturn);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                blurPickerOnReturn();
+            }
+        });
+
         // Back button handling
-        window.addEventListener('popstate', (e) => {
-            // 1) If a dropdown is open in the modal, close it
-            const openDropdown = document.querySelector('.searchable-dropdown.open');
-            if (openDropdown) {
-                const inp = openDropdown.querySelector('.sd-input');
-                if (inp) inp.blur();
+        window.addEventListener('popstate', () => {
+            if (this._suppressNextPopstate) {
+                this._suppressNextPopstate = false;
                 return;
             }
 
-            // 2) If modal is open, close it
-            if (this.editingId !== null) {
+            // 1) Se il modal è aperto, ha la priorità
+            if (this.isModalOpen()) {
+                const dropdownOpen = !!this.getOpenModalDropdown();
+                const activeField = this.getActivePlainModalField();
+
+                // 1a) Se è aperto un dropdown del modal, il back chiude solo quello
+                if (this._modalInteractionActive || dropdownOpen) {
+                    this._suspendInteractionRelease = true;
+                    this.clearModalSelection();
+                    this._modalInteractionActive = false;
+
+                    setTimeout(() => {
+                        this._suspendInteractionRelease = false;
+                    }, 0);
+
+                    return;
+                }
+
+                // 1b) Se un campo normale è ancora focusato, il back deve solo deselezionarlo
+                //     e ripristinare lo state del modal
+                if (activeField) {
+                    this.clearModalSelection();
+                    this.pushModalHistoryState();
+                    return;
+                }
+
+                // 1c) Altrimenti chiude il modal
                 this.closeModal(true);
                 return;
             }
 
-            // 3) If advanced filters open, close them
+            // 2) If advanced filters open, close them
             if (this.advancedFiltersOpen) {
                 this.advancedFiltersOpen = false;
                 document.getElementById('advanced-filters').classList.add('hidden');
@@ -925,7 +1115,7 @@ const App = {
                 return;
             }
 
-            // 4) If base filter panel open, close it
+            // 3) If base filter panel open, close it
             if (this.filterOpen) {
                 this.closeFilterPanel(true);
                 return;
@@ -986,16 +1176,29 @@ const App = {
         };
 
         const open = () => {
+            const wasClosed = !container.classList.contains('open');
             container.classList.add('open');
+
+            if (wasClosed) {
+                this.ensureModalInteractionState();
+            }
+
             renderList();
         };
 
         const close = () => {
+            const wasOpen = container.classList.contains('open');
+
             container.classList.remove('open');
             input.readOnly = true;
             isEditable = false;
+
             const sel = items.find(i => i.id === input.dataset.value) || items[0];
             input.value = `${sel.emoji} ${sel.nome}`;
+
+            if (wasOpen && this._modalInteractionActive && !this._suspendInteractionRelease) {
+                this.releaseModalInteractionState();
+            }
         };
 
         // First tap: open dropdown (readOnly, no keyboard)
@@ -1208,15 +1411,27 @@ const App = {
         };
 
         const open = () => {
+            const wasClosed = !container.classList.contains('open');
             container.classList.add('open');
+
+            if (wasClosed) {
+                this.ensureModalInteractionState();
+            }
+
             renderList();
         };
 
         const close = () => {
+            const wasOpen = container.classList.contains('open');
+
             container.classList.remove('open');
             input.readOnly = true;
             isEditable = false;
             input.value = '';
+
+            if (wasOpen && this._modalInteractionActive && !this._suspendInteractionRelease) {
+                this.releaseModalInteractionState();
+            }
         };
 
         // First tap: open dropdown without keyboard
@@ -1284,17 +1499,35 @@ const App = {
             ? window.visualViewport.height
             : window.innerHeight;
 
+        this._modalInteractionActive = false;
+        this._suspendInteractionRelease = false;
+        this._lastViewportHeight = this.getViewportHeight();
+
         document.getElementById('modal-overlay').classList.remove('hidden');
-        history.pushState({ panel: 'modal' }, '');
+        this.startModalViewportWatch();
+        this.pushModalHistoryState();
     },
 
     closeModal(fromPopstate = false) {
+        const hadInteractionState = this._modalInteractionActive;
+
+        this._suspendInteractionRelease = true;
         this.clearModalSelection();
+        this._suspendInteractionRelease = false;
+
         document.getElementById('modal-overlay').classList.add('hidden');
         this.editingId = null;
+        this._modalInteractionActive = false;
+        this.stopModalViewportWatch();
 
         if (!fromPopstate) {
-            try { history.back(); } catch (_) { }
+            this._suppressNextPopstate = true;
+
+            try {
+                history.go(hadInteractionState ? -2 : -1);
+            } catch (_) {
+                try { history.back(); } catch (_) { }
+            }
         }
     },
 
