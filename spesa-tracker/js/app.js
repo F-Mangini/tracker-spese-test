@@ -45,183 +45,22 @@ const App = {
     _keyboardWatchTimer: null,
     _lastViewportHeight: 0,
 
-    isModalOpen() {
-        const overlay = document.getElementById('modal-overlay');
-        return this.editingId !== null && overlay && !overlay.classList.contains('hidden');
-    },
-
-    getOpenModalDropdown() {
-        return document.querySelector('#edit-modal .searchable-dropdown.open');
-    },
-
-    getActivePlainModalField() {
-        const modal = document.getElementById('edit-modal');
-        const el = document.activeElement;
-
-        if (!this.isModalOpen() || !modal || !el || !modal.contains(el)) return null;
-        if (el.closest('.searchable-dropdown')) return null;
-
-        return el.matches('input, textarea, select') ? el : null;
-    },
-
-    clearModalSelection() {
-        let hadInteraction = false;
-
-        const openDropdown = this.getOpenModalDropdown();
-        if (openDropdown) {
-            const input = openDropdown.querySelector('.sd-input');
-            if (input) {
-                try { input.blur(); } catch (_) { }
-                hadInteraction = true;
-            }
-        }
-
-        const active = this.getActivePlainModalField();
-        if (active) {
-            try { active.blur(); } catch (_) { }
-            hadInteraction = true;
-        }
-
-        const sel = window.getSelection ? window.getSelection() : null;
-        if (sel && sel.rangeCount > 0) {
-            try { sel.removeAllRanges(); } catch (_) { }
-        }
-
-        return hadInteraction;
-    },
-
-    keepModalBackState() {
-        if (!this.isModalOpen()) return;
-        try { history.pushState({ panel: 'modal' }, ''); } catch (_) { }
-    },
-
     /* =====================
        INIT
        ===================== */
-    initModal() {
-        document.getElementById('modal-close').addEventListener('click', () => this.closeModal());
-
-        document.getElementById('modal-overlay').addEventListener('click', e => {
-            if (e.target.id === 'modal-overlay') this.closeModal();
-        });
-
-        document.getElementById('btn-save').addEventListener('click', () => this.saveEdit());
-
-        document.getElementById('btn-delete').addEventListener('click', () => {
-            this.showConfirm('Eliminare questa spesa?', () => {
-                Storage.deleteSpesa(this.editingId);
-
-                if (this.filterOpen) this.recalcSliderMax();
-
-                this.closeModal();
-                this.renderTimeline();
-                if (this.currentPage === 'stats') this.renderStats();
-                this.showToast('Spesa eliminata', 'info');
-            });
-        });
-
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') {
-                this.closeModal();
-                this.closeConfirm();
-            }
-        });
-
-        // Se l'utente sceglie una data/ora, tolgo il focus subito dopo
-        ['edit-data', 'edit-ora'].forEach(id => {
-            const el = document.getElementById(id);
-            if (!el) return;
-
-            el.addEventListener('change', () => {
-                setTimeout(() => {
-                    if (document.activeElement === el) el.blur();
-                }, 0);
-            });
-        });
-
-        // Su Android spesso il back chiude la tastiera ma lascia il campo focusato:
-        // quando il viewport torna alto, tolgo il focus dal campo.
-        this._lastViewportHeight = window.visualViewport
-            ? window.visualViewport.height
-            : window.innerHeight;
-
-        const handleViewportResize = () => {
-            const currentHeight = window.visualViewport
-                ? window.visualViewport.height
-                : window.innerHeight;
-
-            const delta = currentHeight - this._lastViewportHeight;
-
-            if (delta > 120 && this.isModalOpen()) {
-                const active = this.getActivePlainModalField();
-                if (active && active.type !== 'date' && active.type !== 'time') {
-                    this.clearModalSelection();
-                }
-            }
-
-            this._lastViewportHeight = currentHeight;
-        };
-
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', handleViewportResize);
-        } else {
-            window.addEventListener('resize', handleViewportResize);
+    init() {
+        if (!Storage.isAvailable()) {
+            document.body.innerHTML = '<div style="padding:40px;text-align:center"><h2>⚠️ Storage non disponibile</h2></div>';
+            return;
         }
 
-        // Alcuni picker nativi (data/ora) al rientro lasciano ancora il focus:
-        // quando la finestra torna attiva, lo rimuovo.
-        window.addEventListener('focus', () => {
-            if (!this.isModalOpen()) return;
-
-            const active = document.activeElement;
-            if (active && (active.id === 'edit-data' || active.id === 'edit-ora')) {
-                setTimeout(() => {
-                    if (document.activeElement === active) {
-                        try { active.blur(); } catch (_) { }
-                    }
-                }, 0);
-            }
-        });
-
-        // Back button handling
-        window.addEventListener('popstate', () => {
-            // 1) Se nel modal c'è qualcosa di "attivo" (dropdown/input/textarea/date/time),
-            //    il primo back deve solo deselezionare/chiudere tastiera o picker
-            //    e mantenere aperto il modal.
-            if (this.isModalOpen()) {
-                const hadDropdownOpen = !!this.getOpenModalDropdown();
-                const hadActiveField = !!this.getActivePlainModalField();
-
-                if (hadDropdownOpen || hadActiveField) {
-                    this.clearModalSelection();
-                    this.keepModalBackState();
-                    return;
-                }
-
-                // 2) Se non c'è più niente di attivo, il secondo back chiude solo il modal
-                this.closeModal(true);
-                return;
-            }
-
-            // 3) If advanced filters open, close them
-            if (this.advancedFiltersOpen) {
-                this.advancedFiltersOpen = false;
-                document.getElementById('advanced-filters').classList.add('hidden');
-                document.getElementById('btn-advanced-toggle').classList.remove('active');
-                requestAnimationFrame(() => {
-                    const panel = document.getElementById('filter-panel');
-                    const h = panel.offsetHeight;
-                    document.getElementById('app-main').style.marginTop = `calc(var(--header-h) + ${h}px)`;
-                });
-                return;
-            }
-
-            // 4) If base filter panel open, close it
-            if (this.filterOpen) {
-                this.closeFilterPanel(true);
-                return;
-            }
-        });
+        this.initTheme();
+        this.initNavigation();
+        this.initInput();
+        this.initModal();
+        this.initFilters();
+        this.populateDropdowns();
+        this.renderTimeline();
     },
 
     /* =====================
@@ -236,7 +75,6 @@ const App = {
             const next = cur === 'dark' ? 'light' : 'dark';
 
             this.applyTheme(next);
-            // Session-only: don't persist to settings
 
             if (this.currentPage === 'stats') this.renderStats();
         });
@@ -339,7 +177,6 @@ const App = {
 
         resetBtn.addEventListener('click', () => this.resetFilters());
 
-        // Advanced filters toggle
         const advToggle = document.getElementById('btn-advanced-toggle');
         advToggle.addEventListener('click', () => this.toggleAdvancedFilters());
 
@@ -361,13 +198,11 @@ const App = {
             btn.classList.remove('active');
         }
 
-        // Recalculate main margin
         requestAnimationFrame(() => {
             const panel = document.getElementById('filter-panel');
             const h = panel.offsetHeight;
             document.getElementById('app-main').style.marginTop = `calc(var(--header-h) + ${h}px)`;
 
-            // Auto-scroll to bottom when opening
             if (this.advancedFiltersOpen) {
                 const scrollContainer = panel.querySelector('.filter-panel-scroll');
                 scrollContainer.scrollTo({ top: scrollContainer.scrollHeight, behavior: 'smooth' });
@@ -959,7 +794,6 @@ const App = {
                     ['text', 'number', 'search', 'email', 'tel', 'url', 'password'].includes(type);
                 const isPicker = type === 'date' || type === 'time';
 
-                // Se il viewport aumenta molto, di solito tastiera/picker si è chiuso
                 if ((isTextLike || isPicker) && currentHeight - this._lastViewportHeight > 100) {
                     try { active.blur(); } catch (_) { }
                 }
@@ -1014,7 +848,6 @@ const App = {
             }
         });
 
-        // Blur automatico per date/time dopo scelta
         ['edit-data', 'edit-ora'].forEach(id => {
             const el = document.getElementById(id);
             if (!el) return;
@@ -1032,7 +865,6 @@ const App = {
             });
         });
 
-        // Tiene traccia delle variazioni viewport per chiusura tastiera/picker
         const handleViewportResize = () => this.handleModalViewportChange();
 
         window.addEventListener('resize', handleViewportResize);
@@ -1040,7 +872,6 @@ const App = {
             window.visualViewport.addEventListener('resize', handleViewportResize);
         }
 
-        // Alcuni picker nativi tornano con focus ancora attivo
         const blurPickerOnReturn = () => {
             if (!this.isModalOpen()) return;
 
@@ -1064,19 +895,16 @@ const App = {
             }
         });
 
-        // Back button handling
         window.addEventListener('popstate', () => {
             if (this._suppressNextPopstate) {
                 this._suppressNextPopstate = false;
                 return;
             }
 
-            // 1) Se il modal è aperto, ha la priorità
             if (this.isModalOpen()) {
                 const dropdownOpen = !!this.getOpenModalDropdown();
                 const activeField = this.getActivePlainModalField();
 
-                // 1a) Se è aperto un dropdown del modal, il back chiude solo quello
                 if (this._modalInteractionActive || dropdownOpen) {
                     this._suspendInteractionRelease = true;
                     this.clearModalSelection();
@@ -1089,20 +917,16 @@ const App = {
                     return;
                 }
 
-                // 1b) Se un campo normale è ancora focusato, il back deve solo deselezionarlo
-                //     e ripristinare lo state del modal
                 if (activeField) {
                     this.clearModalSelection();
                     this.pushModalHistoryState();
                     return;
                 }
 
-                // 1c) Altrimenti chiude il modal
                 this.closeModal(true);
                 return;
             }
 
-            // 2) If advanced filters open, close them
             if (this.advancedFiltersOpen) {
                 this.advancedFiltersOpen = false;
                 document.getElementById('advanced-filters').classList.add('hidden');
@@ -1115,7 +939,6 @@ const App = {
                 return;
             }
 
-            // 3) If base filter panel open, close it
             if (this.filterOpen) {
                 this.closeFilterPanel(true);
                 return;
@@ -1192,7 +1015,6 @@ const App = {
             container.classList.remove('open');
             input.readOnly = true;
             isEditable = false;
-
             const sel = items.find(i => i.id === input.dataset.value) || items[0];
             input.value = `${sel.emoji} ${sel.nome}`;
 
@@ -1201,22 +1023,17 @@ const App = {
             }
         };
 
-        // First tap: open dropdown (readOnly, no keyboard)
-        // Second tap: enable typing (remove readOnly, keyboard opens)
         input.addEventListener('mousedown', e => {
             if (!container.classList.contains('open')) {
-                // First tap – open dropdown without keyboard
                 e.preventDefault();
                 input.focus();
                 open();
             } else if (!isEditable) {
-                // Second tap – enable typing
                 e.preventDefault();
                 isEditable = true;
                 input.readOnly = false;
                 input.value = '';
                 input.focus();
-                // Scroll so dropdown is visible above mobile keyboard
                 setTimeout(() => {
                     container.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }, 300);
@@ -1292,7 +1109,6 @@ const App = {
         const freq = {};
         const lastUsed = {};
 
-        // Spese are stored newest-first
         spese.forEach(s => {
             if (!s.tags || !Array.isArray(s.tags)) return;
             const ts = new Date(s.data).getTime();
@@ -1349,7 +1165,6 @@ const App = {
                 !this._editTags.includes(t) && (q ? t.toLowerCase().includes(q) : true)
             );
 
-            // Build full sorted list: most recent (🕐) first, then by frequency (⭐), then rest
             let orderedItems = [];
             if (available.length > 0 && !q) {
                 const sorted = available.slice().sort((a, b) => (lastUsed[b] || 0) - (lastUsed[a] || 0));
@@ -1365,7 +1180,6 @@ const App = {
                 }
                 orderedItems.push(...starItems);
 
-                // Add remaining items
                 const usedTags = new Set(orderedItems.map(i => i.tag));
                 for (const t of sorted) {
                     if (!usedTags.has(t)) {
@@ -1373,7 +1187,6 @@ const App = {
                     }
                 }
             } else {
-                // When searching, show all filtered results
                 orderedItems = available.map(t => ({ tag: t, icon: '' }));
             }
 
@@ -1381,7 +1194,6 @@ const App = {
                 `<div class="sd-item" data-tag="${this.esc(tag)}"><span>#${this.esc(tag)}</span>${icon ? `<span class="tag-hint-icon">${icon}</span>` : ''}</div>`
             ).join('');
 
-            // Show "create new" option
             const cleanTag = q.trim();
             if (cleanTag && !allTags.includes(cleanTag) && !this._editTags.includes(cleanTag)) {
                 html += `<div class="sd-item create-new" data-tag="${this.esc(cleanTag)}">+ Crea "#${this.esc(cleanTag)}"</div>`;
@@ -1434,8 +1246,6 @@ const App = {
             }
         };
 
-        // First tap: open dropdown without keyboard
-        // Second tap: enable typing
         input.addEventListener('mousedown', e => {
             if (!container.classList.contains('open')) {
                 e.preventDefault();
@@ -1487,17 +1297,11 @@ const App = {
         document.getElementById('edit-ora').value = this.toInputTime(d);
         document.getElementById('edit-nota').value = spesa.nota || '';
 
-        // Init searchable dropdowns
         this.initSearchableDropdown('sd-categoria', CATEGORIES, spesa.categoria || 'altro');
         this.initSearchableDropdown('sd-metodo', PAYMENT_METHODS, spesa.metodo || 'carta');
 
-        // Init tags
         this._editTags = Array.isArray(spesa.tags) ? [...spesa.tags] : [];
         this.initTagInput();
-
-        this._lastViewportHeight = window.visualViewport
-            ? window.visualViewport.height
-            : window.innerHeight;
 
         this._modalInteractionActive = false;
         this._suspendInteractionRelease = false;
@@ -1866,9 +1670,6 @@ const App = {
         container.querySelectorAll('.period-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const newPeriod = btn.dataset.period;
-
-                // Custom no longer auto-opens the filter panel
-
                 this.statsPeriod = newPeriod;
                 this.statsOffset = 0;
                 this.renderStats();
