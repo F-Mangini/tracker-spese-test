@@ -732,6 +732,64 @@ const App = {
         return el.matches('input, textarea, select') ? el : null;
     },
 
+    bindNonStickyNativePicker(el) {
+        if (!el || typeof el.showPicker !== 'function') return;
+
+        let openedProgrammatically = false;
+
+        const openPicker = (e) => {
+            openedProgrammatically = true;
+            e.preventDefault();
+            e.stopPropagation();
+
+            try {
+                if (document.activeElement === el) el.blur();
+            } catch (_) { }
+
+            try {
+                el.showPicker();
+            } catch (_) {
+                openedProgrammatically = false;
+                try { el.focus(); } catch (_) { }
+                return;
+            }
+
+            setTimeout(() => {
+                if (document.activeElement === el) {
+                    try { el.blur(); } catch (_) { }
+                }
+                openedProgrammatically = false;
+            }, 0);
+        };
+
+        el.addEventListener('pointerdown', openPicker);
+
+        el.addEventListener('focus', () => {
+            if (!openedProgrammatically) return;
+
+            setTimeout(() => {
+                if (document.activeElement === el) {
+                    try { el.blur(); } catch (_) { }
+                }
+            }, 0);
+        });
+
+        el.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                if (typeof el.showPicker !== 'function') return;
+                e.preventDefault();
+                try {
+                    el.showPicker();
+                } catch (_) { }
+                setTimeout(() => {
+                    if (document.activeElement === el) {
+                        try { el.blur(); } catch (_) { }
+                    }
+                }, 0);
+            }
+        });
+    },
+
     pushModalHistoryState() {
         try {
             history.pushState({ panel: 'modal' }, '');
@@ -851,6 +909,8 @@ const App = {
         ['edit-data', 'edit-ora'].forEach(id => {
             const el = document.getElementById(id);
             if (!el) return;
+
+            this.bindNonStickyNativePicker(el);
 
             el.addEventListener('change', () => {
                 setTimeout(() => {
