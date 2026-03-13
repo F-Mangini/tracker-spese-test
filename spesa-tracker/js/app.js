@@ -747,9 +747,11 @@ const App = {
             } catch (_) { }
 
             try {
+                el.classList.add('picker-open');
                 el.showPicker();
             } catch (_) {
                 openedProgrammatically = false;
+                el.classList.remove('picker-open');
                 try { el.focus(); } catch (_) { }
                 return;
             }
@@ -764,8 +766,19 @@ const App = {
 
         el.addEventListener('pointerdown', openPicker);
 
-        el.addEventListener('focus', () => {
-            if (!openedProgrammatically) return;
+        const closeVisuals = (e) => {
+            if (e.target !== el) {
+                el.classList.remove('picker-open');
+            }
+        };
+        document.addEventListener('pointerdown', closeVisuals, { passive: true });
+
+        el.addEventListener('focus', (e) => {
+            if (!openedProgrammatically) {
+                try { el.blur(); } catch (_) { }
+                el.classList.remove('picker-open');
+                return;
+            }
 
             setTimeout(() => {
                 if (document.activeElement === el) {
@@ -779,8 +792,11 @@ const App = {
                 if (typeof el.showPicker !== 'function') return;
                 e.preventDefault();
                 try {
+                    el.classList.add('picker-open');
                     el.showPicker();
-                } catch (_) { }
+                } catch (_) {
+                    el.classList.remove('picker-open');
+                }
                 setTimeout(() => {
                     if (document.activeElement === el) {
                         try { el.blur(); } catch (_) { }
@@ -832,6 +848,11 @@ const App = {
         if (active) {
             try { active.blur(); } catch (_) { }
         }
+
+        ['edit-data', 'edit-ora'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('picker-open');
+        });
 
         const sel = window.getSelection ? window.getSelection() : null;
         if (sel && sel.rangeCount > 0) {
@@ -913,6 +934,7 @@ const App = {
             this.bindNonStickyNativePicker(el);
 
             el.addEventListener('change', () => {
+                el.classList.remove('picker-open');
                 setTimeout(() => {
                     if (document.activeElement === el) {
                         try { el.blur(); } catch (_) { }
@@ -933,6 +955,11 @@ const App = {
         }
 
         const blurPickerOnReturn = () => {
+            ['edit-data', 'edit-ora'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('picker-open');
+            });
+
             if (!this.isModalOpen()) return;
 
             const active = this.getActivePlainModalField();

@@ -1043,7 +1043,8 @@ body:has(.no-input-bar) .filter-panel-scroll {
 
 .form-group input:focus,
 .form-group select:focus,
-.form-group textarea:focus {
+.form-group textarea:focus,
+.form-group input.picker-open {
     border-color: var(--accent);
 }
 
