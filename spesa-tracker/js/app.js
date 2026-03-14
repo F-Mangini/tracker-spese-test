@@ -127,7 +127,6 @@ const App = {
 
         if (page === 'timeline') this.renderTimeline();
         if (page === 'stats') this.renderStats();
-        if (page === 'settings') this.renderSettings();
     },
 
     /* =====================
@@ -729,6 +728,7 @@ const App = {
         if (!this.isModalOpen() || !modal || !el || !modal.contains(el)) return null;
         if (el.closest('.searchable-dropdown')) return null;
 
+        if (el.matches('input[type="date"], input[type="time"]')) return null;
         return el.matches('input, textarea, select') ? el : null;
     },
 
@@ -766,20 +766,6 @@ const App = {
                 }
                 openedProgrammatically = false;
             }, 0);
-
-            let lostFocus = false;
-            let checks = 0;
-            const checkFocusInterval = setInterval(() => {
-                checks++;
-                if (!document.hasFocus()) {
-                    lostFocus = true;
-                } else if (lostFocus || checks > 10) {
-                    clearInterval(checkFocusInterval);
-                    if (lostFocus) {
-                        el.classList.remove('picker-open');
-                    }
-                }
-            }, 50);
         };
 
         el.addEventListener('pointerdown', openPicker);
@@ -790,6 +776,7 @@ const App = {
             }
         };
         document.addEventListener('pointerdown', closeVisuals, { passive: true });
+        window.addEventListener('focus', () => el.classList.remove('picker-open'));
 
         el.addEventListener('focus', (e) => {
             if (!openedProgrammatically) {
@@ -825,20 +812,9 @@ const App = {
                         try { el.blur(); } catch (_) { }
                     }
                 }, 0);
-
-                let lostFocus = false;
-                let checks = 0;
-                const checkFocusInterval = setInterval(() => {
-                    checks++;
-                    if (!document.hasFocus()) {
-                        lostFocus = true;
-                    } else if (lostFocus || checks > 10) {
-                        clearInterval(checkFocusInterval);
-                        if (lostFocus) {
-                            el.classList.remove('picker-open');
-                        }
-                    }
-                }, 50);
+            } else if (e.key === 'Escape') {
+                el.classList.remove('picker-open');
+                try { el.blur(); } catch (_) { }
             }
         });
     },
