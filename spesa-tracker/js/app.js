@@ -917,6 +917,13 @@ const App = {
             }
         }
 
+        if (this.filterOpen) {
+            const searchInput = document.getElementById('search-input');
+            if (searchInput && document.activeElement === searchInput && (currentHeight - this._lastViewportHeight > 100)) {
+                try { searchInput.blur(); } catch (_) { }
+            }
+        }
+
         this._lastViewportHeight = currentHeight;
     },
 
