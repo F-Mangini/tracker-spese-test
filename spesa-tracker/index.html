@@ -33,8 +33,7 @@
             <div class="filter-section">
                 <div class="filter-input-row">
                     <span class="filter-input-icon">🔍</span>
-                    <input type="text" id="search-input" placeholder="Cerca nelle spese..." autocomplete="nope"
-                        autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
+                    <textarea id="search-input" rows="1" placeholder="Cerca nelle spese..."></textarea>
                     <button id="btn-search-clear" class="filter-x-btn hidden">&times;</button>
                 </div>
             </div>
@@ -119,7 +118,7 @@
 
     <div id="input-bar">
         <div class="input-wrapper">
-            <input type="text" id="expense-input" placeholder='es: caffè 1.50' autocomplete="off" enterkeyhint="send">
+            <textarea id="expense-input" rows="1" placeholder='es: caffè 1.50' enterkeyhint="send"></textarea>
             <button id="btn-voice" aria-label="Dettatura vocale">🎤</button>
             <button id="btn-send" aria-label="Aggiungi spesa">
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
@@ -152,9 +151,7 @@
                 <div class="form-row">
                     <div class="form-group flex-1">
                         <label for="edit-importo">Importo (€)</label>
-                        <input type="number" id="edit-importo" step="0.01" min="0" inputmode="decimal"
-                            autocomplete="nope" autocorrect="off" autocapitalize="none" spellcheck="false"
-                            data-form-type="other">
+                        <textarea id="edit-importo" rows="1" inputmode="decimal"></textarea>
                     </div>
                     <div class="form-group flex-1">
                         <label>Pagamento</label>
@@ -163,8 +160,7 @@
                 </div>
                 <div class="form-group">
                     <label for="edit-descrizione">Descrizione</label>
-                    <input type="text" id="edit-descrizione" autocomplete="nope" autocorrect="off" autocapitalize="none"
-                        spellcheck="false" data-form-type="other">
+                    <textarea id="edit-descrizione" rows="1"></textarea>
                 </div>
                 <div class="form-group">
                     <label>Categoria</label>
