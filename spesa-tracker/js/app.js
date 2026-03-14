@@ -742,6 +742,10 @@ const App = {
             e.preventDefault();
             e.stopPropagation();
 
+            if (typeof this.clearModalSelection === 'function') {
+                this.clearModalSelection();
+            }
+
             try {
                 if (document.activeElement === el) el.blur();
             } catch (_) { }
@@ -762,6 +766,20 @@ const App = {
                 }
                 openedProgrammatically = false;
             }, 0);
+
+            let lostFocus = false;
+            let checks = 0;
+            const checkFocusInterval = setInterval(() => {
+                checks++;
+                if (!document.hasFocus()) {
+                    lostFocus = true;
+                } else if (lostFocus || checks > 10) {
+                    clearInterval(checkFocusInterval);
+                    if (lostFocus) {
+                        el.classList.remove('picker-open');
+                    }
+                }
+            }, 50);
         };
 
         el.addEventListener('pointerdown', openPicker);
@@ -791,6 +809,11 @@ const App = {
             if (e.key === 'Enter' || e.key === ' ') {
                 if (typeof el.showPicker !== 'function') return;
                 e.preventDefault();
+
+                if (typeof this.clearModalSelection === 'function') {
+                    this.clearModalSelection();
+                }
+
                 try {
                     el.classList.add('picker-open');
                     el.showPicker();
@@ -802,6 +825,20 @@ const App = {
                         try { el.blur(); } catch (_) { }
                     }
                 }, 0);
+
+                let lostFocus = false;
+                let checks = 0;
+                const checkFocusInterval = setInterval(() => {
+                    checks++;
+                    if (!document.hasFocus()) {
+                        lostFocus = true;
+                    } else if (lostFocus || checks > 10) {
+                        clearInterval(checkFocusInterval);
+                        if (lostFocus) {
+                            el.classList.remove('picker-open');
+                        }
+                    }
+                }, 50);
             }
         });
     },
