@@ -1100,7 +1100,7 @@ const App = {
         const selected = items.find(i => i.id === currentValue) || items[0];
 
         container.innerHTML = `
-            <input type="text" class="sd-input" autocomplete="off" readOnly
+            <input type="text" class="sd-input" autocomplete="nope" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other" readOnly
                    value="${selected.emoji} ${selected.nome}" data-value="${selected.id}">
             <span class="sd-arrow">▼</span>
             <div class="sd-list"></div>
@@ -1271,7 +1271,7 @@ const App = {
         if (!container) return;
 
         container.innerHTML = `
-            <input type="text" class="sd-input" placeholder="Aggiungi tag..." autocomplete="off" readOnly>
+            <input type="text" class="sd-input" placeholder="Aggiungi tag..." autocomplete="nope" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other" readOnly>
             <div class="sd-list"></div>
         `;
 
