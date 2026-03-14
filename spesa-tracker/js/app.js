@@ -175,24 +175,18 @@ const App = {
             }
         });
 
-        clearBtn.addEventListener('mousedown', e => {
-            if (document.activeElement === searchInput) {
-                e.preventDefault();
-            }
-        });
-
-        clearBtn.addEventListener('touchstart', e => {
-            if (document.activeElement === searchInput) {
-                e.preventDefault();
-            }
-        }, { passive: false });
-
-        clearBtn.addEventListener('click', () => {
+        const handleClear = (e) => {
+            if (e && e.cancelable) e.preventDefault();
+            if (searchInput.value === '') return;
             searchInput.value = '';
             this.filters.query = '';
             clearBtn.classList.add('hidden');
             this.onFilterChange();
-        });
+        };
+
+        clearBtn.addEventListener('mousedown', handleClear);
+        clearBtn.addEventListener('touchstart', handleClear, { passive: false });
+        clearBtn.addEventListener('click', handleClear);
 
         this.buildChips('filter-cats', CATEGORIES, this.filters.categories);
         this.buildChips('filter-methods', PAYMENT_METHODS, this.filters.methods);
