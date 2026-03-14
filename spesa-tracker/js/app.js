@@ -37,6 +37,7 @@ const App = {
     sliderMax: 100,
     _lastSliderInput: 'max',
     advancedFiltersOpen: false,
+    _filterSearchActive: false,
 
     /* --- Edit modal history/focus --- */
     _modalInteractionActive: false,
@@ -150,6 +151,28 @@ const App = {
             this.filters.query = searchInput.value.trim();
             clearBtn.classList.toggle('hidden', !this.filters.query);
             this.onFilterChange();
+        });
+
+        searchInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchInput.blur();
+            }
+        });
+
+        searchInput.addEventListener('focus', () => {
+            if (this.filterOpen && !this._filterSearchActive) {
+                this._filterSearchActive = true;
+                try { history.pushState({ panel: 'filter-search' }, ''); } catch (_) { }
+            }
+        });
+
+        searchInput.addEventListener('blur', () => {
+            if (this._filterSearchActive) {
+                this._filterSearchActive = false;
+                this._suppressNextPopstate = true;
+                try { history.back(); } catch (_) { }
+            }
         });
 
         clearBtn.addEventListener('click', () => {
@@ -1026,6 +1049,13 @@ const App = {
                 }
 
                 this.closeModal(true);
+                return;
+            }
+
+            if (this._filterSearchActive) {
+                this._filterSearchActive = false;
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) searchInput.blur();
                 return;
             }
 
