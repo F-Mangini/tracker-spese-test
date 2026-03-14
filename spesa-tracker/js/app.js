@@ -123,7 +123,7 @@ const App = {
         document.getElementById('btn-filter-toggle').style.display =
             page === 'settings' ? 'none' : '';
 
-        if (page === 'settings') this.closeFilterPanel();
+        if (page === 'settings' && this.filterOpen) this.closeFilterPanel();
 
         if (page === 'timeline') this.renderTimeline();
         if (page === 'stats') this.renderStats();
@@ -370,6 +370,7 @@ const App = {
     },
 
     closeFilterPanel(fromPopstate) {
+        const wasOpen = this.filterOpen;
         this.filterOpen = false;
         this.advancedFiltersOpen = false;
         document.getElementById('filter-panel').classList.add('hidden');
@@ -377,7 +378,7 @@ const App = {
         document.getElementById('advanced-filters').classList.add('hidden');
         document.getElementById('btn-advanced-toggle').classList.remove('active');
         document.getElementById('app-main').style.marginTop = '';
-        if (!fromPopstate) {
+        if (wasOpen && !fromPopstate) {
             try { history.back(); } catch (_) { }
         }
     },
