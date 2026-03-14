@@ -127,6 +127,7 @@ const App = {
 
         if (page === 'timeline') this.renderTimeline();
         if (page === 'stats') this.renderStats();
+        if (page === 'settings') this.renderSettings();
     },
 
     /* =====================
