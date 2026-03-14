@@ -175,11 +175,22 @@ const App = {
             }
         });
 
+        clearBtn.addEventListener('mousedown', e => {
+            if (document.activeElement === searchInput) {
+                e.preventDefault();
+            }
+        });
+
+        clearBtn.addEventListener('touchstart', e => {
+            if (document.activeElement === searchInput) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
         clearBtn.addEventListener('click', () => {
             searchInput.value = '';
             this.filters.query = '';
             clearBtn.classList.add('hidden');
-            searchInput.focus();
             this.onFilterChange();
         });
 
