@@ -1048,7 +1048,7 @@ body:has(.no-input-bar) .filter-panel-scroll {
     border-color: var(--accent);
 }
 
-.form-group textarea {
+.form-group #edit-nota {
     resize: vertical;
     min-height: 60px;
 }
