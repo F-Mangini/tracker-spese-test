@@ -69,7 +69,7 @@ const Parser = {
         if (/\b(satispay)\b/.test(text)) return 'satispay';
         if (/\b(paypal)\b/.test(text)) return 'paypal';
         if (/\b(bonifico)\b/.test(text)) return 'bonifico';
-        if (/\b(buoni pasto)\b/.test(text)) return 'buoni_pasto';
+        if (/\b(buoni pasto|buono pasto|buonopasto|buonipasto)\b/.test(text)) return 'buoni_pasto';
         return 'carta'; // default
     }
 };
