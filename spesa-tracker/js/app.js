@@ -1354,7 +1354,7 @@ const App = {
                 `<div class="sd-item" data-tag="${this.esc(tag)}"><span>#${this.esc(tag)}</span>${icon ? `<span class="tag-hint-icon">${icon}</span>` : ''}</div>`
             ).join('');
 
-            const cleanTag = q.trim();
+            const cleanTag = q.replace(/\s+/g, '');
             if (cleanTag && !allTags.includes(cleanTag) && !this._editTags.includes(cleanTag)) {
                 html += `<div class="sd-item create-new" data-tag="${this.esc(cleanTag)}">+ Crea "#${this.esc(cleanTag)}"</div>`;
             }
@@ -1374,7 +1374,7 @@ const App = {
         };
 
         const addTag = (tag) => {
-            tag = tag.trim();
+            tag = tag.replace(/\s+/g, '');
             if (!tag || this._editTags.includes(tag)) return;
             this._editTags.push(tag);
             input.value = '';
@@ -1436,10 +1436,9 @@ const App = {
                         addTag(firstTag);
                     }
                 } else {
-                    const val = input.value.trim().replace(/^#/, '').trim();
+                    const val = input.value.replace(/\s+/g, '').replace(/^#/, '');
                     if (val) addTag(val);
                 }
-                input.blur();
             }
         });
 
