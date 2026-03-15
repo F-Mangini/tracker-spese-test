@@ -1088,6 +1088,18 @@ const App = {
                 return;
             }
         });
+
+        ['edit-importo', 'edit-descrizione', 'edit-nota'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        el.blur();
+                    }
+                });
+            }
+        });
     },
 
     /* --- Searchable Dropdown --- */
@@ -1216,7 +1228,11 @@ const App = {
                 if (highlightIdx >= 0 && highlightIdx < items_in_list.length) {
                     const id = items_in_list[highlightIdx].dataset.id;
                     selectItem(items.find(i => i.id === id));
+                } else if (items_in_list.length > 0) {
+                    const id = items_in_list[0].dataset.id;
+                    selectItem(items.find(i => i.id === id));
                 }
+                input.blur();
             } else if (e.key === 'Escape') {
                 e.preventDefault();
                 close();
@@ -1413,11 +1429,17 @@ const App = {
         input.addEventListener('keydown', e => {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                const val = input.value.trim().replace(/^#/, '').trim();
-                if (val) addTag(val);
-            } else if (e.key === 'Backspace' && !input.value && this._editTags.length > 0) {
-                this._editTags.pop();
-                renderChips();
+                const items_in_list = list.querySelectorAll('.sd-item');
+                if (items_in_list.length > 0) {
+                    const firstTag = items_in_list[0].dataset.tag;
+                    if (firstTag) {
+                        addTag(firstTag);
+                    }
+                } else {
+                    const val = input.value.trim().replace(/^#/, '').trim();
+                    if (val) addTag(val);
+                }
+                input.blur();
             }
         });
 
