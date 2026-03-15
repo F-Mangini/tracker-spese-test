@@ -29,6 +29,7 @@ const CATEGORIES = [
 
 const PAYMENT_METHODS = [
     { id: 'bonifico', nome: 'Bonifico', emoji: '🏦' },
+    { id: 'buoni_pasto', nome: 'Buoni Pasto', emoji: '🍔' },
     { id: 'carta', nome: 'Carta', emoji: '💳' },
     { id: 'contanti', nome: 'Contanti', emoji: '💵' },
     { id: 'paypal', nome: 'PayPal', emoji: '🅿️' },
