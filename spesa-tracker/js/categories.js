@@ -9,9 +9,9 @@ const CATEGORIES = [
     { id: 'bollette', nome: 'Bollette', emoji: '💡', keywords: ['bolletta', 'luce', 'gas', 'acqua', 'enel', 'eni', 'a2a', 'internet', 'wifi', 'fibra', 'utenze'] },
     { id: 'casa', nome: 'Casa', emoji: '🏠', keywords: ['affitto', 'mutuo', 'condominio', 'casa', 'arredamento', 'ikea'] },
     { id: 'cura', nome: 'Cura personale', emoji: '💇', keywords: ['barbiere', 'parrucchiere', 'estetista', 'profumo', 'crema', 'shampoo', 'sapone', 'trucco', 'makeup', 'smalto', 'rossetto', 'eyeliner', 'matita', 'mascara', 'blush', 'fondotinta', 'cipria', 'ombretto', 'capelli', 'taglio', 'unghie', 'manicure', 'pedicure', 'sopracciglia', 'ceretta', 'depilazione', 'tinta', 'lucidalabbra', 'rasoio', 'lametta', 'pennello', 'spazzolino', 'dentifricio', 'collutorio', 'deodorante', 'bagnoschiuma', 'doccia', 'dopobarba'] },
-    { id: 'drink', nome: 'Drink', emoji: '🍺', keywords: ['birra', 'vino', 'cocktail', 'aperitivo', 'spritz', 'drink', 'shot', 'mojito', 'gin', 'rum', 'vodka', 'amaro'] },
+    { id: 'drink', nome: 'Drink', emoji: '🍺', keywords: ['birra', 'vino', 'cocktail', 'aperitivo', 'spritz', 'drink', 'shot', 'mojito', 'gin', 'rum', 'vodka', 'amaro', 'negroni', 'campari', 'camparino'] },
     { id: 'formazione', nome: 'Formazione', emoji: '🎓', keywords: ['libro', 'corso', 'università', 'scuola', 'master', 'udemy', 'lezione', 'formazione', 'workshop'] },
-    { id: 'intrattenimento', nome: 'Intrattenimento', emoji: '🎬', keywords: ['cinema', 'netflix', 'spotify', 'disney', 'prime video', 'concerto', 'teatro', 'museo', 'mostra', 'evento', 'playstation', 'xbox', 'nintendo', 'gioco', 'videogioco', 'steam', 'bowling', 'biliardo', 'ice hockey', 'biliardino', 'sala giochi'] },
+    { id: 'intrattenimento', nome: 'Intrattenimento', emoji: '🎬', keywords: ['cinema', 'netflix', 'spotify', 'disney', 'prime video', 'concerto', 'teatro', 'museo', 'mostra', 'evento', 'playstation', 'xbox', 'nintendo', 'gioco', 'videogioco', 'steam', 'bowling', 'biliardo', 'ice hockey', 'biliardino', 'sala giochi', 'spettacolo'] },
     { id: 'produttività', nome: 'Produttività', emoji: '🤖', keywords: ['produttività', 'produttivita', 'chatgpt', 'claude', 'gemini', 'kimi', 'copilot', 'claude code', 'codex', 'perplexity', 'colab', 'server', 'gpu'] },
     { id: 'regali', nome: 'Regali', emoji: '🎁', keywords: ['regalo', 'fiori', 'pensiero', 'compleanno', 'natale'] },
     { id: 'ristorante', nome: 'Ristorante', emoji: '🍝', keywords: ['pizza', 'sushi', 'ristorante', 'trattoria', 'hamburger', 'panino', 'pranzo', 'cena', 'pizzeria', 'kebab', 'poke', 'mcdonald', 'mcd', 'burger', 'macelleria', 'braceria'] },
@@ -23,7 +23,7 @@ const CATEGORIES = [
     { id: 'tech', nome: 'Tech', emoji: '💻', keywords: ['computer', 'pc', 'laptop', 'tablet', 'cuffie', 'caricatore', 'amazon', 'elettronica', 'monitor', 'tastiera', 'mouse', 'cavo', 'usb', 'hard disk', 'ssd', 'iphone', 'samsung', 'apple', 'telefono nuovo'] },
     { id: 'telefono', nome: 'Telefono', emoji: '📱', keywords: ['ricarica', 'iliad', 'vodafone', 'tim', 'wind', 'tre', 'ho mobile', 'fastweb', 'sim'] },
     { id: 'trasporti', nome: 'Trasporti', emoji: '🚗', keywords: ['benzina', 'diesel', 'treno', 'bus', 'metro', 'taxi', 'uber', 'autostrada', 'parcheggio', 'bollo', 'assicurazione', 'meccanico', 'gomme', 'italo', 'trenitalia', 'flixbus', 'monopattino'] },
-    { id: 'viaggi', nome: 'Viaggi', emoji: '✈️', keywords: ['volo', 'aereo', 'hotel', 'albergo', 'airbnb', 'booking', 'vacanza', 'viaggio', 'ostello'] },
+    { id: 'viaggi', nome: 'Viaggi', emoji: '✈️', keywords: ['volo', 'voli', 'aereo', 'hotel', 'albergo', 'airbnb', 'booking', 'vacanza', 'viaggio', 'ostello'] },
     { id: 'altro', nome: 'Altro', emoji: '📦', keywords: [] }
 ];
 
