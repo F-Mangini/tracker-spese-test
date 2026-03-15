@@ -16,7 +16,7 @@
 <body>
 
     <header id="app-header">
-        <h1>💰 SpesaTracker v1.1.0</h1>
+        <h1>💰 SpesaTracker v1.1.1</h1>
         <div class="header-actions">
             <button id="btn-filter-toggle" class="header-btn" aria-label="Filtri" title="Filtri e ricerca">
                 🔍
@@ -151,7 +151,7 @@
                 <div class="form-row">
                     <div class="form-group flex-1">
                         <label for="edit-importo">Importo (€)</label>
-                        <textarea id="edit-importo" rows="1" inputmode="decimal"></textarea>
+                        <textarea id="edit-importo" rows="1" inputmode="decimal" enterkeyhint="done"></textarea>
                     </div>
                     <div class="form-group flex-1">
                         <label>Pagamento</label>
@@ -160,7 +160,7 @@
                 </div>
                 <div class="form-group">
                     <label for="edit-descrizione">Descrizione</label>
-                    <textarea id="edit-descrizione" rows="1"></textarea>
+                    <textarea id="edit-descrizione" rows="1" enterkeyhint="done"></textarea>
                 </div>
                 <div class="form-group">
                     <label>Categoria</label>
@@ -186,7 +186,7 @@
                 </div>
                 <div class="form-group">
                     <label for="edit-nota">Nota</label>
-                    <textarea id="edit-nota" rows="2" placeholder="Aggiungi una nota..."></textarea>
+                    <textarea id="edit-nota" rows="2" placeholder="Aggiungi una nota..." enterkeyhint="done"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
