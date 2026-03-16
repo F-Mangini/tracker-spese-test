@@ -58,11 +58,46 @@ const App = {
 
         this.initTheme();
         this.initNavigation();
+        this.initEdgeSwipePrevention();
         this.initInput();
         this.initModal();
         this.initFilters();
         this.populateDropdowns();
         this.renderTimeline();
+    },
+
+    /* =====================
+       EDGE SWIPE PREVENTION
+       ===================== */
+    initEdgeSwipePrevention() {
+        const EDGE_WIDTH = 30;
+        let edgeTouch = false;
+
+        document.addEventListener('touchstart', (e) => {
+            const t = e.touches[0];
+            if (!t) return;
+            const x = t.clientX;
+            const w = window.innerWidth;
+            if (x <= EDGE_WIDTH || x >= w - EDGE_WIDTH) {
+                edgeTouch = true;
+            } else {
+                edgeTouch = false;
+            }
+        }, { passive: true });
+
+        document.addEventListener('touchmove', (e) => {
+            if (edgeTouch && e.cancelable) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchend', () => {
+            edgeTouch = false;
+        }, { passive: true });
+
+        document.addEventListener('touchcancel', () => {
+            edgeTouch = false;
+        }, { passive: true });
     },
 
     /* =====================
@@ -154,9 +189,6 @@ const App = {
         const dateFrom = document.getElementById('filter-date-from');
         const dateTo = document.getElementById('filter-date-to');
 
-        if (dateFrom) this.bindNonStickyNativePicker(dateFrom);
-        if (dateTo) this.bindNonStickyNativePicker(dateTo);
-
         toggleBtn.addEventListener('click', () => {
             if (this.filterOpen) this.closeFilterPanel();
             else this.openFilterPanel();
@@ -209,25 +241,15 @@ const App = {
         this.initSlider();
 
         dateFrom.addEventListener('change', () => {
-            dateFrom.classList.remove('picker-open');
             this.filters.dateFrom = dateFrom.value;
             this.onFilterChange();
-            setTimeout(() => {
-                if (document.activeElement === dateFrom) {
-                    try { dateFrom.blur(); } catch (_) { }
-                }
-            }, 0);
+            try { dateFrom.blur(); } catch (_) { }
         });
 
         dateTo.addEventListener('change', () => {
-            dateTo.classList.remove('picker-open');
             this.filters.dateTo = dateTo.value;
             this.onFilterChange();
-            setTimeout(() => {
-                if (document.activeElement === dateTo) {
-                    try { dateTo.blur(); } catch (_) { }
-                }
-            }, 0);
+            try { dateTo.blur(); } catch (_) { }
         });
 
         resetBtn.addEventListener('click', () => this.resetFilters());
