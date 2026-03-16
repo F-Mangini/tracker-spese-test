@@ -613,6 +613,7 @@ const App = {
         this.newCardId = spesa.id;
         input.value = '';
         try { input.blur(); } catch (_) { }
+        try { document.activeElement.blur(); } catch (_) { }
 
         if (this.filterOpen) this.recalcSliderMax();
 
@@ -946,6 +947,13 @@ const App = {
             const searchInput = document.getElementById('search-input');
             if (searchInput && document.activeElement === searchInput && (currentHeight - this._lastViewportHeight > 100)) {
                 try { searchInput.blur(); } catch (_) { }
+            }
+        }
+
+        if (this.currentPage === 'timeline') {
+            const expenseInput = document.getElementById('expense-input');
+            if (expenseInput && document.activeElement === expenseInput && (currentHeight - this._lastViewportHeight > 100)) {
+                try { expenseInput.blur(); } catch (_) { }
             }
         }
 
