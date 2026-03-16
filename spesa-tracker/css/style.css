@@ -59,7 +59,8 @@
 
 html {
     height: 100%;
-    -webkit-text-size-adjust: 100%
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior-x: none;
 }
 
 textarea {
@@ -74,6 +75,7 @@ body {
     min-height: 100dvh;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
+    overscroll-behavior-x: none;
 }
 
 /* ============================================

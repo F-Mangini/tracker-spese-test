@@ -102,7 +102,18 @@ const App = {
         });
     },
 
-    navigateTo(page) {
+    navigateTo(page, fromPopstate = false) {
+        if (!fromPopstate && page !== 'timeline') {
+            if (this.currentPage === 'timeline') {
+                try { history.pushState({ page: page }, ''); } catch (_) {}
+            } else {
+                try { history.replaceState({ page: page }, ''); } catch (_) {}
+            }
+        } else if (!fromPopstate && page === 'timeline' && this.currentPage !== 'timeline') {
+            this._suppressNextPopstate = true;
+            try { history.back(); } catch (_) { }
+        }
+
         this.currentPage = page;
 
         document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
@@ -197,11 +208,13 @@ const App = {
         dateFrom.addEventListener('change', () => {
             this.filters.dateFrom = dateFrom.value;
             this.onFilterChange();
+            try { dateFrom.blur(); } catch (_) { }
         });
 
         dateTo.addEventListener('change', () => {
             this.filters.dateTo = dateTo.value;
             this.onFilterChange();
+            try { dateTo.blur(); } catch (_) { }
         });
 
         resetBtn.addEventListener('click', () => this.resetFilters());
@@ -1124,6 +1137,11 @@ const App = {
 
             if (this.filterOpen) {
                 this.closeFilterPanel(true);
+                return;
+            }
+
+            if (this.currentPage !== 'timeline') {
+                this.navigateTo('timeline', true);
                 return;
             }
         });
