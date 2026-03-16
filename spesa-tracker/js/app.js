@@ -543,7 +543,10 @@ const App = {
 
         btnSend.addEventListener('click', () => this.submitExpense());
         input.addEventListener('keydown', e => {
-            if (e.key === 'Enter') this.submitExpense();
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.submitExpense();
+            }
         });
 
         input.addEventListener('focus', () => {
