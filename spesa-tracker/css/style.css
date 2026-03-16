@@ -61,6 +61,7 @@ html {
     height: 100%;
     -webkit-text-size-adjust: 100%;
     overscroll-behavior-x: none;
+    touch-action: pan-y;
 }
 
 textarea {
@@ -76,6 +77,7 @@ body {
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
     overscroll-behavior-x: none;
+    touch-action: pan-y;
 }
 
 /* ============================================
@@ -344,6 +346,7 @@ body:has(.no-input-bar) .filter-panel-scroll {
     appearance: none;
     z-index: 3;
     outline: none;
+    touch-action: none;
 }
 
 /* Webkit thumb */

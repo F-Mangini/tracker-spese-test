@@ -154,6 +154,9 @@ const App = {
         const dateFrom = document.getElementById('filter-date-from');
         const dateTo = document.getElementById('filter-date-to');
 
+        if (dateFrom) this.bindNonStickyNativePicker(dateFrom);
+        if (dateTo) this.bindNonStickyNativePicker(dateTo);
+
         toggleBtn.addEventListener('click', () => {
             if (this.filterOpen) this.closeFilterPanel();
             else this.openFilterPanel();
@@ -206,15 +209,25 @@ const App = {
         this.initSlider();
 
         dateFrom.addEventListener('change', () => {
+            dateFrom.classList.remove('picker-open');
             this.filters.dateFrom = dateFrom.value;
             this.onFilterChange();
-            try { dateFrom.blur(); } catch (_) { }
+            setTimeout(() => {
+                if (document.activeElement === dateFrom) {
+                    try { dateFrom.blur(); } catch (_) { }
+                }
+            }, 0);
         });
 
         dateTo.addEventListener('change', () => {
+            dateTo.classList.remove('picker-open');
             this.filters.dateTo = dateTo.value;
             this.onFilterChange();
-            try { dateTo.blur(); } catch (_) { }
+            setTimeout(() => {
+                if (document.activeElement === dateTo) {
+                    try { dateTo.blur(); } catch (_) { }
+                }
+            }, 0);
         });
 
         resetBtn.addEventListener('click', () => this.resetFilters());
