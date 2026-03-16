@@ -44,6 +44,7 @@ const App = {
     _suppressNextPopstate: false,
     _suspendInteractionRelease: false,
     _keyboardWatchTimer: null,
+    _expenseInputActive: false,
     _lastViewportHeight: 0,
 
     /* =====================
@@ -220,10 +221,12 @@ const App = {
         if (this.advancedFiltersOpen) {
             section.classList.remove('hidden');
             btn.classList.add('active');
+            document.body.classList.add('no-scroll');
             history.pushState({ panel: 'advanced-filters' }, '');
         } else {
             section.classList.add('hidden');
             btn.classList.remove('active');
+            document.body.classList.remove('no-scroll');
         }
 
         requestAnimationFrame(() => {
@@ -405,6 +408,7 @@ const App = {
         document.getElementById('btn-filter-toggle').classList.remove('active');
         document.getElementById('advanced-filters').classList.add('hidden');
         document.getElementById('btn-advanced-toggle').classList.remove('active');
+        document.body.classList.remove('no-scroll');
         document.getElementById('app-main').style.marginTop = '';
         if (wasOpen && !fromPopstate) {
             try { history.back(); } catch (_) { }
@@ -542,6 +546,21 @@ const App = {
             if (e.key === 'Enter') this.submitExpense();
         });
 
+        input.addEventListener('focus', () => {
+            if (!this._expenseInputActive) {
+                this._expenseInputActive = true;
+                try { history.pushState({ panel: 'expense-input' }, ''); } catch (_) {}
+            }
+        });
+
+        input.addEventListener('blur', () => {
+            if (this._expenseInputActive) {
+                this._expenseInputActive = false;
+                this._suppressNextPopstate = true;
+                try { history.back(); } catch (_) { }
+            }
+        });
+
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -593,6 +612,7 @@ const App = {
         const spesa = Storage.addSpesa(parsed);
         this.newCardId = spesa.id;
         input.value = '';
+        try { input.blur(); } catch (_) { }
 
         if (this.filterOpen) this.recalcSliderMax();
 
@@ -1071,10 +1091,18 @@ const App = {
                 return;
             }
 
+            if (this._expenseInputActive) {
+                this._expenseInputActive = false;
+                const expenseInput = document.getElementById('expense-input');
+                if (expenseInput) expenseInput.blur();
+                return;
+            }
+
             if (this.advancedFiltersOpen) {
                 this.advancedFiltersOpen = false;
                 document.getElementById('advanced-filters').classList.add('hidden');
                 document.getElementById('btn-advanced-toggle').classList.remove('active');
+                document.body.classList.remove('no-scroll');
                 requestAnimationFrame(() => {
                     const panel = document.getElementById('filter-panel');
                     const h = panel.offsetHeight;
@@ -1152,6 +1180,7 @@ const App = {
             input.value = `${item.emoji} ${item.nome}`;
             input.dataset.value = item.id;
             close();
+            try { input.blur(); } catch (_) { }
         };
 
         const open = () => {
@@ -1473,6 +1502,7 @@ const App = {
         this._lastViewportHeight = this.getViewportHeight();
 
         document.getElementById('modal-overlay').classList.remove('hidden');
+        document.body.classList.add('no-scroll');
         this.startModalViewportWatch();
         this.pushModalHistoryState();
     },
@@ -1485,6 +1515,7 @@ const App = {
         this._suspendInteractionRelease = false;
 
         document.getElementById('modal-overlay').classList.add('hidden');
+        document.body.classList.remove('no-scroll');
         this.editingId = null;
         this._modalInteractionActive = false;
         this.stopModalViewportWatch();

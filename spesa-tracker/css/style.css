@@ -1679,6 +1679,10 @@ body:has(.no-input-bar) .filter-panel-scroll {
     display: none !important;
 }
 
+.no-scroll {
+    overflow: hidden !important;
+}
+
 @media (min-width: 600px) {
     #app-main {
         max-width: 540px;
