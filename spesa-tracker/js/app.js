@@ -557,22 +557,21 @@ const App = {
         const btnSend = document.getElementById('btn-send');
         const btnVoice = document.getElementById('btn-voice');
 
-        const handleSend = () => {
-            this.submitExpense();
-            // Force clear pressed/active state
-            btnSend.style.pointerEvents = 'none';
-            requestAnimationFrame(() => { btnSend.style.pointerEvents = ''; });
-        };
-
-        // Touch feedback + touchend for reliable mobile clicks
-        btnSend.addEventListener('touchstart', () => btnSend.classList.add('pressed'), { passive: true });
-        btnSend.addEventListener('touchend', e => {
-            btnSend.classList.remove('pressed');
-            e.preventDefault();
-            handleSend();
+        // CORE FIX: prevent buttons from stealing focus from the input.
+        // This stops the blur event from firing when tapping buttons,
+        // so the keyboard stays open and no repositioning happens.
+        [btnSend, btnVoice].forEach(btn => {
+            btn.addEventListener('mousedown', e => e.preventDefault());
+            btn.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+            // Visual press feedback
+            btn.addEventListener('pointerdown', () => btn.classList.add('pressed'));
+            btn.addEventListener('pointerup', () => btn.classList.remove('pressed'));
+            btn.addEventListener('pointerleave', () => btn.classList.remove('pressed'));
+            btn.addEventListener('pointercancel', () => btn.classList.remove('pressed'));
         });
-        btnSend.addEventListener('click', () => handleSend()); // desktop fallback
 
+        // click works normally because input never blurs
+        btnSend.addEventListener('click', () => this.submitExpense());
         input.addEventListener('keydown', e => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -598,7 +597,6 @@ const App = {
         };
 
         const doBlurCleanup = () => {
-            // Immediately: show nav bar, stop tracking, clear inline position
             document.body.classList.remove('expense-input-active');
             if (inputBarRafId) {
                 cancelAnimationFrame(inputBarRafId);
@@ -606,7 +604,6 @@ const App = {
             }
             inputBar.style.bottom = '';
 
-            // Delay only the history cleanup so button clicks can fire first
             blurCleanupTimer = setTimeout(() => {
                 this._expenseInputActive = false;
                 this._suppressNextPopstate = true;
@@ -658,17 +655,6 @@ const App = {
                 btnVoice.classList.remove('recording');
             };
 
-            btnVoice.addEventListener('touchstart', () => btnVoice.classList.add('pressed'), { passive: true });
-            btnVoice.addEventListener('touchend', e => {
-                btnVoice.classList.remove('pressed');
-                e.preventDefault();
-                if (btnVoice.classList.contains('recording')) {
-                    this.recognition.stop();
-                } else {
-                    btnVoice.classList.add('recording');
-                    this.recognition.start();
-                }
-            });
             btnVoice.addEventListener('click', () => {
                 if (btnVoice.classList.contains('recording')) {
                     this.recognition.stop();
