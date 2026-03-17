@@ -583,18 +583,17 @@ const App = {
         };
 
         const doBlurCleanup = () => {
-            // Immediately show the nav bar
+            // Immediately: show nav bar, stop tracking, clear inline position
             document.body.classList.remove('expense-input-active');
+            if (inputBarRafId) {
+                cancelAnimationFrame(inputBarRafId);
+                inputBarRafId = null;
+            }
+            inputBar.style.bottom = '';
 
-            // Delay the position/state cleanup to let the keyboard animation settle
-            // and to let button clicks fire before the bar moves
+            // Delay only the history cleanup so button clicks can fire first
             blurCleanupTimer = setTimeout(() => {
                 this._expenseInputActive = false;
-                if (inputBarRafId) {
-                    cancelAnimationFrame(inputBarRafId);
-                    inputBarRafId = null;
-                }
-                inputBar.style.bottom = '';
                 this._suppressNextPopstate = true;
                 try { history.back(); } catch (_) { }
             }, 300);
@@ -661,11 +660,16 @@ const App = {
         const input = document.getElementById('expense-input');
         const text = input.value.trim();
 
-        if (!text) return;
+        if (!text) {
+            // Re-focus to keep keyboard open and clear button pressed state
+            setTimeout(() => { try { input.focus(); } catch (_) { } }, 0);
+            return;
+        }
 
         const parsed = Parser.parse(text);
         if (!parsed) {
             this.showToast('Non ho capito l\'importo. Prova: "caffè 1.50"', 'error');
+            setTimeout(() => { try { input.focus(); } catch (_) { } }, 0);
             return;
         }
 
@@ -674,7 +678,6 @@ const App = {
         input.value = '';
         try { input.blur(); } catch (_) { }
         try { document.activeElement.blur(); } catch (_) { }
-        try { document.getElementById('btn-send').blur(); } catch (_) { }
 
         if (this.filterOpen) this.recalcSliderMax();
 
