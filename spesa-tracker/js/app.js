@@ -557,6 +557,8 @@ const App = {
         const btnSend = document.getElementById('btn-send');
         const btnVoice = document.getElementById('btn-voice');
 
+        btnSend.addEventListener('mousedown', e => e.preventDefault());
+        btnSend.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
         btnSend.addEventListener('click', () => this.submitExpense());
         input.addEventListener('keydown', e => {
             if (e.key === 'Enter') {
@@ -566,14 +568,19 @@ const App = {
         });
 
         const inputBar = document.getElementById('input-bar');
+        let inputBarRafId = null;
 
         const updateInputBarPosition = () => {
-            if (!this._expenseInputActive) return;
+            if (!this._expenseInputActive) {
+                inputBarRafId = null;
+                return;
+            }
             const vv = window.visualViewport;
             if (vv) {
                 const offsetFromBottom = window.innerHeight - (vv.offsetTop + vv.height);
                 inputBar.style.bottom = Math.max(0, offsetFromBottom) + 'px';
             }
+            inputBarRafId = requestAnimationFrame(updateInputBarPosition);
         };
 
         input.addEventListener('focus', () => {
@@ -582,12 +589,8 @@ const App = {
                 document.body.classList.add('expense-input-active');
                 try { history.pushState({ panel: 'expense-input' }, ''); } catch (_) { }
 
-                if (window.visualViewport) {
-                    window.visualViewport.addEventListener('resize', updateInputBarPosition);
-                    window.visualViewport.addEventListener('scroll', updateInputBarPosition);
-                }
-                setTimeout(updateInputBarPosition, 50);
-                setTimeout(updateInputBarPosition, 300);
+                if (inputBarRafId) cancelAnimationFrame(inputBarRafId);
+                inputBarRafId = requestAnimationFrame(updateInputBarPosition);
             }
         });
 
@@ -595,12 +598,11 @@ const App = {
             if (this._expenseInputActive) {
                 this._expenseInputActive = false;
                 document.body.classList.remove('expense-input-active');
-                inputBar.style.bottom = '';
-
-                if (window.visualViewport) {
-                    window.visualViewport.removeEventListener('resize', updateInputBarPosition);
-                    window.visualViewport.removeEventListener('scroll', updateInputBarPosition);
+                if (inputBarRafId) {
+                    cancelAnimationFrame(inputBarRafId);
+                    inputBarRafId = null;
                 }
+                inputBar.style.bottom = '';
 
                 this._suppressNextPopstate = true;
                 try { history.back(); } catch (_) { }
@@ -630,6 +632,8 @@ const App = {
                 btnVoice.classList.remove('recording');
             };
 
+            btnVoice.addEventListener('mousedown', e => e.preventDefault());
+            btnVoice.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
             btnVoice.addEventListener('click', () => {
                 if (btnVoice.classList.contains('recording')) {
                     this.recognition.stop();
