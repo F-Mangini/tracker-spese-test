@@ -767,6 +767,14 @@ body:has(.no-input-bar) .filter-panel-scroll {
     display: none;
 }
 
+body.expense-input-active #bottom-nav {
+    display: none;
+}
+
+body.expense-input-active #input-bar {
+    bottom: var(--safe-bottom);
+}
+
 .input-wrapper {
     display: flex;
     align-items: center;
@@ -976,8 +984,37 @@ body:has(.no-input-bar) .filter-panel-scroll {
     }
 }
 
+@keyframes modalOut {
+    from {
+        transform: translateY(0)
+    }
+
+    to {
+        transform: translateY(100%)
+    }
+}
+
+@keyframes overlayOut {
+    from {
+        opacity: 1
+    }
+
+    to {
+        opacity: 0
+    }
+}
+
+.overlay.closing {
+    animation: overlayOut 0.3s ease forwards;
+}
+
+.overlay.closing .modal {
+    animation: modalOut 0.3s ease forwards;
+}
+
 #confirm-overlay {
     align-items: center;
+    z-index: 210;
 }
 
 .modal-header {

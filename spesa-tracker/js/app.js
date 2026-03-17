@@ -568,6 +568,7 @@ const App = {
         input.addEventListener('focus', () => {
             if (!this._expenseInputActive) {
                 this._expenseInputActive = true;
+                document.body.classList.add('expense-input-active');
                 try { history.pushState({ panel: 'expense-input' }, ''); } catch (_) { }
             }
         });
@@ -575,6 +576,7 @@ const App = {
         input.addEventListener('blur', () => {
             if (this._expenseInputActive) {
                 this._expenseInputActive = false;
+                document.body.classList.remove('expense-input-active');
                 this._suppressNextPopstate = true;
                 try { history.back(); } catch (_) { }
             }
@@ -1085,6 +1087,11 @@ const App = {
                 return;
             }
 
+            if (this.isConfirmOpen()) {
+                this.closeConfirm(true);
+                return;
+            }
+
             if (this.isModalOpen()) {
                 const dropdownOpen = !!this.getOpenModalDropdown();
                 const activeField = this.getActivePlainModalField();
@@ -1120,6 +1127,7 @@ const App = {
 
             if (this._expenseInputActive) {
                 this._expenseInputActive = false;
+                document.body.classList.remove('expense-input-active');
                 const expenseInput = document.getElementById('expense-input');
                 if (expenseInput) expenseInput.blur();
                 return;
@@ -1546,11 +1554,17 @@ const App = {
         this.clearModalSelection();
         this._suspendInteractionRelease = false;
 
-        document.getElementById('modal-overlay').classList.add('hidden');
+        const overlay = document.getElementById('modal-overlay');
+        overlay.classList.add('closing');
         document.body.classList.remove('no-scroll');
         this.editingId = null;
         this._modalInteractionActive = false;
         this.stopModalViewportWatch();
+
+        setTimeout(() => {
+            overlay.classList.remove('closing');
+            overlay.classList.add('hidden');
+        }, 280);
 
         if (!fromPopstate) {
             this._suppressNextPopstate = true;
@@ -1598,9 +1612,16 @@ const App = {
     /* =====================
        CONFIRM
        ===================== */
+    isConfirmOpen() {
+        const overlay = document.getElementById('confirm-overlay');
+        return !!overlay && !overlay.classList.contains('hidden');
+    },
+
     showConfirm(msg, onYes) {
         document.getElementById('confirm-message').textContent = msg;
         document.getElementById('confirm-overlay').classList.remove('hidden');
+
+        try { history.pushState({ panel: 'confirm' }, ''); } catch (_) { }
 
         const yesBtn = document.getElementById('confirm-yes');
         const noBtn = document.getElementById('confirm-no');
@@ -1619,8 +1640,12 @@ const App = {
         newNo.addEventListener('click', () => this.closeConfirm());
     },
 
-    closeConfirm() {
+    closeConfirm(fromPopstate = false) {
         document.getElementById('confirm-overlay').classList.add('hidden');
+        if (!fromPopstate) {
+            this._suppressNextPopstate = true;
+            try { history.back(); } catch (_) { }
+        }
     },
 
     /* =============================================
