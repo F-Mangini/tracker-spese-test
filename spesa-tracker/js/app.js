@@ -58,46 +58,11 @@ const App = {
 
         this.initTheme();
         this.initNavigation();
-        this.initEdgeSwipePrevention();
         this.initInput();
         this.initModal();
         this.initFilters();
         this.populateDropdowns();
         this.renderTimeline();
-    },
-
-    /* =====================
-       EDGE SWIPE PREVENTION
-       ===================== */
-    initEdgeSwipePrevention() {
-        const EDGE_WIDTH = 30;
-        let edgeTouch = false;
-
-        document.addEventListener('touchstart', (e) => {
-            const t = e.touches[0];
-            if (!t) return;
-            const x = t.clientX;
-            const w = window.innerWidth;
-            if (x <= EDGE_WIDTH || x >= w - EDGE_WIDTH) {
-                edgeTouch = true;
-            } else {
-                edgeTouch = false;
-            }
-        }, { passive: true });
-
-        document.addEventListener('touchmove', (e) => {
-            if (edgeTouch && e.cancelable) {
-                e.preventDefault();
-            }
-        }, { passive: false });
-
-        document.addEventListener('touchend', () => {
-            edgeTouch = false;
-        }, { passive: true });
-
-        document.addEventListener('touchcancel', () => {
-            edgeTouch = false;
-        }, { passive: true });
     },
 
     /* =====================
@@ -140,9 +105,9 @@ const App = {
     navigateTo(page, fromPopstate = false) {
         if (!fromPopstate && page !== 'timeline') {
             if (this.currentPage === 'timeline') {
-                try { history.pushState({ page: page }, ''); } catch (_) {}
+                try { history.pushState({ page: page }, ''); } catch (_) { }
             } else {
-                try { history.replaceState({ page: page }, ''); } catch (_) {}
+                try { history.replaceState({ page: page }, ''); } catch (_) { }
             }
         } else if (!fromPopstate && page === 'timeline' && this.currentPage !== 'timeline') {
             this._suppressNextPopstate = true;
@@ -244,12 +209,14 @@ const App = {
             this.filters.dateFrom = dateFrom.value;
             this.onFilterChange();
             try { dateFrom.blur(); } catch (_) { }
+            try { document.activeElement.blur(); } catch (_) { }
         });
 
         dateTo.addEventListener('change', () => {
             this.filters.dateTo = dateTo.value;
             this.onFilterChange();
             try { dateTo.blur(); } catch (_) { }
+            try { document.activeElement.blur(); } catch (_) { }
         });
 
         resetBtn.addEventListener('click', () => this.resetFilters());
@@ -600,7 +567,7 @@ const App = {
         input.addEventListener('focus', () => {
             if (!this._expenseInputActive) {
                 this._expenseInputActive = true;
-                try { history.pushState({ panel: 'expense-input' }, ''); } catch (_) {}
+                try { history.pushState({ panel: 'expense-input' }, ''); } catch (_) { }
             }
         });
 
