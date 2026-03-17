@@ -583,15 +583,21 @@ const App = {
         };
 
         const doBlurCleanup = () => {
-            this._expenseInputActive = false;
+            // Immediately show the nav bar
             document.body.classList.remove('expense-input-active');
-            if (inputBarRafId) {
-                cancelAnimationFrame(inputBarRafId);
-                inputBarRafId = null;
-            }
-            inputBar.style.bottom = '';
-            this._suppressNextPopstate = true;
-            try { history.back(); } catch (_) { }
+
+            // Delay the position/state cleanup to let the keyboard animation settle
+            // and to let button clicks fire before the bar moves
+            blurCleanupTimer = setTimeout(() => {
+                this._expenseInputActive = false;
+                if (inputBarRafId) {
+                    cancelAnimationFrame(inputBarRafId);
+                    inputBarRafId = null;
+                }
+                inputBar.style.bottom = '';
+                this._suppressNextPopstate = true;
+                try { history.back(); } catch (_) { }
+            }, 300);
         };
 
         input.addEventListener('focus', () => {
@@ -612,7 +618,7 @@ const App = {
 
         input.addEventListener('blur', () => {
             if (!this._expenseInputActive) return;
-            blurCleanupTimer = setTimeout(doBlurCleanup, 300);
+            doBlurCleanup();
         });
 
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -668,6 +674,7 @@ const App = {
         input.value = '';
         try { input.blur(); } catch (_) { }
         try { document.activeElement.blur(); } catch (_) { }
+        try { document.getElementById('btn-send').blur(); } catch (_) { }
 
         if (this.filterOpen) this.recalcSliderMax();
 
