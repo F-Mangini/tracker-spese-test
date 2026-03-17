@@ -835,6 +835,7 @@ body.expense-input-active #input-bar {
 
 #btn-voice.recording {
     color: var(--danger);
+    background: var(--bg-primary);
     animation: pulse 1s infinite;
 }
 
@@ -1396,6 +1397,11 @@ body.expense-input-active #input-bar {
     overflow: hidden;
     text-overflow: ellipsis;
     text-align: center;
+}
+
+body.expense-input-active .toast {
+    bottom: auto;
+    top: 40%;
 }
 
 .toast.hidden {
