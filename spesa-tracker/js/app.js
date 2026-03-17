@@ -557,21 +557,35 @@ const App = {
         const btnSend = document.getElementById('btn-send');
         const btnVoice = document.getElementById('btn-voice');
 
-        // CORE FIX: prevent buttons from stealing focus from the input.
-        // This stops the blur event from firing when tapping buttons,
-        // so the keyboard stays open and no repositioning happens.
-        [btnSend, btnVoice].forEach(btn => {
-            btn.addEventListener('mousedown', e => e.preventDefault());
-            btn.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
-            // Visual press feedback
-            btn.addEventListener('pointerdown', () => btn.classList.add('pressed'));
-            btn.addEventListener('pointerup', () => btn.classList.remove('pressed'));
-            btn.addEventListener('pointerleave', () => btn.classList.remove('pressed'));
-            btn.addEventListener('pointercancel', () => btn.classList.remove('pressed'));
+        /*
+         * Mobile button strategy:
+         * - touchstart: add .pressed class (visual only, NO preventDefault)
+         * - touchend: remove .pressed, preventDefault (stops stale click), run action
+         * - click: desktop fallback (runs only if no prior touchend)
+         *
+         * This works because touchend always dispatches to the touchstart target
+         * even if the element moved (unlike click which does hit-testing).
+         */
+        let touchHandled = false;
+
+        // --- Send button ---
+        btnSend.addEventListener('touchstart', () => {
+            btnSend.classList.add('pressed');
+        }, { passive: true });
+
+        btnSend.addEventListener('touchend', (e) => {
+            btnSend.classList.remove('pressed');
+            e.preventDefault();
+            touchHandled = true;
+            this.submitExpense();
         });
 
-        // click works normally because input never blurs
-        btnSend.addEventListener('click', () => this.submitExpense());
+        btnSend.addEventListener('click', () => {
+            if (touchHandled) { touchHandled = false; return; }
+            this.submitExpense();
+        });
+
+        // --- Keyboard Enter ---
         input.addEventListener('keydown', e => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -579,6 +593,7 @@ const App = {
             }
         });
 
+        // --- Input bar positioning ---
         const inputBar = document.getElementById('input-bar');
         let inputBarRafId = null;
         let blurCleanupTimer = null;
@@ -632,6 +647,7 @@ const App = {
             doBlurCleanup();
         });
 
+        // --- Voice button ---
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -655,13 +671,29 @@ const App = {
                 btnVoice.classList.remove('recording');
             };
 
-            btnVoice.addEventListener('click', () => {
+            const toggleVoice = () => {
                 if (btnVoice.classList.contains('recording')) {
                     this.recognition.stop();
                 } else {
                     btnVoice.classList.add('recording');
                     this.recognition.start();
                 }
+            };
+
+            btnVoice.addEventListener('touchstart', () => {
+                btnVoice.classList.add('pressed');
+            }, { passive: true });
+
+            btnVoice.addEventListener('touchend', (e) => {
+                btnVoice.classList.remove('pressed');
+                e.preventDefault();
+                touchHandled = true;
+                toggleVoice();
+            });
+
+            btnVoice.addEventListener('click', () => {
+                if (touchHandled) { touchHandled = false; return; }
+                toggleVoice();
             });
         } else {
             btnVoice.style.display = 'none';
@@ -673,6 +705,7 @@ const App = {
         const text = input.value.trim();
 
         if (!text) {
+            this.showToast('Scrivi una spesa prima di inviare', 'error');
             return;
         }
 
