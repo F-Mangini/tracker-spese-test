@@ -206,7 +206,7 @@ const App = {
         this.initSlider();
 
         [dateFrom, dateTo].forEach(el => {
-            el.addEventListener('focus', () => {
+            el.addEventListener('click', () => {
                 el.classList.remove('date-picked');
             });
 
