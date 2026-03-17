@@ -205,36 +205,17 @@ const App = {
 
         this.initSlider();
 
+        this.bindNonStickyNativePicker(dateFrom);
+        this.bindNonStickyNativePicker(dateTo);
+
         dateFrom.addEventListener('change', () => {
             this.filters.dateFrom = dateFrom.value;
             this.onFilterChange();
-            try { dateFrom.blur(); } catch (_) { }
-            try { document.activeElement.blur(); } catch (_) { }
         });
 
         dateTo.addEventListener('change', () => {
             this.filters.dateTo = dateTo.value;
             this.onFilterChange();
-            try { dateTo.blur(); } catch (_) { }
-            try { document.activeElement.blur(); } catch (_) { }
-        });
-
-        const blurFilterDateOnReturn = () => {
-            ['filter-date-from', 'filter-date-to'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el && document.activeElement === el) {
-                    setTimeout(() => {
-                        if (document.activeElement === el) {
-                            try { el.blur(); } catch (_) { }
-                        }
-                    }, 0);
-                }
-            });
-        };
-
-        window.addEventListener('focus', blurFilterDateOnReturn);
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') blurFilterDateOnReturn();
         });
 
         resetBtn.addEventListener('click', () => this.resetFilters());
