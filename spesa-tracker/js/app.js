@@ -2456,10 +2456,23 @@ const App = {
         toast.textContent = message;
         toast.className = 'toast ' + type;
 
+        // Position above input bar when keyboard is open
+        if (this._expenseInputActive) {
+            const inputBar = document.getElementById('input-bar');
+            const barTop = inputBar.getBoundingClientRect().top;
+            toast.style.bottom = (window.innerHeight - barTop + 8) + 'px';
+            toast.style.top = 'auto';
+        } else {
+            toast.style.bottom = '';
+            toast.style.top = '';
+        }
+
         if (this.toastTimer) clearTimeout(this.toastTimer);
 
         this.toastTimer = setTimeout(() => {
             toast.classList.add('hidden');
+            toast.style.bottom = '';
+            toast.style.top = '';
         }, 2800);
     },
 

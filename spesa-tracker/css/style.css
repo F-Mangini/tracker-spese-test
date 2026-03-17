@@ -1399,11 +1399,6 @@ body.expense-input-active #input-bar {
     text-align: center;
 }
 
-body.expense-input-active .toast {
-    bottom: auto;
-    top: 40%;
-}
-
 .toast.hidden {
     opacity: 0;
     transform: translateX(-50%) translateY(16px);
