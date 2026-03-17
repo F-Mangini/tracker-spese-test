@@ -219,6 +219,24 @@ const App = {
             try { document.activeElement.blur(); } catch (_) { }
         });
 
+        const blurFilterDateOnReturn = () => {
+            ['filter-date-from', 'filter-date-to'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && document.activeElement === el) {
+                    setTimeout(() => {
+                        if (document.activeElement === el) {
+                            try { el.blur(); } catch (_) { }
+                        }
+                    }, 0);
+                }
+            });
+        };
+
+        window.addEventListener('focus', blurFilterDateOnReturn);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') blurFilterDateOnReturn();
+        });
+
         resetBtn.addEventListener('click', () => this.resetFilters());
 
         const advToggle = document.getElementById('btn-advanced-toggle');
@@ -426,6 +444,7 @@ const App = {
         document.body.classList.remove('no-scroll');
         document.getElementById('app-main').style.marginTop = '';
         if (wasOpen && !fromPopstate) {
+            this._suppressNextPopstate = true;
             try { history.back(); } catch (_) { }
         }
     },
