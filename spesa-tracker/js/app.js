@@ -557,15 +557,6 @@ const App = {
         const btnSend = document.getElementById('btn-send');
         const btnVoice = document.getElementById('btn-voice');
 
-        let _inputBarButtonTapped = false;
-
-        const markButtonTap = () => {
-            _inputBarButtonTapped = true;
-            setTimeout(() => { _inputBarButtonTapped = false; }, 400);
-        };
-
-        btnSend.addEventListener('mousedown', markButtonTap);
-        btnSend.addEventListener('touchstart', markButtonTap, { passive: true });
         btnSend.addEventListener('click', () => this.submitExpense());
         input.addEventListener('keydown', e => {
             if (e.key === 'Enter') {
@@ -576,6 +567,7 @@ const App = {
 
         const inputBar = document.getElementById('input-bar');
         let inputBarRafId = null;
+        let blurCleanupTimer = null;
 
         const updateInputBarPosition = () => {
             if (!this._expenseInputActive) {
@@ -590,7 +582,24 @@ const App = {
             inputBarRafId = requestAnimationFrame(updateInputBarPosition);
         };
 
+        const doBlurCleanup = () => {
+            this._expenseInputActive = false;
+            document.body.classList.remove('expense-input-active');
+            if (inputBarRafId) {
+                cancelAnimationFrame(inputBarRafId);
+                inputBarRafId = null;
+            }
+            inputBar.style.bottom = '';
+            this._suppressNextPopstate = true;
+            try { history.back(); } catch (_) { }
+        };
+
         input.addEventListener('focus', () => {
+            if (blurCleanupTimer) {
+                clearTimeout(blurCleanupTimer);
+                blurCleanupTimer = null;
+            }
+
             if (!this._expenseInputActive) {
                 this._expenseInputActive = true;
                 document.body.classList.add('expense-input-active');
@@ -602,20 +611,8 @@ const App = {
         });
 
         input.addEventListener('blur', () => {
-            if (_inputBarButtonTapped) return;
-
-            if (this._expenseInputActive) {
-                this._expenseInputActive = false;
-                document.body.classList.remove('expense-input-active');
-                if (inputBarRafId) {
-                    cancelAnimationFrame(inputBarRafId);
-                    inputBarRafId = null;
-                }
-                inputBar.style.bottom = '';
-
-                this._suppressNextPopstate = true;
-                try { history.back(); } catch (_) { }
-            }
+            if (!this._expenseInputActive) return;
+            blurCleanupTimer = setTimeout(doBlurCleanup, 300);
         });
 
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -641,8 +638,6 @@ const App = {
                 btnVoice.classList.remove('recording');
             };
 
-            btnVoice.addEventListener('mousedown', markButtonTap);
-            btnVoice.addEventListener('touchstart', markButtonTap, { passive: true });
             btnVoice.addEventListener('click', () => {
                 if (btnVoice.classList.contains('recording')) {
                     this.recognition.stop();
