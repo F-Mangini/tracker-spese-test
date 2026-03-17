@@ -565,11 +565,29 @@ const App = {
             }
         });
 
+        const inputBar = document.getElementById('input-bar');
+
+        const updateInputBarPosition = () => {
+            if (!this._expenseInputActive) return;
+            const vv = window.visualViewport;
+            if (vv) {
+                const offsetFromBottom = window.innerHeight - (vv.offsetTop + vv.height);
+                inputBar.style.bottom = Math.max(0, offsetFromBottom) + 'px';
+            }
+        };
+
         input.addEventListener('focus', () => {
             if (!this._expenseInputActive) {
                 this._expenseInputActive = true;
                 document.body.classList.add('expense-input-active');
                 try { history.pushState({ panel: 'expense-input' }, ''); } catch (_) { }
+
+                if (window.visualViewport) {
+                    window.visualViewport.addEventListener('resize', updateInputBarPosition);
+                    window.visualViewport.addEventListener('scroll', updateInputBarPosition);
+                }
+                setTimeout(updateInputBarPosition, 50);
+                setTimeout(updateInputBarPosition, 300);
             }
         });
 
@@ -577,6 +595,13 @@ const App = {
             if (this._expenseInputActive) {
                 this._expenseInputActive = false;
                 document.body.classList.remove('expense-input-active');
+                inputBar.style.bottom = '';
+
+                if (window.visualViewport) {
+                    window.visualViewport.removeEventListener('resize', updateInputBarPosition);
+                    window.visualViewport.removeEventListener('scroll', updateInputBarPosition);
+                }
+
                 this._suppressNextPopstate = true;
                 try { history.back(); } catch (_) { }
             }

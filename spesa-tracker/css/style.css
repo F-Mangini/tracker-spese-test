@@ -772,7 +772,8 @@ body.expense-input-active #bottom-nav {
 }
 
 body.expense-input-active #input-bar {
-    bottom: var(--safe-bottom);
+    bottom: 0;
+    transition: none;
 }
 
 .input-wrapper {
