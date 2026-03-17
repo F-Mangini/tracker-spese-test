@@ -557,8 +557,15 @@ const App = {
         const btnSend = document.getElementById('btn-send');
         const btnVoice = document.getElementById('btn-voice');
 
-        btnSend.addEventListener('mousedown', e => e.preventDefault());
-        btnSend.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+        let _inputBarButtonTapped = false;
+
+        const markButtonTap = () => {
+            _inputBarButtonTapped = true;
+            setTimeout(() => { _inputBarButtonTapped = false; }, 400);
+        };
+
+        btnSend.addEventListener('mousedown', markButtonTap);
+        btnSend.addEventListener('touchstart', markButtonTap, { passive: true });
         btnSend.addEventListener('click', () => this.submitExpense());
         input.addEventListener('keydown', e => {
             if (e.key === 'Enter') {
@@ -595,6 +602,8 @@ const App = {
         });
 
         input.addEventListener('blur', () => {
+            if (_inputBarButtonTapped) return;
+
             if (this._expenseInputActive) {
                 this._expenseInputActive = false;
                 document.body.classList.remove('expense-input-active');
@@ -632,8 +641,8 @@ const App = {
                 btnVoice.classList.remove('recording');
             };
 
-            btnVoice.addEventListener('mousedown', e => e.preventDefault());
-            btnVoice.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+            btnVoice.addEventListener('mousedown', markButtonTap);
+            btnVoice.addEventListener('touchstart', markButtonTap, { passive: true });
             btnVoice.addEventListener('click', () => {
                 if (btnVoice.classList.contains('recording')) {
                     this.recognition.stop();
