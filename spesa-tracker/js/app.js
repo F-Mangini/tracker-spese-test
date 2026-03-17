@@ -557,7 +557,20 @@ const App = {
         const btnSend = document.getElementById('btn-send');
         const btnVoice = document.getElementById('btn-voice');
 
-        btnSend.addEventListener('click', () => this.submitExpense());
+        const handleSend = () => {
+            this.submitExpense();
+            // Force clear pressed/active state
+            btnSend.style.pointerEvents = 'none';
+            requestAnimationFrame(() => { btnSend.style.pointerEvents = ''; });
+        };
+
+        // touchend always fires on the original touchstart target, even if the element moved
+        btnSend.addEventListener('touchend', e => {
+            e.preventDefault(); // prevent subsequent click (avoids double-fire)
+            handleSend();
+        });
+        btnSend.addEventListener('click', () => handleSend()); // desktop fallback
+
         input.addEventListener('keydown', e => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -643,6 +656,15 @@ const App = {
                 btnVoice.classList.remove('recording');
             };
 
+            btnVoice.addEventListener('touchend', e => {
+                e.preventDefault();
+                if (btnVoice.classList.contains('recording')) {
+                    this.recognition.stop();
+                } else {
+                    btnVoice.classList.add('recording');
+                    this.recognition.start();
+                }
+            });
             btnVoice.addEventListener('click', () => {
                 if (btnVoice.classList.contains('recording')) {
                     this.recognition.stop();
