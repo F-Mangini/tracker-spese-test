@@ -205,17 +205,37 @@ const App = {
 
         this.initSlider();
 
-        this.bindNonStickyNativePicker(dateFrom);
-        this.bindNonStickyNativePicker(dateTo);
+        const blurFilterDate = (el) => {
+            setTimeout(() => {
+                if (document.activeElement === el) {
+                    try { el.blur(); } catch (_) { }
+                }
+            }, 80);
+        };
 
         dateFrom.addEventListener('change', () => {
             this.filters.dateFrom = dateFrom.value;
             this.onFilterChange();
+            blurFilterDate(dateFrom);
         });
 
         dateTo.addEventListener('change', () => {
             this.filters.dateTo = dateTo.value;
             this.onFilterChange();
+            blurFilterDate(dateTo);
+        });
+
+        const blurFilterDateOnReturn = () => {
+            [dateFrom, dateTo].forEach(el => {
+                if (document.activeElement === el) {
+                    try { el.blur(); } catch (_) { }
+                }
+            });
+        };
+
+        window.addEventListener('focus', blurFilterDateOnReturn);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') blurFilterDateOnReturn();
         });
 
         resetBtn.addEventListener('click', () => this.resetFilters());
