@@ -859,8 +859,14 @@ body.expense-input-active #input-bar {
     background: var(--accent-hover);
 }
 
-#btn-send:active {
+#btn-send:active,
+#btn-send.pressed {
     transform: scale(0.92);
+}
+
+#btn-voice:active,
+#btn-voice.pressed {
+    background: var(--bg-primary);
 }
 
 /* ============================================

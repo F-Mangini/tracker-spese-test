@@ -564,9 +564,11 @@ const App = {
             requestAnimationFrame(() => { btnSend.style.pointerEvents = ''; });
         };
 
-        // touchend always fires on the original touchstart target, even if the element moved
+        // Touch feedback + touchend for reliable mobile clicks
+        btnSend.addEventListener('touchstart', () => btnSend.classList.add('pressed'), { passive: true });
         btnSend.addEventListener('touchend', e => {
-            e.preventDefault(); // prevent subsequent click (avoids double-fire)
+            btnSend.classList.remove('pressed');
+            e.preventDefault();
             handleSend();
         });
         btnSend.addEventListener('click', () => handleSend()); // desktop fallback
@@ -656,7 +658,9 @@ const App = {
                 btnVoice.classList.remove('recording');
             };
 
+            btnVoice.addEventListener('touchstart', () => btnVoice.classList.add('pressed'), { passive: true });
             btnVoice.addEventListener('touchend', e => {
+                btnVoice.classList.remove('pressed');
                 e.preventDefault();
                 if (btnVoice.classList.contains('recording')) {
                     this.recognition.stop();
@@ -683,15 +687,12 @@ const App = {
         const text = input.value.trim();
 
         if (!text) {
-            // Re-focus to keep keyboard open and clear button pressed state
-            setTimeout(() => { try { input.focus(); } catch (_) { } }, 0);
             return;
         }
 
         const parsed = Parser.parse(text);
         if (!parsed) {
             this.showToast('Non ho capito l\'importo. Prova: "caffè 1.50"', 'error');
-            setTimeout(() => { try { input.focus(); } catch (_) { } }, 0);
             return;
         }
 
