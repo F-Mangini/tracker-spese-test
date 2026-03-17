@@ -451,6 +451,11 @@ body:has(.no-input-bar) .filter-panel-scroll {
     border-color: var(--accent);
 }
 
+.date-field input[type="date"].date-picked,
+.date-field input[type="date"].date-picked:focus {
+    border-color: var(--border);
+}
+
 /* Filter footer */
 .filter-footer {
     display: flex;

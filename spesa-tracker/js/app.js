@@ -205,37 +205,18 @@ const App = {
 
         this.initSlider();
 
-        const blurFilterDate = (el) => {
-            setTimeout(() => {
-                if (document.activeElement === el) {
-                    try { el.blur(); } catch (_) { }
-                }
-            }, 80);
-        };
-
-        dateFrom.addEventListener('change', () => {
-            this.filters.dateFrom = dateFrom.value;
-            this.onFilterChange();
-            blurFilterDate(dateFrom);
-        });
-
-        dateTo.addEventListener('change', () => {
-            this.filters.dateTo = dateTo.value;
-            this.onFilterChange();
-            blurFilterDate(dateTo);
-        });
-
-        const blurFilterDateOnReturn = () => {
-            [dateFrom, dateTo].forEach(el => {
-                if (document.activeElement === el) {
-                    try { el.blur(); } catch (_) { }
-                }
+        [dateFrom, dateTo].forEach(el => {
+            el.addEventListener('focus', () => {
+                el.classList.remove('date-picked');
             });
-        };
 
-        window.addEventListener('focus', blurFilterDateOnReturn);
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') blurFilterDateOnReturn();
+            el.addEventListener('change', () => {
+                el.classList.add('date-picked');
+                if (el === dateFrom) this.filters.dateFrom = el.value;
+                else this.filters.dateTo = el.value;
+                this.onFilterChange();
+                try { el.blur(); } catch (_) { }
+            });
         });
 
         resetBtn.addEventListener('click', () => this.resetFilters());
