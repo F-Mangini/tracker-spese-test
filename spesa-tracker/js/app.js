@@ -48,6 +48,7 @@ const App = {
     _lastViewportHeight: 0,
     _expenseInputBarRaf: null,
     _expenseInputResizeHandler: null,
+    _expenseScrollLockY: 0,
 
     /* =====================
        INIT
@@ -570,6 +571,17 @@ const App = {
         return { bottom, translateY };
     },
 
+    getExpenseInputKeyboardInset() {
+        const vv = window.visualViewport;
+
+        if (!vv || !Number.isFinite(vv.height)) return 0;
+
+        // Distanza reale tra il fondo del layout viewport
+        // e il fondo del visual viewport: è la zona occupata
+        // da tastiera / UI browser.
+        return Math.max(0, Math.round(window.innerHeight - (vv.offsetTop + vv.height)));
+    },
+
     updateExpenseInputBarPosition(force = false) {
         const inputBar = document.getElementById('input-bar');
         if (!inputBar) return;
@@ -580,23 +592,12 @@ const App = {
             return;
         }
 
-        const { bottom, translateY } = this.getExpenseInputViewportMetrics();
+        const nextBottom = `${this.getExpenseInputKeyboardInset()}px`;
 
-        const nextBottom = `${bottom}px`;
-        const nextTransform = translateY > 0
-            ? `translateY(${translateY}px)`
-            : 'translateY(0px)';
-
-        if (
-            !force &&
-            inputBar.style.bottom === nextBottom &&
-            inputBar.style.transform === nextTransform
-        ) {
-            return;
-        }
+        if (!force && inputBar.style.bottom === nextBottom) return;
 
         inputBar.style.bottom = nextBottom;
-        inputBar.style.transform = nextTransform;
+        inputBar.style.transform = 'none';
     },
 
     scheduleExpenseInputBarPositionUpdate(force = false) {
@@ -617,28 +618,28 @@ const App = {
             this.scheduleExpenseInputBarPositionUpdate();
         };
 
+        // Solo resize: niente listener di scroll.
+        // Se inseguiamo lo scroll, su Android la barra "wobbla".
         window.addEventListener('resize', this._expenseInputResizeHandler, { passive: true });
-        window.addEventListener('scroll', this._expenseInputResizeHandler, { passive: true });
 
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', this._expenseInputResizeHandler, { passive: true });
-            window.visualViewport.addEventListener('scroll', this._expenseInputResizeHandler, { passive: true });
         }
 
         this.scheduleExpenseInputBarPositionUpdate(true);
 
-        // Secondo assestamento per browser lenti con tastiera virtuale
+        // Assestamenti extra per tastiere lente / browser che aggiornano in ritardo
         setTimeout(() => {
-            if (this._expenseInputActive) {
-                this.scheduleExpenseInputBarPositionUpdate(true);
-            }
+            if (this._expenseInputActive) this.scheduleExpenseInputBarPositionUpdate(true);
         }, 80);
 
         setTimeout(() => {
-            if (this._expenseInputActive) {
-                this.scheduleExpenseInputBarPositionUpdate(true);
-            }
+            if (this._expenseInputActive) this.scheduleExpenseInputBarPositionUpdate(true);
         }, 180);
+
+        setTimeout(() => {
+            if (this._expenseInputActive) this.scheduleExpenseInputBarPositionUpdate(true);
+        }, 320);
     },
 
     stopExpenseInputBarWatch() {
@@ -649,11 +650,9 @@ const App = {
 
         if (this._expenseInputResizeHandler) {
             window.removeEventListener('resize', this._expenseInputResizeHandler);
-            window.removeEventListener('scroll', this._expenseInputResizeHandler);
 
             if (window.visualViewport) {
                 window.visualViewport.removeEventListener('resize', this._expenseInputResizeHandler);
-                window.visualViewport.removeEventListener('scroll', this._expenseInputResizeHandler);
             }
 
             this._expenseInputResizeHandler = null;
@@ -664,6 +663,27 @@ const App = {
             inputBar.style.bottom = '';
             inputBar.style.transform = '';
         }
+    },
+
+    lockExpenseScroll() {
+        if (document.body.classList.contains('expense-scroll-lock')) return;
+
+        this._expenseScrollLockY = window.scrollY || window.pageYOffset || 0;
+
+        document.body.classList.add('expense-scroll-lock');
+        document.body.style.top = `-${this._expenseScrollLockY}px`;
+    },
+
+    unlockExpenseScroll() {
+        const body = document.body;
+        if (!body.classList.contains('expense-scroll-lock')) return;
+
+        const y = this._expenseScrollLockY || 0;
+
+        body.classList.remove('expense-scroll-lock');
+        body.style.top = '';
+
+        window.scrollTo(0, y);
     },
 
     stopExpenseInputBarWatch() {
@@ -733,10 +753,11 @@ const App = {
             }
         });
 
-        // --- Input bar positioning ---
+        // --- Input bar positioning / scroll lock ---
         const doBlurCleanup = () => {
             document.body.classList.remove('expense-input-active');
             this.stopExpenseInputBarWatch();
+            this.unlockExpenseScroll();
 
             blurCleanupTimer = setTimeout(() => {
                 this._expenseInputActive = false;
@@ -755,6 +776,7 @@ const App = {
             this._expenseInputActive = true;
 
             document.body.classList.add('expense-input-active');
+            this.lockExpenseScroll();
 
             if (wasInactive) {
                 try { history.pushState({ panel: 'expense-input' }, ''); } catch (_) { }
@@ -1335,6 +1357,7 @@ const App = {
                 this._expenseInputActive = false;
                 document.body.classList.remove('expense-input-active');
                 this.stopExpenseInputBarWatch();
+                this.unlockExpenseScroll();
                 const expenseInput = document.getElementById('expense-input');
                 if (expenseInput) expenseInput.blur();
                 return;
