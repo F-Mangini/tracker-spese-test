@@ -771,14 +771,14 @@ body:has(.no-input-bar) .filter-panel-scroll {
     display: none;
 }
 
-body.expense-input-active #bottom-nav {
-    display: none;
-}
-
+/* Non nascondiamo più la bottom nav e non forziamo più
+   la barra input a scendere a bottom: 0 appena prende focus.
+   La posizione verrà aggiornata solo dal JS quando la tastiera
+   è davvero aperta. */
 body.expense-input-active #input-bar {
-    bottom: 0;
     transition: none;
     transform: none !important;
+    will-change: bottom;
 }
 
 .input-wrapper {
