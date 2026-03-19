@@ -46,6 +46,8 @@ const App = {
     _keyboardWatchTimer: null,
     _expenseInputActive: false,
     _lastViewportHeight: 0,
+    _expenseInputBarRaf: null,
+    _expenseInputResizeHandler: null,
 
     /* =====================
        INIT
@@ -549,6 +551,86 @@ const App = {
         return this.getActiveFilterCount() > 0;
     },
 
+    getExpenseInputKeyboardInset() {
+        const vv = window.visualViewport;
+        if (!vv || !Number.isFinite(vv.height)) return 0;
+
+        // Usiamo solo la differenza di altezza e NON offsetTop:
+        // così la barra non reagisce allo scroll verticale della pagina.
+        return Math.max(0, Math.round(window.innerHeight - vv.height));
+    },
+
+    updateExpenseInputBarPosition(force = false) {
+        const inputBar = document.getElementById('input-bar');
+        if (!inputBar) return;
+
+        if (!this._expenseInputActive) {
+            inputBar.style.bottom = '';
+            return;
+        }
+
+        const nextBottom = `${this.getExpenseInputKeyboardInset()}px`;
+
+        if (!force && inputBar.style.bottom === nextBottom) return;
+        inputBar.style.bottom = nextBottom;
+    },
+
+    scheduleExpenseInputBarPositionUpdate(force = false) {
+        if (this._expenseInputBarRaf) {
+            cancelAnimationFrame(this._expenseInputBarRaf);
+        }
+
+        this._expenseInputBarRaf = requestAnimationFrame(() => {
+            this._expenseInputBarRaf = null;
+            this.updateExpenseInputBarPosition(force);
+        });
+    },
+
+    startExpenseInputBarWatch() {
+        this.stopExpenseInputBarWatch();
+
+        this._expenseInputResizeHandler = () => {
+            this.scheduleExpenseInputBarPositionUpdate();
+        };
+
+        window.addEventListener('resize', this._expenseInputResizeHandler, { passive: true });
+
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', this._expenseInputResizeHandler, { passive: true });
+        }
+
+        this.scheduleExpenseInputBarPositionUpdate(true);
+
+        // Piccolo secondo aggiornamento per i browser che assestano la tastiera con ritardo
+        setTimeout(() => {
+            if (this._expenseInputActive) {
+                this.scheduleExpenseInputBarPositionUpdate(true);
+            }
+        }, 80);
+    },
+
+    stopExpenseInputBarWatch() {
+        if (this._expenseInputBarRaf) {
+            cancelAnimationFrame(this._expenseInputBarRaf);
+            this._expenseInputBarRaf = null;
+        }
+
+        if (this._expenseInputResizeHandler) {
+            window.removeEventListener('resize', this._expenseInputResizeHandler);
+
+            if (window.visualViewport) {
+                window.visualViewport.removeEventListener('resize', this._expenseInputResizeHandler);
+            }
+
+            this._expenseInputResizeHandler = null;
+        }
+
+        const inputBar = document.getElementById('input-bar');
+        if (inputBar) {
+            inputBar.style.bottom = '';
+        }
+    },
+
     /* =====================
        INPUT
        ===================== */
@@ -594,30 +676,11 @@ const App = {
         });
 
         // --- Input bar positioning ---
-        const inputBar = document.getElementById('input-bar');
-        let inputBarRafId = null;
         let blurCleanupTimer = null;
-
-        const updateInputBarPosition = () => {
-            if (!this._expenseInputActive) {
-                inputBarRafId = null;
-                return;
-            }
-            const vv = window.visualViewport;
-            if (vv) {
-                const offsetFromBottom = window.innerHeight - (vv.offsetTop + vv.height);
-                inputBar.style.bottom = Math.max(0, offsetFromBottom) + 'px';
-            }
-            inputBarRafId = requestAnimationFrame(updateInputBarPosition);
-        };
 
         const doBlurCleanup = () => {
             document.body.classList.remove('expense-input-active');
-            if (inputBarRafId) {
-                cancelAnimationFrame(inputBarRafId);
-                inputBarRafId = null;
-            }
-            inputBar.style.bottom = '';
+            this.stopExpenseInputBarWatch();
 
             blurCleanupTimer = setTimeout(() => {
                 this._expenseInputActive = false;
@@ -632,14 +695,16 @@ const App = {
                 blurCleanupTimer = null;
             }
 
-            if (!this._expenseInputActive) {
-                this._expenseInputActive = true;
-                document.body.classList.add('expense-input-active');
-                try { history.pushState({ panel: 'expense-input' }, ''); } catch (_) { }
+            const wasInactive = !this._expenseInputActive;
+            this._expenseInputActive = true;
 
-                if (inputBarRafId) cancelAnimationFrame(inputBarRafId);
-                inputBarRafId = requestAnimationFrame(updateInputBarPosition);
+            document.body.classList.add('expense-input-active');
+
+            if (wasInactive) {
+                try { history.pushState({ panel: 'expense-input' }, ''); } catch (_) { }
             }
+
+            this.startExpenseInputBarWatch();
         });
 
         input.addEventListener('blur', () => {
@@ -1213,6 +1278,7 @@ const App = {
             if (this._expenseInputActive) {
                 this._expenseInputActive = false;
                 document.body.classList.remove('expense-input-active');
+                this.stopExpenseInputBarWatch();
                 const expenseInput = document.getElementById('expense-input');
                 if (expenseInput) expenseInput.blur();
                 return;
