@@ -50,6 +50,12 @@ const App = {
     _expenseInputResizeHandler: null,
     _expenseScrollLockY: 0,
 
+    /* --- Searchable dropdown instances --- */
+    _sdInstances: {},
+
+    /* --- Tags --- */
+    _editTags: [],
+
     /* =====================
        INIT
        ===================== */
@@ -66,6 +72,7 @@ const App = {
         this.initFilters();
         this.populateDropdowns();
         this.renderTimeline();
+        this._lastViewportHeight = this.getViewportHeight();
     },
 
     /* =====================
@@ -176,6 +183,8 @@ const App = {
         });
 
         searchInput.addEventListener('focus', () => {
+            this._lastViewportHeight = this.getViewportHeight();
+
             if (this.filterOpen && !this._filterSearchActive) {
                 this._filterSearchActive = true;
                 try { history.pushState({ panel: 'filter-search' }, ''); } catch (_) { }
@@ -552,86 +561,13 @@ const App = {
         return this.getActiveFilterCount() > 0;
     },
 
-    updateExpenseInputBarPosition(force = false) {
-        const inputBar = document.getElementById('input-bar');
-        if (!inputBar) return;
-
-        if (!this._expenseInputActive) {
-            inputBar.style.bottom = '';
-            inputBar.style.transform = '';
-            return;
-        }
-
-        const nextBottom = `${this.getExpenseInputKeyboardInset()}px`;
-
-        if (!force && inputBar.style.bottom === nextBottom) return;
-
-        inputBar.style.bottom = nextBottom;
-        inputBar.style.transform = 'none';
-    },
-
-    scheduleExpenseInputBarPositionUpdate(force = false) {
-        if (this._expenseInputBarRaf) {
-            cancelAnimationFrame(this._expenseInputBarRaf);
-        }
-
-        this._expenseInputBarRaf = requestAnimationFrame(() => {
-            this._expenseInputBarRaf = null;
-            this.updateExpenseInputBarPosition(force);
-        });
-    },
-
-    stopExpenseInputBarWatch() {
-        if (this._expenseInputBarRaf) {
-            cancelAnimationFrame(this._expenseInputBarRaf);
-            this._expenseInputBarRaf = null;
-        }
-
-        if (this._expenseInputResizeHandler) {
-            window.removeEventListener('resize', this._expenseInputResizeHandler);
-
-            if (window.visualViewport) {
-                window.visualViewport.removeEventListener('resize', this._expenseInputResizeHandler);
-            }
-
-            this._expenseInputResizeHandler = null;
-        }
-
-        const inputBar = document.getElementById('input-bar');
-        if (inputBar) {
-            inputBar.style.bottom = '';
-            inputBar.style.transform = '';
-        }
-    },
-
-    stopExpenseInputBarWatch() {
-        if (this._expenseInputBarRaf) {
-            cancelAnimationFrame(this._expenseInputBarRaf);
-            this._expenseInputBarRaf = null;
-        }
-
-        if (this._expenseInputResizeHandler) {
-            window.removeEventListener('resize', this._expenseInputResizeHandler);
-
-            if (window.visualViewport) {
-                window.visualViewport.removeEventListener('resize', this._expenseInputResizeHandler);
-            }
-
-            this._expenseInputResizeHandler = null;
-        }
-
-        const inputBar = document.getElementById('input-bar');
-        if (inputBar) {
-            inputBar.style.bottom = '';
-        }
-    },
-
     getExpenseInputKeyboardInset() {
         const vv = window.visualViewport;
 
         if (!vv || !Number.isFinite(vv.height)) return 0;
 
-        return Math.max(0, Math.round(window.innerHeight - (vv.offsetTop + vv.height)));
+        const inset = window.innerHeight - (vv.offsetTop + vv.height);
+        return Math.max(0, Math.round(inset));
     },
 
     updateExpenseInputBarPosition(force = false) {
@@ -644,7 +580,18 @@ const App = {
             return;
         }
 
-        const nextBottom = `${this.getExpenseInputKeyboardInset()}px`;
+        const inset = this.getExpenseInputKeyboardInset();
+
+        // Finché la tastiera non è davvero aperta, lasciamo la barra
+        // nella posizione CSS normale sopra la bottom nav.
+        if (inset <= 0) {
+            if (!force && inputBar.style.bottom === '' && inputBar.style.transform === '') return;
+            inputBar.style.bottom = '';
+            inputBar.style.transform = '';
+            return;
+        }
+
+        const nextBottom = `${inset}px`;
 
         if (!force && inputBar.style.bottom === nextBottom && inputBar.style.transform === 'none') {
             return;
@@ -672,15 +619,14 @@ const App = {
             this.scheduleExpenseInputBarPositionUpdate();
         };
 
-        // IMPORTANTE:
-        // ascoltiamo solo i resize della viewport/tastiera,
-        // NON gli scroll della pagina.
+        // Ascoltiamo solo i resize della viewport/tastiera
         window.addEventListener('resize', this._expenseInputResizeHandler, { passive: true });
 
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', this._expenseInputResizeHandler, { passive: true });
         }
 
+        // Primo sync: se inset = 0 la barra resta dov'è.
         this.scheduleExpenseInputBarPositionUpdate(true);
 
         setTimeout(() => {
@@ -781,6 +727,7 @@ const App = {
 
             const wasInactive = !this._expenseInputActive;
             this._expenseInputActive = true;
+            this._lastViewportHeight = this.getViewportHeight();
 
             document.body.classList.add('expense-input-active');
 
@@ -1182,34 +1129,40 @@ const App = {
 
     handleModalViewportChange() {
         const currentHeight = this.getViewportHeight();
+        const prevHeight = this._lastViewportHeight;
+        const delta = prevHeight > 0 ? (currentHeight - prevHeight) : 0;
 
-        if (this.isModalOpen()) {
-            const active = this.getActivePlainModalField();
+        if (prevHeight > 0) {
+            if (this.isModalOpen()) {
+                const active = this.getActivePlainModalField();
 
-            if (active) {
-                const type = (active.type || '').toLowerCase();
-                const isTextLike =
-                    active.tagName === 'TEXTAREA' ||
-                    ['text', 'number', 'search', 'email', 'tel', 'url', 'password'].includes(type);
-                const isPicker = type === 'date' || type === 'time';
+                if (active) {
+                    const type = (active.type || '').toLowerCase();
+                    const isTextLike =
+                        active.tagName === 'TEXTAREA' ||
+                        ['text', 'number', 'search', 'email', 'tel', 'url', 'password'].includes(type);
+                    const isPicker = type === 'date' || type === 'time';
 
-                if ((isTextLike || isPicker) && currentHeight - this._lastViewportHeight > 100) {
-                    try { active.blur(); } catch (_) { }
+                    // Blur solo quando la viewport aumenta molto:
+                    // tipico caso di chiusura tastiera/picker, non apertura.
+                    if ((isTextLike || isPicker) && delta > 100) {
+                        try { active.blur(); } catch (_) { }
+                    }
                 }
             }
-        }
 
-        if (this.filterOpen) {
-            const searchInput = document.getElementById('search-input');
-            if (searchInput && document.activeElement === searchInput && (currentHeight - this._lastViewportHeight > 100)) {
-                try { searchInput.blur(); } catch (_) { }
+            if (this.filterOpen) {
+                const searchInput = document.getElementById('search-input');
+                if (searchInput && document.activeElement === searchInput && delta > 100) {
+                    try { searchInput.blur(); } catch (_) { }
+                }
             }
-        }
 
-        if (this.currentPage === 'timeline') {
-            const expenseInput = document.getElementById('expense-input');
-            if (expenseInput && document.activeElement === expenseInput && (currentHeight - this._lastViewportHeight > 100)) {
-                try { expenseInput.blur(); } catch (_) { }
+            if (this.currentPage === 'timeline') {
+                const expenseInput = document.getElementById('expense-input');
+                if (expenseInput && document.activeElement === expenseInput && delta > 100) {
+                    try { expenseInput.blur(); } catch (_) { }
+                }
             }
         }
 
@@ -1407,8 +1360,6 @@ const App = {
     },
 
     /* --- Searchable Dropdown --- */
-    _sdInstances: {},
-
     initSearchableDropdown(containerId, items, currentValue) {
         const container = document.getElementById(containerId);
         if (!container) return;
@@ -1556,8 +1507,6 @@ const App = {
     },
 
     /* --- Tags --- */
-    _editTags: [],
-
     getAllTags() {
         const spese = Storage.getSpese();
         const tagSet = new Set();
