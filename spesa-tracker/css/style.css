@@ -74,8 +74,8 @@ body {
     min-height: 100vh;
     min-height: 100dvh;
     -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
-    overscroll-behavior-x: none;
+    overflow: hidden;
+    overscroll-behavior: none;
 }
 
 /* ============================================
@@ -529,9 +529,13 @@ body:has(.no-input-bar) .filter-panel-scroll {
    ============================================ */
 #app-main {
     margin-top: var(--header-h);
+    height: calc(100vh - var(--header-h));
+    height: calc(100dvh - var(--header-h));
     padding-bottom: calc(var(--input-h) + var(--nav-h) + var(--safe-bottom) + 8px);
-    min-height: calc(100vh - var(--header-h));
-    min-height: calc(100dvh - var(--header-h));
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
     transition: margin-top 0.2s ease;
 }
 
@@ -774,18 +778,7 @@ body.expense-input-active #bottom-nav {
 body.expense-input-active #input-bar {
     bottom: 0;
     transition: none;
-    transform: none;
-    will-change: bottom;
-}
-
-/* Lock forte dello scroll mentre si scrive:
-   evita che la barra "insegua" la timeline su Android/WebView */
-body.expense-scroll-lock {
-    position: fixed;
-    left: 0;
-    right: 0;
-    width: 100%;
-    overflow: hidden;
+    transform: none !important;
 }
 
 .input-wrapper {
@@ -1749,6 +1742,10 @@ body.expense-scroll-lock {
 }
 
 .no-scroll {
+    overflow: hidden !important;
+}
+
+body.no-scroll #app-main {
     overflow: hidden !important;
 }
 

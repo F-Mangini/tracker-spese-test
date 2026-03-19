@@ -552,36 +552,6 @@ const App = {
         return this.getActiveFilterCount() > 0;
     },
 
-    getExpenseInputViewportMetrics() {
-        const vv = window.visualViewport;
-
-        if (!vv || !Number.isFinite(vv.height)) {
-            return {
-                bottom: 0,
-                translateY: 0
-            };
-        }
-
-        // Altezza tastiera: quanto il viewport visibile è più basso del layout viewport
-        const bottom = Math.max(0, Math.round(window.innerHeight - vv.height));
-
-        // Compensazione scroll/shift del viewport visibile mentre la tastiera è aperta
-        const translateY = Math.max(0, Math.round(vv.offsetTop || 0));
-
-        return { bottom, translateY };
-    },
-
-    getExpenseInputKeyboardInset() {
-        const vv = window.visualViewport;
-
-        if (!vv || !Number.isFinite(vv.height)) return 0;
-
-        // Distanza reale tra il fondo del layout viewport
-        // e il fondo del visual viewport: è la zona occupata
-        // da tastiera / UI browser.
-        return Math.max(0, Math.round(window.innerHeight - (vv.offsetTop + vv.height)));
-    },
-
     updateExpenseInputBarPosition(force = false) {
         const inputBar = document.getElementById('input-bar');
         if (!inputBar) return;
@@ -611,6 +581,90 @@ const App = {
         });
     },
 
+    stopExpenseInputBarWatch() {
+        if (this._expenseInputBarRaf) {
+            cancelAnimationFrame(this._expenseInputBarRaf);
+            this._expenseInputBarRaf = null;
+        }
+
+        if (this._expenseInputResizeHandler) {
+            window.removeEventListener('resize', this._expenseInputResizeHandler);
+
+            if (window.visualViewport) {
+                window.visualViewport.removeEventListener('resize', this._expenseInputResizeHandler);
+            }
+
+            this._expenseInputResizeHandler = null;
+        }
+
+        const inputBar = document.getElementById('input-bar');
+        if (inputBar) {
+            inputBar.style.bottom = '';
+            inputBar.style.transform = '';
+        }
+    },
+
+    stopExpenseInputBarWatch() {
+        if (this._expenseInputBarRaf) {
+            cancelAnimationFrame(this._expenseInputBarRaf);
+            this._expenseInputBarRaf = null;
+        }
+
+        if (this._expenseInputResizeHandler) {
+            window.removeEventListener('resize', this._expenseInputResizeHandler);
+
+            if (window.visualViewport) {
+                window.visualViewport.removeEventListener('resize', this._expenseInputResizeHandler);
+            }
+
+            this._expenseInputResizeHandler = null;
+        }
+
+        const inputBar = document.getElementById('input-bar');
+        if (inputBar) {
+            inputBar.style.bottom = '';
+        }
+    },
+
+    getExpenseInputKeyboardInset() {
+        const vv = window.visualViewport;
+
+        if (!vv || !Number.isFinite(vv.height)) return 0;
+
+        return Math.max(0, Math.round(window.innerHeight - (vv.offsetTop + vv.height)));
+    },
+
+    updateExpenseInputBarPosition(force = false) {
+        const inputBar = document.getElementById('input-bar');
+        if (!inputBar) return;
+
+        if (!this._expenseInputActive) {
+            inputBar.style.bottom = '';
+            inputBar.style.transform = '';
+            return;
+        }
+
+        const nextBottom = `${this.getExpenseInputKeyboardInset()}px`;
+
+        if (!force && inputBar.style.bottom === nextBottom && inputBar.style.transform === 'none') {
+            return;
+        }
+
+        inputBar.style.bottom = nextBottom;
+        inputBar.style.transform = 'none';
+    },
+
+    scheduleExpenseInputBarPositionUpdate(force = false) {
+        if (this._expenseInputBarRaf) {
+            cancelAnimationFrame(this._expenseInputBarRaf);
+        }
+
+        this._expenseInputBarRaf = requestAnimationFrame(() => {
+            this._expenseInputBarRaf = null;
+            this.updateExpenseInputBarPosition(force);
+        });
+    },
+
     startExpenseInputBarWatch() {
         this.stopExpenseInputBarWatch();
 
@@ -618,8 +672,9 @@ const App = {
             this.scheduleExpenseInputBarPositionUpdate();
         };
 
-        // Solo resize: niente listener di scroll.
-        // Se inseguiamo lo scroll, su Android la barra "wobbla".
+        // IMPORTANTE:
+        // ascoltiamo solo i resize della viewport/tastiera,
+        // NON gli scroll della pagina.
         window.addEventListener('resize', this._expenseInputResizeHandler, { passive: true });
 
         if (window.visualViewport) {
@@ -628,14 +683,13 @@ const App = {
 
         this.scheduleExpenseInputBarPositionUpdate(true);
 
-        // Assestamenti extra per tastiere lente / browser che aggiornano in ritardo
         setTimeout(() => {
             if (this._expenseInputActive) this.scheduleExpenseInputBarPositionUpdate(true);
-        }, 80);
+        }, 60);
 
         setTimeout(() => {
             if (this._expenseInputActive) this.scheduleExpenseInputBarPositionUpdate(true);
-        }, 180);
+        }, 160);
 
         setTimeout(() => {
             if (this._expenseInputActive) this.scheduleExpenseInputBarPositionUpdate(true);
@@ -665,49 +719,6 @@ const App = {
         }
     },
 
-    lockExpenseScroll() {
-        if (document.body.classList.contains('expense-scroll-lock')) return;
-
-        this._expenseScrollLockY = window.scrollY || window.pageYOffset || 0;
-
-        document.body.classList.add('expense-scroll-lock');
-        document.body.style.top = `-${this._expenseScrollLockY}px`;
-    },
-
-    unlockExpenseScroll() {
-        const body = document.body;
-        if (!body.classList.contains('expense-scroll-lock')) return;
-
-        const y = this._expenseScrollLockY || 0;
-
-        body.classList.remove('expense-scroll-lock');
-        body.style.top = '';
-
-        window.scrollTo(0, y);
-    },
-
-    stopExpenseInputBarWatch() {
-        if (this._expenseInputBarRaf) {
-            cancelAnimationFrame(this._expenseInputBarRaf);
-            this._expenseInputBarRaf = null;
-        }
-
-        if (this._expenseInputResizeHandler) {
-            window.removeEventListener('resize', this._expenseInputResizeHandler);
-
-            if (window.visualViewport) {
-                window.visualViewport.removeEventListener('resize', this._expenseInputResizeHandler);
-            }
-
-            this._expenseInputResizeHandler = null;
-        }
-
-        const inputBar = document.getElementById('input-bar');
-        if (inputBar) {
-            inputBar.style.bottom = '';
-        }
-    },
-
     /* =====================
        INPUT
        ===================== */
@@ -721,9 +732,6 @@ const App = {
          * - touchstart: add .pressed class (visual only, NO preventDefault)
          * - touchend: remove .pressed, preventDefault (stops stale click), run action
          * - click: desktop fallback (runs only if no prior touchend)
-         *
-         * This works because touchend always dispatches to the touchstart target
-         * even if the element moved (unlike click which does hit-testing).
          */
         let touchHandled = false;
         let blurCleanupTimer = null;
@@ -753,11 +761,10 @@ const App = {
             }
         });
 
-        // --- Input bar positioning / scroll lock ---
+        // --- Input bar positioning ---
         const doBlurCleanup = () => {
             document.body.classList.remove('expense-input-active');
             this.stopExpenseInputBarWatch();
-            this.unlockExpenseScroll();
 
             blurCleanupTimer = setTimeout(() => {
                 this._expenseInputActive = false;
@@ -776,13 +783,13 @@ const App = {
             this._expenseInputActive = true;
 
             document.body.classList.add('expense-input-active');
-            this.lockExpenseScroll();
 
             if (wasInactive) {
                 try { history.pushState({ panel: 'expense-input' }, ''); } catch (_) { }
             }
 
             this.startExpenseInputBarWatch();
+            this.scheduleExpenseInputBarPositionUpdate(true);
         });
 
         input.addEventListener('blur', () => {
@@ -1357,7 +1364,6 @@ const App = {
                 this._expenseInputActive = false;
                 document.body.classList.remove('expense-input-active');
                 this.stopExpenseInputBarWatch();
-                this.unlockExpenseScroll();
                 const expenseInput = document.getElementById('expense-input');
                 if (expenseInput) expenseInput.blur();
                 return;
