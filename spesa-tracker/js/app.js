@@ -551,13 +551,23 @@ const App = {
         return this.getActiveFilterCount() > 0;
     },
 
-    getExpenseInputKeyboardInset() {
+    getExpenseInputViewportMetrics() {
         const vv = window.visualViewport;
-        if (!vv || !Number.isFinite(vv.height)) return 0;
 
-        // Usiamo solo la differenza di altezza e NON offsetTop:
-        // così la barra non reagisce allo scroll verticale della pagina.
-        return Math.max(0, Math.round(window.innerHeight - vv.height));
+        if (!vv || !Number.isFinite(vv.height)) {
+            return {
+                bottom: 0,
+                translateY: 0
+            };
+        }
+
+        // Altezza tastiera: quanto il viewport visibile è più basso del layout viewport
+        const bottom = Math.max(0, Math.round(window.innerHeight - vv.height));
+
+        // Compensazione scroll/shift del viewport visibile mentre la tastiera è aperta
+        const translateY = Math.max(0, Math.round(vv.offsetTop || 0));
+
+        return { bottom, translateY };
     },
 
     updateExpenseInputBarPosition(force = false) {
@@ -566,13 +576,27 @@ const App = {
 
         if (!this._expenseInputActive) {
             inputBar.style.bottom = '';
+            inputBar.style.transform = '';
             return;
         }
 
-        const nextBottom = `${this.getExpenseInputKeyboardInset()}px`;
+        const { bottom, translateY } = this.getExpenseInputViewportMetrics();
 
-        if (!force && inputBar.style.bottom === nextBottom) return;
+        const nextBottom = `${bottom}px`;
+        const nextTransform = translateY > 0
+            ? `translateY(${translateY}px)`
+            : 'translateY(0px)';
+
+        if (
+            !force &&
+            inputBar.style.bottom === nextBottom &&
+            inputBar.style.transform === nextTransform
+        ) {
+            return;
+        }
+
         inputBar.style.bottom = nextBottom;
+        inputBar.style.transform = nextTransform;
     },
 
     scheduleExpenseInputBarPositionUpdate(force = false) {
@@ -594,19 +618,52 @@ const App = {
         };
 
         window.addEventListener('resize', this._expenseInputResizeHandler, { passive: true });
+        window.addEventListener('scroll', this._expenseInputResizeHandler, { passive: true });
 
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', this._expenseInputResizeHandler, { passive: true });
+            window.visualViewport.addEventListener('scroll', this._expenseInputResizeHandler, { passive: true });
         }
 
         this.scheduleExpenseInputBarPositionUpdate(true);
 
-        // Piccolo secondo aggiornamento per i browser che assestano la tastiera con ritardo
+        // Secondo assestamento per browser lenti con tastiera virtuale
         setTimeout(() => {
             if (this._expenseInputActive) {
                 this.scheduleExpenseInputBarPositionUpdate(true);
             }
         }, 80);
+
+        setTimeout(() => {
+            if (this._expenseInputActive) {
+                this.scheduleExpenseInputBarPositionUpdate(true);
+            }
+        }, 180);
+    },
+
+    stopExpenseInputBarWatch() {
+        if (this._expenseInputBarRaf) {
+            cancelAnimationFrame(this._expenseInputBarRaf);
+            this._expenseInputBarRaf = null;
+        }
+
+        if (this._expenseInputResizeHandler) {
+            window.removeEventListener('resize', this._expenseInputResizeHandler);
+            window.removeEventListener('scroll', this._expenseInputResizeHandler);
+
+            if (window.visualViewport) {
+                window.visualViewport.removeEventListener('resize', this._expenseInputResizeHandler);
+                window.visualViewport.removeEventListener('scroll', this._expenseInputResizeHandler);
+            }
+
+            this._expenseInputResizeHandler = null;
+        }
+
+        const inputBar = document.getElementById('input-bar');
+        if (inputBar) {
+            inputBar.style.bottom = '';
+            inputBar.style.transform = '';
+        }
     },
 
     stopExpenseInputBarWatch() {
@@ -649,6 +706,7 @@ const App = {
          * even if the element moved (unlike click which does hit-testing).
          */
         let touchHandled = false;
+        let blurCleanupTimer = null;
 
         // --- Send button ---
         btnSend.addEventListener('touchstart', () => {
@@ -676,8 +734,6 @@ const App = {
         });
 
         // --- Input bar positioning ---
-        let blurCleanupTimer = null;
-
         const doBlurCleanup = () => {
             document.body.classList.remove('expense-input-active');
             this.stopExpenseInputBarWatch();

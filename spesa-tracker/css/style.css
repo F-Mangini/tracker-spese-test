@@ -774,6 +774,7 @@ body.expense-input-active #bottom-nav {
 body.expense-input-active #input-bar {
     bottom: 0;
     transition: none;
+    will-change: bottom, transform;
 }
 
 .input-wrapper {
