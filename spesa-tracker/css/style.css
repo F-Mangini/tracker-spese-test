@@ -769,7 +769,7 @@ body:has(.no-input-bar) .filter-panel-scroll {
 }
 
 #expense-input {
-    touch-action: auto;
+    touch-action: none;
 }
 
 #input-bar.hidden {

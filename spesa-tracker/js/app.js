@@ -677,9 +677,8 @@ const App = {
         // Previene lo scroll (e il conseguente effetto elastico su iOS/Android)
         // quando si trascina la barra di inserimento
         inputBar.addEventListener('touchmove', (e) => {
-            if (e.target !== input) {
-                e.preventDefault();
-            }
+            // Blocca sempre il touchmove per evitare qualsiasi scroll elastico
+            e.preventDefault();
         }, { passive: false });
 
         /*
