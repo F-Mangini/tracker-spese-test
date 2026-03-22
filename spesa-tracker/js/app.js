@@ -582,13 +582,13 @@ const App = {
             if (inset > 0) {
                 paddingCalc += ` + ${inset}px - var(--nav-h)`;
             }
-        } else {
-            if (this.filterOpen) {
-                const panel = document.getElementById('filter-panel');
-                if (panel && !panel.classList.contains('hidden')) {
-                    const h = panel.offsetHeight;
-                    paddingCalc += ` + ${h}px`;
-                }
+        }
+
+        if (this.filterOpen) {
+            const panel = document.getElementById('filter-panel');
+            if (panel && !panel.classList.contains('hidden')) {
+                const h = panel.offsetHeight;
+                paddingCalc += ` + ${h}px`;
             }
         }
 
@@ -2521,7 +2521,7 @@ const App = {
             </div>
 
             <div class="about-section">
-                <p>💰 SpesaTracker v2.2</p>
+                <p>💰 SpesaTracker v2.2.1</p>
                 <p>Dati locali · Nessun server · Nessun costo</p>
             </div>
         `;
