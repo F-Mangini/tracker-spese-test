@@ -765,6 +765,7 @@ const App = {
             blurCleanupTimer = setTimeout(() => {
                 this._expenseInputActive = false;
                 this._suppressNextPopstate = true;
+                this.updateAppMainPadding();
                 try { history.back(); } catch (_) { }
             }, 300);
         };
