@@ -148,6 +148,8 @@ const App = {
 
         if (page === 'settings' && this.filterOpen) this.closeFilterPanel();
 
+        this.updateAppMainPadding();
+
         if (page === 'timeline') this.renderTimeline();
         if (page === 'stats') this.renderStats();
         if (page === 'settings') this.renderSettings();
@@ -260,6 +262,7 @@ const App = {
             const panel = document.getElementById('filter-panel');
             const h = panel.offsetHeight;
             document.getElementById('app-main').style.marginTop = `calc(var(--header-h) + ${h}px)`;
+            this.updateAppMainPadding();
 
             if (this.advancedFiltersOpen) {
                 const scrollContainer = panel.querySelector('.filter-panel-scroll');
@@ -424,6 +427,7 @@ const App = {
         requestAnimationFrame(() => {
             const h = panel.offsetHeight;
             document.getElementById('app-main').style.marginTop = `calc(var(--header-h) + ${h}px)`;
+            this.updateAppMainPadding();
         });
     },
 
@@ -437,6 +441,7 @@ const App = {
         document.getElementById('btn-advanced-toggle').classList.remove('active');
         document.body.classList.remove('no-scroll');
         document.getElementById('app-main').style.marginTop = '';
+        this.updateAppMainPadding();
         if (wasOpen && !fromPopstate) {
             this._suppressNextPopstate = true;
             try { history.back(); } catch (_) { }
@@ -561,6 +566,36 @@ const App = {
         return this.getActiveFilterCount() > 0;
     },
 
+    updateAppMainPadding() {
+        const main = document.getElementById('app-main');
+        if (!main) return;
+
+        let paddingCalc = 'calc(';
+        if (main.classList.contains('no-input-bar')) {
+            paddingCalc += 'var(--nav-h) + var(--safe-bottom)';
+        } else {
+            paddingCalc += 'var(--input-h) + var(--nav-h) + var(--safe-bottom)';
+        }
+
+        if (this._expenseInputActive) {
+            const inset = this.getExpenseInputKeyboardInset();
+            if (inset > 0) {
+                paddingCalc += ` + ${inset}px`;
+            }
+        }
+
+        if (this.filterOpen) {
+            const panel = document.getElementById('filter-panel');
+            if (panel && !panel.classList.contains('hidden')) {
+                const h = panel.offsetHeight;
+                paddingCalc += ` + ${h}px`;
+            }
+        }
+
+        paddingCalc += ')';
+        main.style.paddingBottom = paddingCalc;
+    },
+
     getExpenseInputKeyboardInset() {
         const vv = window.visualViewport;
 
@@ -579,7 +614,7 @@ const App = {
         if (!this._expenseInputActive) {
             inputBar.style.bottom = '';
             inputBar.style.transform = '';
-            if (main) main.style.paddingBottom = '';
+            this.updateAppMainPadding();
             return;
         }
 
@@ -589,12 +624,12 @@ const App = {
         // nella posizione CSS normale sopra la bottom nav.
         if (inset <= 0) {
             if (!force && inputBar.style.bottom === '' && inputBar.style.transform === '') {
-                if (main && main.style.paddingBottom !== '') main.style.paddingBottom = '';
+                this.updateAppMainPadding();
                 return;
             }
             inputBar.style.bottom = '';
             inputBar.style.transform = '';
-            if (main) main.style.paddingBottom = '';
+            this.updateAppMainPadding();
             return;
         }
 
@@ -607,9 +642,7 @@ const App = {
         inputBar.style.bottom = nextBottom;
         inputBar.style.transform = 'none';
 
-        if (main) {
-            main.style.paddingBottom = `calc(var(--input-h) + var(--safe-bottom) + ${inset}px)`;
-        }
+        this.updateAppMainPadding();
     },
 
     scheduleExpenseInputBarPositionUpdate(force = false) {
@@ -675,10 +708,7 @@ const App = {
             inputBar.style.transform = '';
         }
 
-        const main = document.getElementById('app-main');
-        if (main) {
-            main.style.paddingBottom = '';
-        }
+        this.updateAppMainPadding();
     },
 
     /* =====================
