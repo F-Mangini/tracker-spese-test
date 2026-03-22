@@ -765,6 +765,11 @@ body:has(.no-input-bar) .filter-panel-scroll {
     background: var(--bg-secondary);
     border-top: 1px solid var(--border);
     z-index: 100;
+    touch-action: none;
+}
+
+#expense-input {
+    touch-action: auto;
 }
 
 #input-bar.hidden {

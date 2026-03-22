@@ -672,6 +672,15 @@ const App = {
         const input = document.getElementById('expense-input');
         const btnSend = document.getElementById('btn-send');
         const btnVoice = document.getElementById('btn-voice');
+        const inputBar = document.getElementById('input-bar');
+
+        // Previene lo scroll (e il conseguente effetto elastico su iOS/Android)
+        // quando si trascina la barra di inserimento
+        inputBar.addEventListener('touchmove', (e) => {
+            if (e.target !== input) {
+                e.preventDefault();
+            }
+        }, { passive: false });
 
         /*
          * Mobile button strategy:
