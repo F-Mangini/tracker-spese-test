@@ -531,7 +531,7 @@ body:has(.no-input-bar) .filter-panel-scroll {
     margin-top: var(--header-h);
     height: calc(100vh - var(--header-h));
     height: calc(100dvh - var(--header-h));
-    padding-bottom: calc(var(--input-h) + var(--nav-h) + var(--safe-bottom) + 4px);
+    padding-bottom: calc(var(--input-h) + var(--nav-h) + var(--safe-bottom));
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
@@ -540,7 +540,7 @@ body:has(.no-input-bar) .filter-panel-scroll {
 }
 
 #app-main.no-input-bar {
-    padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 4px);
+    padding-bottom: calc(var(--nav-h) + var(--safe-bottom));
 }
 
 .page {
