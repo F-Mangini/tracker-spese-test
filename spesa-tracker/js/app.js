@@ -608,7 +608,7 @@ const App = {
         inputBar.style.transform = 'none';
 
         if (main) {
-            main.style.paddingBottom = `calc(var(--input-h) + var(--nav-h) + var(--safe-bottom) + 8px + ${inset}px)`;
+            main.style.paddingBottom = `calc(var(--input-h) + var(--safe-bottom) + 4px + ${inset}px)`;
         }
     },
 
