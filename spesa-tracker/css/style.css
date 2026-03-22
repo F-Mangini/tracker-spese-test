@@ -94,6 +94,7 @@ body {
     justify-content: space-between;
     padding: 0 16px;
     z-index: 100;
+    touch-action: none;
 }
 
 #app-header h1 {
@@ -190,6 +191,7 @@ body {
     max-width: 540px;
     margin: 0 auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
 }
 
 .no-input-bar~#filter-panel .filter-panel-scroll,

@@ -73,6 +73,11 @@ const App = {
         this.populateDropdowns();
         this.renderTimeline();
         this._lastViewportHeight = this.getViewportHeight();
+
+        const header = document.getElementById('app-header');
+        if (header) {
+            header.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+        }
     },
 
     /* =====================
@@ -240,6 +245,15 @@ const App = {
 
         this.syncFilterUI();
         this.updateFilterBadge();
+
+        const panel = document.getElementById('filter-panel');
+        if (panel) {
+            panel.addEventListener('touchmove', (e) => {
+                if (!e.target.closest('.filter-panel-scroll')) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+        }
     },
 
     toggleAdvancedFilters() {
