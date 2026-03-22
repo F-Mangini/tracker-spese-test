@@ -574,9 +574,12 @@ const App = {
         const inputBar = document.getElementById('input-bar');
         if (!inputBar) return;
 
+        const main = document.getElementById('app-main');
+
         if (!this._expenseInputActive) {
             inputBar.style.bottom = '';
             inputBar.style.transform = '';
+            if (main) main.style.paddingBottom = '';
             return;
         }
 
@@ -585,9 +588,13 @@ const App = {
         // Finché la tastiera non è davvero aperta, lasciamo la barra
         // nella posizione CSS normale sopra la bottom nav.
         if (inset <= 0) {
-            if (!force && inputBar.style.bottom === '' && inputBar.style.transform === '') return;
+            if (!force && inputBar.style.bottom === '' && inputBar.style.transform === '') {
+                if (main && main.style.paddingBottom !== '') main.style.paddingBottom = '';
+                return;
+            }
             inputBar.style.bottom = '';
             inputBar.style.transform = '';
+            if (main) main.style.paddingBottom = '';
             return;
         }
 
@@ -599,6 +606,10 @@ const App = {
 
         inputBar.style.bottom = nextBottom;
         inputBar.style.transform = 'none';
+
+        if (main) {
+            main.style.paddingBottom = `calc(var(--input-h) + var(--nav-h) + var(--safe-bottom) + 8px + ${inset}px)`;
+        }
     },
 
     scheduleExpenseInputBarPositionUpdate(force = false) {
@@ -662,6 +673,11 @@ const App = {
         if (inputBar) {
             inputBar.style.bottom = '';
             inputBar.style.transform = '';
+        }
+
+        const main = document.getElementById('app-main');
+        if (main) {
+            main.style.paddingBottom = '';
         }
     },
 
