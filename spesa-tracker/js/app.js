@@ -572,23 +572,22 @@ const App = {
 
         let paddingCalc = 'calc(';
         if (main.classList.contains('no-input-bar')) {
-            paddingCalc += 'var(--nav-h) + var(--safe-bottom)';
+            paddingCalc += 'var(--safe-bottom)';
         } else {
             paddingCalc += 'var(--input-h) + var(--nav-h) + var(--safe-bottom)';
+            if (this.filterOpen) {
+                const panel = document.getElementById('filter-panel');
+                if (panel && !panel.classList.contains('hidden')) {
+                    const h = panel.offsetHeight;
+                    paddingCalc += ` + ${h}px`;
+                }
+            }
         }
 
         if (this._expenseInputActive) {
             const inset = this.getExpenseInputKeyboardInset();
             if (inset > 0) {
                 paddingCalc += ` + ${inset}px`;
-            }
-        }
-
-        if (this.filterOpen) {
-            const panel = document.getElementById('filter-panel');
-            if (panel && !panel.classList.contains('hidden')) {
-                const h = panel.offsetHeight;
-                paddingCalc += ` + ${h}px`;
             }
         }
 
