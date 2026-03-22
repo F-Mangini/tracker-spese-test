@@ -761,11 +761,11 @@ const App = {
         const doBlurCleanup = () => {
             document.body.classList.remove('expense-input-active');
             this.stopExpenseInputBarWatch();
+            this._expenseInputActive = false;
+            this.updateAppMainPadding();
 
             blurCleanupTimer = setTimeout(() => {
-                this._expenseInputActive = false;
                 this._suppressNextPopstate = true;
-                this.updateAppMainPadding();
                 try { history.back(); } catch (_) { }
             }, 300);
         };
@@ -2521,7 +2521,7 @@ const App = {
             </div>
 
             <div class="about-section">
-                <p>💰 SpesaTracker v2.1</p>
+                <p>💰 SpesaTracker v2.2</p>
                 <p>Dati locali · Nessun server · Nessun costo</p>
             </div>
         `;
