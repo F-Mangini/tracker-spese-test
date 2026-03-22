@@ -606,6 +606,7 @@ const App = {
     },
 
     updateExpenseInputBarPosition(force = false) {
+        this.updateAppMainPadding();
         const inputBar = document.getElementById('input-bar');
         if (!inputBar) return;
 
@@ -614,7 +615,6 @@ const App = {
         if (!this._expenseInputActive) {
             inputBar.style.bottom = '';
             inputBar.style.transform = '';
-            this.updateAppMainPadding();
             return;
         }
 
@@ -624,12 +624,10 @@ const App = {
         // nella posizione CSS normale sopra la bottom nav.
         if (inset <= 0) {
             if (!force && inputBar.style.bottom === '' && inputBar.style.transform === '') {
-                this.updateAppMainPadding();
                 return;
             }
             inputBar.style.bottom = '';
             inputBar.style.transform = '';
-            this.updateAppMainPadding();
             return;
         }
 
@@ -641,8 +639,6 @@ const App = {
 
         inputBar.style.bottom = nextBottom;
         inputBar.style.transform = 'none';
-
-        this.updateAppMainPadding();
     },
 
     scheduleExpenseInputBarPositionUpdate(force = false) {
