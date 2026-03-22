@@ -262,12 +262,12 @@ const App = {
             const panel = document.getElementById('filter-panel');
             const h = panel.offsetHeight;
             document.getElementById('app-main').style.marginTop = `calc(var(--header-h) + ${h}px)`;
-            this.updateAppMainPadding();
 
             if (this.advancedFiltersOpen) {
                 const scrollContainer = panel.querySelector('.filter-panel-scroll');
                 scrollContainer.scrollTo({ top: scrollContainer.scrollHeight, behavior: 'smooth' });
             }
+            this.updateAppMainPadding();
         });
     },
 
@@ -441,11 +441,11 @@ const App = {
         document.getElementById('btn-advanced-toggle').classList.remove('active');
         document.body.classList.remove('no-scroll');
         document.getElementById('app-main').style.marginTop = '';
-        this.updateAppMainPadding();
         if (wasOpen && !fromPopstate) {
             this._suppressNextPopstate = true;
             try { history.back(); } catch (_) { }
         }
+        this.updateAppMainPadding();
     },
 
     /* --- Filter state --- */
