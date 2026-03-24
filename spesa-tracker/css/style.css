@@ -1150,6 +1150,9 @@ body.expense-input-active #input-bar {
     transition: border-color 0.2s;
     outline: none;
     cursor: pointer;
+    resize: none;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 .sd-input:focus {
