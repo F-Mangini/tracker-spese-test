@@ -1445,9 +1445,25 @@ const App = {
 
         const renderList = (filter = '') => {
             const q = filter.toLowerCase();
-            const filtered = q
+            let filtered = q
                 ? items.filter(i => i.nome.toLowerCase().includes(q) || (i.emoji + ' ' + i.nome).toLowerCase().includes(q))
                 : items;
+
+            if (q && filtered.length > 0) {
+                filtered = [...filtered].sort((a, b) => {
+                    const nameA = a.nome.toLowerCase();
+                    const nameB = b.nome.toLowerCase();
+                    const idxA = nameA.indexOf(q);
+                    const idxB = nameB.indexOf(q);
+
+                    if (idxA !== idxB) {
+                        if (idxA === -1) return 1;
+                        if (idxB === -1) return -1;
+                        return idxA - idxB;
+                    }
+                    return nameA.localeCompare(nameB, 'it');
+                });
+            }
 
             if (filtered.length === 0) {
                 list.innerHTML = '<div class="sd-empty">Nessun risultato</div>';
@@ -1666,6 +1682,21 @@ const App = {
                     }
                 }
             } else {
+                if (q && available.length > 0) {
+                    available.sort((a, b) => {
+                        const nameA = a.toLowerCase();
+                        const nameB = b.toLowerCase();
+                        const idxA = nameA.indexOf(q);
+                        const idxB = nameB.indexOf(q);
+
+                        if (idxA !== idxB) {
+                            if (idxA === -1) return 1;
+                            if (idxB === -1) return -1;
+                            return idxA - idxB;
+                        }
+                        return nameA.localeCompare(nameB, 'it');
+                    });
+                }
                 orderedItems = available.map(t => ({ tag: t, icon: '' }));
             }
 
