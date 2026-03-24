@@ -5,7 +5,7 @@
 const CATEGORIES = [
     { id: 'abbigliamento', nome: 'Abbigliamento', emoji: '👕', keywords: ['maglietta', 'maglia', 'maglione', 'pantaloni', 'scarpe', 'giacca', 'vestito', 'zara', 'h&m', 'nike', 'adidas', 'felpa', 'jeans', 'camicia', 'cappotto', 'calze', 'intimo', 'gonna', 'top', 'cappello', 'sciarpa', 'guanti', 'body', 'pantaloncini', 'shorts', 'mutande', 'reggiseno', 'boxer', 'slip', 'calzini', 'collant', 'cravatta', 'blazer', 'costume', 't-shirt', 'corsetto', 'coprispalla'] },
     { id: 'accessori', nome: 'Accessori', emoji: '⌚', keywords: ['orologio', 'borsa', 'accessori', 'collana', 'orecchini', 'anello', 'bracciale', 'portafoglio', 'zaino', 'portachiavi', 'occhiali da sole', 'custodia', 'cover'] },
-    { id: 'bar', nome: 'Bar', emoji: '☕', keywords: ['caffè', 'caffe', 'acqua', 'cappuccino', 'cornetto', 'brioche', 'espresso', 'bar', 'colazione', 'latte', 'tè', 'the', 'gelato', 'biscotto', 'pasticciotto', 'granita', 'espressino', 'granita', 'cioccolata', 'ginseng', 'crepes', 'waffle', 'yogurt', 'torta'] },
+    { id: 'bar', nome: 'Bar', emoji: '☕', keywords: ['caffè', 'caffe', 'acqua', 'cappuccino', 'cornetto', 'brioche', 'espresso', 'bar', 'colazione', 'latte', 'tè', 'the', 'gelato', 'biscotto', 'pasticciotto', 'granita', 'espressino', 'granita', 'cioccolata', 'ginseng', 'crepes', 'waffle', 'yogurt', 'torta', 'coca cola'] },
     { id: 'bollette', nome: 'Bollette', emoji: '💡', keywords: ['bolletta', 'luce', 'gas', 'acqua', 'enel', 'eni', 'a2a', 'internet', 'wifi', 'fibra', 'utenze'] },
     { id: 'casa', nome: 'Casa', emoji: '🏠', keywords: ['affitto', 'mutuo', 'condominio', 'casa', 'arredamento', 'ikea'] },
     { id: 'cura', nome: 'Cura personale', emoji: '💇', keywords: ['barbiere', 'parrucchiere', 'estetista', 'profumo', 'crema', 'shampoo', 'lenti', 'sapone', 'trucco', 'makeup', 'smalto', 'rossetto', 'eyeliner', 'matita', 'mascara', 'blush', 'fondotinta', 'cipria', 'ombretto', 'capelli', 'taglio', 'unghie', 'manicure', 'pedicure', 'sopracciglia', 'ceretta', 'depilazione', 'tinta', 'lucidalabbra', 'rasoio', 'lametta', 'pennello', 'spazzolino', 'dentifricio', 'collutorio', 'deodorante', 'bagnoschiuma', 'doccia', 'dopobarba'] },
@@ -15,7 +15,7 @@ const CATEGORIES = [
     { id: 'produttività', nome: 'Produttività', emoji: '🤖', keywords: ['produttività', 'produttivita', 'chatgpt', 'claude', 'gemini', 'kimi', 'copilot', 'claude code', 'codex', 'perplexity', 'colab', 'server', 'gpu'] },
     { id: 'regali', nome: 'Regali', emoji: '🎁', keywords: ['regalo', 'fiori', 'pensiero', 'compleanno', 'natale'] },
     { id: 'ristorante', nome: 'Ristorante', emoji: '🍝', keywords: ['pizza', 'sushi', 'ristorante', 'trattoria', 'hamburger', 'panino', 'pranzo', 'cena', 'pizzeria', 'kebab', 'poke', 'mcdonald', 'mcd', 'burger', 'macelleria', 'braceria'] },
-    { id: 'salute', nome: 'Salute', emoji: '💊', keywords: ['farmacia', 'medicina', 'dottore', 'medico', 'dentista', 'visita', 'analisi', 'ospedale', 'ottico', 'occhiali', 'integratore', 'vitamina'] },
+    { id: 'salute', nome: 'Salute', emoji: '💊', keywords: ['farmacia', 'medicina', 'dottore', 'medico', 'dentista', 'visita', 'analisi', 'ospedale', 'ottico', 'occhiali', 'integratore', 'integratori', 'vitamina', 'vitamine', 'cerotti'] },
     { id: 'supermercato', nome: 'Supermercato', emoji: '🛒', keywords: ['spesa', 'supermercato', 'esselunga', 'conad', 'coop', 'lidl', 'eurospin', 'carrefour', 'pam', 'despar', 'md', 'aldi', 'penny', 'famila', 'casa del detersivo', 'acqua e sapone'] },
     { id: 'sport', nome: 'Sport', emoji: '🏋️', keywords: ['palestra', 'piscina', 'partita', 'calcetto', 'tennis', 'padel', 'beach', 'kart', 'pallavolo', 'paintball', 'decathlon', 'sport', 'yoga', 'pilates'] },
     { id: 'tabacchi', nome: 'Tabacchi', emoji: '🏪', keywords: ['sigarette', 'tabacchi', 'tabacchino', 'gratta', 'lotto', 'francobollo', 'gomme'] },
@@ -34,5 +34,6 @@ const PAYMENT_METHODS = [
     { id: 'contanti', nome: 'Contanti', emoji: '💵' },
     { id: 'paypal', nome: 'PayPal', emoji: '🅿️' },
     { id: 'satispay', nome: 'Satispay', emoji: '📱' },
+    { id: 'welfare', nome: 'Welfare', emoji: '🌟' },
     { id: 'altro_pag', nome: 'Altro', emoji: '💰' }
 ];
