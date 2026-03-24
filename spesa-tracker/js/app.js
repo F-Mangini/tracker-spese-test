@@ -1510,8 +1510,14 @@ const App = {
             const sel = items.find(i => i.id === input.dataset.value) || items[0];
             input.value = `${sel.emoji} ${sel.nome}`;
 
-            if (wasOpen && this._modalInteractionActive && !this._suspendInteractionRelease) {
-                this.releaseModalInteractionState();
+            const shouldRelease = wasOpen && this._modalInteractionActive && !this._suspendInteractionRelease;
+            if (shouldRelease) {
+                setTimeout(() => {
+                    const dropdownOpen = !!this.getOpenModalDropdown();
+                    if (!dropdownOpen && this._modalInteractionActive) {
+                        this.releaseModalInteractionState();
+                    }
+                }, 10);
             }
         };
 
@@ -1750,8 +1756,14 @@ const App = {
             isEditable = false;
             input.value = '';
 
-            if (wasOpen && this._modalInteractionActive && !this._suspendInteractionRelease) {
-                this.releaseModalInteractionState();
+            const shouldRelease = wasOpen && this._modalInteractionActive && !this._suspendInteractionRelease;
+            if (shouldRelease) {
+                setTimeout(() => {
+                    const dropdownOpen = !!this.getOpenModalDropdown();
+                    if (!dropdownOpen && this._modalInteractionActive) {
+                        this.releaseModalInteractionState();
+                    }
+                }, 10);
             }
         };
 
