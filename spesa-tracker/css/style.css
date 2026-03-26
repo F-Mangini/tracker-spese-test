@@ -770,10 +770,6 @@ body:has(.no-input-bar) .filter-panel-scroll {
     touch-action: none;
 }
 
-#expense-input {
-    touch-action: none;
-}
-
 #input-bar.hidden {
     display: none;
 }
