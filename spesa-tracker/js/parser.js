@@ -74,13 +74,22 @@ const Parser = {
     },
 
     _detectCategory(text) {
+        let firstMatchIndex = -1;
+        let matchedCategory = 'altro';
+
         for (const cat of CATEGORIES) {
             if (cat.id === 'altro') continue;
             for (const kw of cat.keywords) {
-                if (text.includes(kw)) return cat.id;
+                const index = text.indexOf(kw);
+                if (index !== -1) {
+                    if (firstMatchIndex === -1 || index < firstMatchIndex) {
+                        firstMatchIndex = index;
+                        matchedCategory = cat.id;
+                    }
+                }
             }
         }
-        return 'altro';
+        return matchedCategory;
     },
 
     _detectPaymentInfo(text) {
