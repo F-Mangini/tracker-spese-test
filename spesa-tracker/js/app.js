@@ -1972,10 +1972,10 @@ const App = {
                 const ref = new Date(now);
                 ref.setDate(ref.getDate() + this.statsOffset * 7);
 
-                end = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate(), 23, 59, 59, 999);
-                start = new Date(end);
-                start.setDate(start.getDate() - 6);
-                start.setHours(0, 0, 0, 0);
+                start = this.startOfWeek(ref);
+                end = new Date(start);
+                end.setDate(end.getDate() + 6);
+                end.setHours(23, 59, 59, 999);
 
                 const sl = start.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
                 const el = end.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });

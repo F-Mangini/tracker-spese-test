@@ -315,7 +315,7 @@ body:has(.no-input-bar) .filter-panel-scroll {
    DUAL RANGE SLIDER
    ============================================ */
 .slider-container {
-    padding: 0 2px;
+    padding: 0 16px;
 }
 
 .slider-values {
