@@ -28,12 +28,12 @@ const CATEGORIES = [
 ];
 
 const PAYMENT_METHODS = [
-    { id: 'bonifico', nome: 'Bonifico', emoji: '🏦' },
-    { id: 'buoni_pasto', nome: 'Buoni Pasto', emoji: '🍔' },
-    { id: 'carta', nome: 'Carta', emoji: '💳' },
-    { id: 'contanti', nome: 'Contanti', emoji: '💵' },
-    { id: 'paypal', nome: 'PayPal', emoji: '🅿️' },
-    { id: 'satispay', nome: 'Satispay', emoji: '📱' },
-    { id: 'welfare', nome: 'Welfare', emoji: '🌟' },
-    { id: 'altro_pag', nome: 'Altro', emoji: '💰' }
+    { id: 'bonifico', nome: 'Bonifico', emoji: '🏦', keywords: ['bonifico'] },
+    { id: 'buoni_pasto', nome: 'Buoni Pasto', emoji: '🍔', keywords: ['buoni pasto', 'buono pasto', 'buonopasto', 'buonipasto'] },
+    { id: 'carta', nome: 'Carta', emoji: '💳', keywords: ['carta'] },
+    { id: 'contanti', nome: 'Contanti', emoji: '💵', keywords: ['contanti', 'cash'] },
+    { id: 'paypal', nome: 'PayPal', emoji: '🅿️', keywords: ['paypal'] },
+    { id: 'satispay', nome: 'Satispay', emoji: '📱', keywords: ['satispay'] },
+    { id: 'welfare', nome: 'Welfare', emoji: '🌟', keywords: ['welfare'] },
+    { id: 'altro_pag', nome: 'Altro', emoji: '💰', keywords: [] }
 ];

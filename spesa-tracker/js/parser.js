@@ -84,19 +84,14 @@ const Parser = {
     },
 
     _detectPaymentInfo(text) {
-        const methods = [
-            { id: 'contanti', regex: /\b(contanti|cash)\b/i },
-            { id: 'satispay', regex: /\b(satispay)\b/i },
-            { id: 'paypal', regex: /\b(paypal)\b/i },
-            { id: 'bonifico', regex: /\b(bonifico)\b/i },
-            { id: 'buoni_pasto', regex: /\b(buoni pasto|buono pasto|buonopasto|buonipasto)\b/i },
-            { id: 'carta', regex: /\b(carta)\b/i }
-        ];
-
-        for (const m of methods) {
-            const match = text.match(m.regex);
-            if (match) {
-                return { id: m.id, keyword: match[0] };
+        for (const pm of PAYMENT_METHODS) {
+            if (pm.id === 'altro_pag' || !pm.keywords) continue;
+            for (const kw of pm.keywords) {
+                const regex = new RegExp('\\b' + kw + '\\b', 'i');
+                const match = text.match(regex);
+                if (match) {
+                    return { id: pm.id, keyword: match[0] };
+                }
             }
         }
         return { id: 'carta', keyword: null };
