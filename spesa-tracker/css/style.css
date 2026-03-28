@@ -6,7 +6,8 @@
 *::after {
     margin: 0;
     padding: 0;
-    box-sizing: border-box
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
 :root {
@@ -121,8 +122,14 @@ body {
     line-height: 1;
 }
 
-.header-btn:hover {
+.header-btn:active {
     background: var(--bg-primary);
+}
+
+@media (hover: hover) {
+    .header-btn:hover {
+        background: var(--bg-primary);
+    }
 }
 
 .header-btn.active {
@@ -651,12 +658,14 @@ body:has(.no-input-bar) .filter-panel-scroll {
     border: 1px solid var(--border);
 }
 
-.expense-card:hover {
-    box-shadow: var(--shadow);
-}
-
 .expense-card:active {
     transform: scale(0.98);
+}
+
+@media (hover: hover) {
+    .expense-card:hover {
+        box-shadow: var(--shadow);
+    }
 }
 
 .expense-emoji {
@@ -1061,8 +1070,14 @@ body.expense-input-active #input-bar {
     transition: background 0.2s;
 }
 
-.modal-close-btn:hover {
+.modal-close-btn:active {
     background: var(--bg-primary);
+}
+
+@media (hover: hover) {
+    .modal-close-btn:hover {
+        background: var(--bg-primary);
+    }
 }
 
 .modal-body {
@@ -1353,7 +1368,6 @@ body.expense-input-active #input-bar {
 
 .btn:active {
     transform: scale(0.96);
-    transition: background 0s, transform 0.1s;
 }
 
 .btn-primary {
@@ -1403,7 +1417,7 @@ body.expense-input-active #input-bar {
 }
 
 .btn-warning {
-    background: #ee8309;
+    background: #f59e0b;
     color: #fff;
 }
 
