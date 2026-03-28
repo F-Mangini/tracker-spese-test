@@ -1382,6 +1382,15 @@ body.expense-input-active #input-bar {
     background: var(--danger-hover);
 }
 
+.btn-warning {
+    background: #d97706;
+    color: #fff;
+}
+
+.btn-warning:hover {
+    background: #b45309;
+}
+
 .btn-block {
     width: 100%;
     justify-content: center;

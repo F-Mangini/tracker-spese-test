@@ -1911,7 +1911,7 @@ const App = {
         return !!overlay && !overlay.classList.contains('hidden');
     },
 
-    showConfirm(msg, onYes, yesText = null, noText = null) {
+    showConfirm(msg, onYes, yesText = null, noText = null, yesClass = 'btn-danger') {
         document.getElementById('confirm-message').innerHTML = msg;
         document.getElementById('confirm-overlay').classList.remove('hidden');
 
@@ -1928,6 +1928,8 @@ const App = {
         
         if (noText) newNo.textContent = noText;
         else newNo.textContent = 'Annulla';
+
+        newYes.className = `btn ${yesClass}`;
 
         yesBtn.replaceWith(newYes);
         noBtn.replaceWith(newNo);
@@ -2600,12 +2602,12 @@ const App = {
 
         container.querySelector('#btn-export-json').addEventListener('click', () => {
             this.download(Storage.exportJSON(), `spese_backup_${this.dateStamp()}.json`, 'application/json');
-            this.showToast('Backup JSON scaricato ✓', 'success');
+            this.showToast('Download JSON avviato...', 'info');
         });
 
         container.querySelector('#btn-export-csv').addEventListener('click', () => {
             this.download('\uFEFF' + Storage.exportCSV(), `spese_${this.dateStamp()}.csv`, 'text/csv;charset=utf-8');
-            this.showToast('CSV scaricato ✓', 'success');
+            this.showToast('Download CSV avviato...', 'info');
         });
 
         const fileInput = container.querySelector('#import-file');
@@ -2624,8 +2626,13 @@ const App = {
                 if (file.name.endsWith('.json')) {
                     let msg = 'Importare backup JSON?';
                     const hasSpese = Storage.getSpese().length > 0;
+                    let yesText = 'Importa';
+                    let yesClass = 'btn-primary';
+                    
                     if (hasSpese) {
-                        msg += '<br>I dati attuali andranno persi.';
+                        msg += '<br><span style="font-size: 0.85rem; color: var(--text-tertiary);">⚠️ I dati attuali andranno persi.</span>';
+                        yesText = 'Sostituisci';
+                        yesClass = 'btn-warning';
                     }
                     
                     this.showConfirm(msg, () => {
@@ -2638,7 +2645,7 @@ const App = {
                         } else {
                             this.showToast('Errore: ' + r.error, 'error');
                         }
-                    }, 'Conferma', 'Annulla');
+                    }, yesText, 'Annulla', yesClass);
                 } else if (file.name.endsWith('.csv')) {
                     const r = Storage.importCSV(content);
 
