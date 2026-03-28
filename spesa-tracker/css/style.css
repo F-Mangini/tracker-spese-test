@@ -1353,6 +1353,7 @@ body.expense-input-active #input-bar {
 
 .btn:active {
     transform: scale(0.96);
+    transition: background 0s, transform 0.1s;
 }
 
 .btn-primary {
