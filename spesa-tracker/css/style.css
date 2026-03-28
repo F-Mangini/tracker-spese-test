@@ -1359,8 +1359,10 @@ body.expense-input-active #input-bar {
     color: #fff;
 }
 
-.btn-primary:hover {
-    background: var(--accent-hover);
+@media (hover: hover) {
+    .btn-primary:hover {
+        background: var(--accent-hover);
+    }
 }
 
 .btn-secondary {
@@ -1369,8 +1371,10 @@ body.expense-input-active #input-bar {
     border: 1px solid var(--border);
 }
 
-.btn-secondary:hover {
-    background: var(--border);
+@media (hover: hover) {
+    .btn-secondary:hover {
+        background: var(--border);
+    }
 }
 
 .btn-danger {
@@ -1378,8 +1382,10 @@ body.expense-input-active #input-bar {
     color: #fff;
 }
 
-.btn-danger:hover {
-    background: var(--danger-hover);
+@media (hover: hover) {
+    .btn-danger:hover {
+        background: var(--danger-hover);
+    }
 }
 
 .btn-warning {
@@ -1387,8 +1393,10 @@ body.expense-input-active #input-bar {
     color: #fff;
 }
 
-.btn-warning:hover {
-    background: #c45a0a;
+@media (hover: hover) {
+    .btn-warning:hover {
+        background: #c45a0a;
+    }
 }
 
 .btn-block {
