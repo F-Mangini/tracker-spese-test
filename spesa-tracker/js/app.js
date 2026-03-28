@@ -1925,7 +1925,7 @@ const App = {
 
         if (yesText) newYes.textContent = yesText;
         else newYes.textContent = 'Elimina';
-        
+
         if (noText) newNo.textContent = noText;
         else newNo.textContent = 'Annulla';
 
@@ -2567,7 +2567,7 @@ const App = {
             <div class="settings-section">
                 <h3>📥 Importa dati</h3>
                 <p class="settings-hint">JSON sostituisce i dati, CSV li aggiunge.</p>
-                <input type="file" id="import-file" accept=".json,.csv" hidden>
+                <input type="file" id="import-file" accept=".json,application/json,.csv,text/csv,application/csv,text/comma-separated-values" hidden>
                 <button id="btn-import" class="btn btn-secondary btn-block">📁 Scegli file...</button>
             </div>
 
@@ -2587,7 +2587,7 @@ const App = {
             </div>
 
             <div class="about-section">
-                <p>💰 SpesaTracker v2.2.2</p>
+                <p>💰 SpesaTracker v2.3.0</p>
                 <p>Dati locali · Nessun server · Nessun costo</p>
             </div>
         `;
@@ -2623,18 +2623,24 @@ const App = {
             reader.onload = ev => {
                 const content = ev.target.result;
 
-                if (file.name.endsWith('.json')) {
+                const fileName = file.name.toLowerCase();
+                const fileType = file.type ? file.type.toLowerCase() : '';
+                
+                const isJson = fileName.endsWith('.json') || fileType.includes('json');
+                const isCsv = fileName.endsWith('.csv') || fileType.includes('csv') || fileType.includes('comma-separated-values');
+
+                if (isJson) {
                     let msg = 'Importare backup JSON?';
                     const hasSpese = Storage.getSpese().length > 0;
                     let yesText = 'Importa';
                     let yesClass = 'btn-primary';
-                    
+
                     if (hasSpese) {
                         msg += '<br><span style="font-size: 0.85rem; color: var(--text-tertiary);">⚠️ I dati attuali andranno persi.</span>';
                         yesText = 'Sostituisci';
                         yesClass = 'btn-warning';
                     }
-                    
+
                     this.showConfirm(msg, () => {
                         const r = Storage.importJSON(content);
 
@@ -2646,7 +2652,7 @@ const App = {
                             this.showToast('Errore: ' + r.error, 'error');
                         }
                     }, yesText, 'Annulla', yesClass);
-                } else if (file.name.endsWith('.csv')) {
+                } else if (isCsv) {
                     const r = Storage.importCSV(content);
 
                     if (r.success) {

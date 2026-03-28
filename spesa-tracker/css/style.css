@@ -27,6 +27,7 @@
     --danger-hover: #dc2626;
     --danger-light: #fee2e2;
     --warning: #f59e0b;
+    --warning-hover: #ee8309;
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
     --shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
@@ -1422,12 +1423,12 @@ body.expense-input-active #input-bar {
 }
 
 .btn-warning:active {
-    background: #c45a0a;
+    background: #ee8309;
 }
 
 @media (hover: hover) {
     .btn-warning:hover {
-        background: #c45a0a;
+        background: #ee8309;
     }
 }
 
