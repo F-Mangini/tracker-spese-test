@@ -194,6 +194,7 @@ const App = {
 
             if (this.filterOpen && !this._filterSearchActive) {
                 this._filterSearchActive = true;
+                this.startExpenseInputBarWatch();
                 try { history.pushState({ panel: 'filter-search' }, ''); } catch (_) { }
             }
         });
@@ -201,6 +202,7 @@ const App = {
         searchInput.addEventListener('blur', () => {
             if (this._filterSearchActive) {
                 this._filterSearchActive = false;
+                this.stopExpenseInputBarWatch();
                 this._suppressNextPopstate = true;
                 try { history.back(); } catch (_) { }
             }
@@ -591,7 +593,7 @@ const App = {
             paddingCalc += 'var(--input-h) + var(--nav-h) + var(--safe-bottom)';
         }
 
-        if (this._expenseInputActive) {
+        if (this._expenseInputActive || this._filterSearchActive) {
             const inset = this.getExpenseInputKeyboardInset();
             if (inset > 0) {
                 paddingCalc += ` + ${inset}px - var(--nav-h)`;
@@ -1909,8 +1911,8 @@ const App = {
         return !!overlay && !overlay.classList.contains('hidden');
     },
 
-    showConfirm(msg, onYes) {
-        document.getElementById('confirm-message').textContent = msg;
+    showConfirm(msg, onYes, yesText = null, noText = null) {
+        document.getElementById('confirm-message').innerHTML = msg;
         document.getElementById('confirm-overlay').classList.remove('hidden');
 
         try { history.pushState({ panel: 'confirm' }, ''); } catch (_) { }
@@ -1920,6 +1922,12 @@ const App = {
 
         const newYes = yesBtn.cloneNode(true);
         const newNo = noBtn.cloneNode(true);
+
+        if (yesText) newYes.textContent = yesText;
+        else newYes.textContent = 'Elimina';
+        
+        if (noText) newNo.textContent = noText;
+        else newNo.textContent = 'Annulla';
 
         yesBtn.replaceWith(newYes);
         noBtn.replaceWith(newNo);
@@ -2614,7 +2622,13 @@ const App = {
                 const content = ev.target.result;
 
                 if (file.name.endsWith('.json')) {
-                    this.showConfirm('Importare backup JSON? I dati attuali verranno SOSTITUITI.', () => {
+                    let msg = 'Importare backup JSON?';
+                    const hasSpese = Storage.getSpese().length > 0;
+                    if (hasSpese) {
+                        msg += '<br>I dati attuali andranno persi.';
+                    }
+                    
+                    this.showConfirm(msg, () => {
                         const r = Storage.importJSON(content);
 
                         if (r.success) {
@@ -2624,7 +2638,7 @@ const App = {
                         } else {
                             this.showToast('Errore: ' + r.error, 'error');
                         }
-                    });
+                    }, 'Conferma', 'Annulla');
                 } else if (file.name.endsWith('.csv')) {
                     const r = Storage.importCSV(content);
 
