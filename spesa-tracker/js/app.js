@@ -2600,14 +2600,16 @@ const App = {
             });
         });
 
-        container.querySelector('#btn-export-json').addEventListener('click', () => {
+        container.querySelector('#btn-export-json').addEventListener('click', (e) => {
             this.download(Storage.exportJSON(), `spese_backup_${this.dateStamp()}.json`, 'application/json');
             this.showToast('Download JSON avviato...', 'info');
+            e.currentTarget.blur();
         });
 
-        container.querySelector('#btn-export-csv').addEventListener('click', () => {
+        container.querySelector('#btn-export-csv').addEventListener('click', (e) => {
             this.download('\uFEFF' + Storage.exportCSV(), `spese_${this.dateStamp()}.csv`, 'text/csv;charset=utf-8');
             this.showToast('Download CSV avviato...', 'info');
+            e.currentTarget.blur();
         });
 
         const fileInput = container.querySelector('#import-file');
