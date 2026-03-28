@@ -1348,6 +1348,7 @@ body.expense-input-active #input-bar {
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .btn:active {
@@ -1357,6 +1358,10 @@ body.expense-input-active #input-bar {
 .btn-primary {
     background: var(--accent);
     color: #fff;
+}
+
+.btn-primary:active {
+    background: var(--accent-hover);
 }
 
 @media (hover: hover) {
@@ -1371,6 +1376,10 @@ body.expense-input-active #input-bar {
     border: 1px solid var(--border);
 }
 
+.btn-secondary:active {
+    background: var(--border);
+}
+
 @media (hover: hover) {
     .btn-secondary:hover {
         background: var(--border);
@@ -1382,6 +1391,10 @@ body.expense-input-active #input-bar {
     color: #fff;
 }
 
+.btn-danger:active {
+    background: var(--danger-hover);
+}
+
 @media (hover: hover) {
     .btn-danger:hover {
         background: var(--danger-hover);
@@ -1391,6 +1404,10 @@ body.expense-input-active #input-bar {
 .btn-warning {
     background: #ee8309;
     color: #fff;
+}
+
+.btn-warning:active {
+    background: #c45a0a;
 }
 
 @media (hover: hover) {
