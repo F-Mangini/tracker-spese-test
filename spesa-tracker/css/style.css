@@ -468,6 +468,7 @@ body:has(.no-input-bar) .filter-panel-scroll {
 
 /* Filter footer */
 .filter-footer {
+    position: relative;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -484,9 +485,14 @@ body:has(.no-input-bar) .filter-panel-scroll {
 }
 
 .filter-info {
-    font-size: 0.75rem;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.70rem;
     color: var(--text-tertiary);
     font-weight: 500;
+    pointer-events: none;
+    white-space: nowrap;
 }
 
 .btn-filter-reset {
@@ -579,7 +585,7 @@ body:has(.no-input-bar) .filter-panel-scroll {
    ============================================ */
 #timeline-summary {
     position: sticky;
-    top: 0;
+    top: 12px;
     z-index: 98;
     background: linear-gradient(135deg, var(--accent), var(--accent-hover));
     color: #fff;
@@ -587,6 +593,18 @@ body:has(.no-input-bar) .filter-panel-scroll {
     padding: 16px 20px;
     margin-bottom: 16px;
     box-shadow: var(--shadow);
+}
+
+#timeline-summary::before {
+    content: '';
+    position: absolute;
+    top: -14px;
+    left: -20px;
+    right: -20px;
+    bottom: -32px;
+    background: linear-gradient(to bottom, var(--bg-primary) 0%, var(--bg-primary) calc(100% - 32px), transparent 100%);
+    z-index: -1;
+    pointer-events: none;
 }
 
 #timeline-summary.hidden {

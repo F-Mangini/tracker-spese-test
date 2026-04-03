@@ -517,16 +517,24 @@ const App = {
             const meseCorrente = oggi.getMonth();
             const annoCorrente = oggi.getFullYear();
 
+            const monday = new Date(oggi);
+            const dayOfWeek = monday.getDay();
+            const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+            monday.setDate(monday.getDate() + diffToMonday);
+            monday.setHours(0, 0, 0, 0);
+
             let totOggi = 0;
+            let totSettimana = 0;
             let totMese = 0;
 
             allSpese.forEach(s => {
                 const d = new Date(s.data);
                 if (this.dateKey(d) === oggiKey) totOggi += s.importo;
+                if (d >= monday) totSettimana += s.importo;
                 if (d.getMonth() === meseCorrente && d.getFullYear() === annoCorrente) totMese += s.importo;
             });
 
-            info.textContent = `Oggi: €${totOggi.toFixed(2)} · Mese: €${totMese.toFixed(2)}`;
+            info.textContent = `Oggi: €${totOggi.toFixed(2)} · Settimana: €${totSettimana.toFixed(2)} · Mese: €${totMese.toFixed(2)}`;
         }
     },
 
@@ -976,7 +984,7 @@ const App = {
         } else {
             summaryLabel1 = 'Oggi';
             summaryValue1 = `€${totOggi.toFixed(2)}`;
-            summaryLabel2 = 'In settimana';
+            summaryLabel2 = 'Settimana';
             summaryValue2 = `€${totSettimana.toFixed(2)}`;
             summaryLabel3 = nomeMese;
             summaryValue3 = `€${totMese.toFixed(2)}`;
