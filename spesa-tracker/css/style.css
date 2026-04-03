@@ -609,8 +609,24 @@ body:has(.no-input-bar) .filter-panel-scroll {
     margin-bottom: -120px;
 }
 
-#page-timeline.no-gradient::before {
-    display: none;
+#page-settings::before {
+    content: '';
+    position: sticky;
+    top: 0;
+    z-index: 97;
+    display: block;
+    height: 48px;
+    background: linear-gradient(to bottom, var(--bg-primary) 0%, transparent 100%);
+    pointer-events: none;
+    margin-left: -12px;
+    margin-right: -12px;
+    margin-bottom: -48px;
+}
+
+#page-timeline.filter-open::before {
+    height: 32px;
+    background: linear-gradient(to bottom, var(--bg-primary) 0%, transparent 100%);
+    margin-bottom: -32px;
 }
 
 #timeline-summary.hidden {
@@ -946,6 +962,18 @@ body.expense-input-active #input-bar {
     display: flex;
     align-items: stretch;
     z-index: 100;
+}
+
+#bottom-nav::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(to top, var(--bg-primary) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: -1;
 }
 
 .nav-btn {
@@ -1868,7 +1896,7 @@ body.no-scroll #app-main {
 .stats-sticky-header::after {
     content: '';
     position: absolute;
-    top: 100%;
+    top: calc(100% - 12px);
     left: -12px;
     right: -12px;
     height: 32px;

@@ -444,7 +444,7 @@ const App = {
         if (summary) summary.classList.add('hidden');
         
         const pageTimeline = document.getElementById('page-timeline');
-        if (pageTimeline) pageTimeline.classList.add('no-gradient');
+        if (pageTimeline) pageTimeline.classList.add('filter-open');
 
         requestAnimationFrame(() => {
             const h = panel.offsetHeight;
@@ -467,7 +467,7 @@ const App = {
         if (summary) summary.classList.remove('hidden');
 
         const pageTimeline = document.getElementById('page-timeline');
-        if (pageTimeline) pageTimeline.classList.remove('no-gradient');
+        if (pageTimeline) pageTimeline.classList.remove('filter-open');
 
         document.getElementById('app-main').style.marginTop = '';
         if (wasOpen && !fromPopstate) {
