@@ -578,12 +578,19 @@ body:has(.no-input-bar) .filter-panel-scroll {
    TIMELINE SUMMARY
    ============================================ */
 #timeline-summary {
+    position: sticky;
+    top: 0;
+    z-index: 98;
     background: linear-gradient(135deg, var(--accent), var(--accent-hover));
     color: #fff;
     border-radius: var(--radius);
     padding: 16px 20px;
     margin-bottom: 16px;
     box-shadow: var(--shadow);
+}
+
+#timeline-summary.hidden {
+    display: none;
 }
 
 .summary-row {

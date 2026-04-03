@@ -439,6 +439,9 @@ const App = {
         document.getElementById('btn-filter-toggle').classList.add('active');
 
         history.pushState({ panel: 'filter' }, '');
+        
+        const summary = document.getElementById('timeline-summary');
+        if (summary) summary.classList.add('hidden');
 
         requestAnimationFrame(() => {
             const h = panel.offsetHeight;
@@ -456,6 +459,10 @@ const App = {
         document.getElementById('advanced-filters').classList.add('hidden');
         document.getElementById('btn-advanced-toggle').classList.remove('active');
         document.body.classList.remove('no-scroll');
+        
+        const summary = document.getElementById('timeline-summary');
+        if (summary) summary.classList.remove('hidden');
+
         document.getElementById('app-main').style.marginTop = '';
         if (wasOpen && !fromPopstate) {
             this._suppressNextPopstate = true;
@@ -499,11 +506,27 @@ const App = {
             const filtered = this.applyFilters(allSpese);
             const total = filtered.reduce((sum, x) => sum + x.importo, 0);
 
-            info.textContent = `${n} filtr${n === 1 ? 'o attivo' : 'i attivi'} · ${filtered.length} risultat${filtered.length === 1 ? 'o' : 'i'} · €${total.toFixed(2)}`;
+            info.textContent = `${n} filtr${n === 1 ? 'o' : 'i'} · ${filtered.length} spes${filtered.length === 1 ? 'a' : 'e'} · €${total.toFixed(2)}`;
         } else {
             badge.classList.add('hidden');
             resetBtn.classList.add('hidden');
-            info.textContent = '';
+            
+            const allSpese = Storage.getSpese();
+            const oggi = new Date();
+            const oggiKey = this.dateKey(oggi);
+            const meseCorrente = oggi.getMonth();
+            const annoCorrente = oggi.getFullYear();
+
+            let totOggi = 0;
+            let totMese = 0;
+
+            allSpese.forEach(s => {
+                const d = new Date(s.data);
+                if (this.dateKey(d) === oggiKey) totOggi += s.importo;
+                if (d.getMonth() === meseCorrente && d.getFullYear() === annoCorrente) totMese += s.importo;
+            });
+
+            info.textContent = `Oggi: €${totOggi.toFixed(2)} · Mese: €${totMese.toFixed(2)}`;
         }
     },
 
@@ -918,13 +941,21 @@ const App = {
         const meseCorrente = oggi.getMonth();
         const annoCorrente = oggi.getFullYear();
 
+        const monday = new Date(oggi);
+        const dayOfWeek = monday.getDay();
+        const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        monday.setDate(monday.getDate() + diffToMonday);
+        monday.setHours(0, 0, 0, 0);
+
         let totOggi = 0;
+        let totSettimana = 0;
         let totMese = 0;
 
         allSpese.forEach(s => {
             const d = new Date(s.data);
 
             if (this.dateKey(d) === oggiKey) totOggi += s.importo;
+            if (d >= monday) totSettimana += s.importo;
             if (d.getMonth() === meseCorrente && d.getFullYear() === annoCorrente) totMese += s.importo;
         });
 
@@ -945,10 +976,10 @@ const App = {
         } else {
             summaryLabel1 = 'Oggi';
             summaryValue1 = `€${totOggi.toFixed(2)}`;
-            summaryLabel2 = nomeMese;
-            summaryValue2 = `€${totMese.toFixed(2)}`;
-            summaryLabel3 = 'N. spese';
-            summaryValue3 = allSpese.length;
+            summaryLabel2 = 'In settimana';
+            summaryValue2 = `€${totSettimana.toFixed(2)}`;
+            summaryLabel3 = nomeMese;
+            summaryValue3 = `€${totMese.toFixed(2)}`;
         }
 
         summary.innerHTML = `
