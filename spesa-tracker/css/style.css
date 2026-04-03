@@ -615,18 +615,18 @@ body:has(.no-input-bar) .filter-panel-scroll {
     top: 0;
     z-index: 97;
     display: block;
-    height: 48px;
+    height: 16px;
     background: linear-gradient(to bottom, var(--bg-primary) 0%, transparent 100%);
     pointer-events: none;
     margin-left: -12px;
     margin-right: -12px;
-    margin-bottom: -48px;
+    margin-bottom: -16px;
 }
 
 #page-timeline.filter-open::before {
-    height: 32px;
+    height: 16px;
     background: linear-gradient(to bottom, var(--bg-primary) 0%, transparent 100%);
-    margin-bottom: -32px;
+    margin-bottom: -16px;
 }
 
 #timeline-summary.hidden {
@@ -962,6 +962,10 @@ body.expense-input-active #input-bar {
     display: flex;
     align-items: stretch;
     z-index: 100;
+}
+
+#app-main:not(.no-input-bar) ~ #bottom-nav::before {
+    display: none;
 }
 
 #bottom-nav::before {
@@ -1586,7 +1590,7 @@ body.expense-input-active #input-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 16px;
+    margin-bottom: 4px;
     padding: 0 4px;
 }
 
@@ -1640,6 +1644,7 @@ body.expense-input-active #input-bar {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
+    margin-top: 12px;
     margin-bottom: 24px;
 }
 

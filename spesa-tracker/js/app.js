@@ -2197,16 +2197,16 @@ const App = {
 
             <div class="stats-cards">
                 <div class="stat-card">
-                    <div class="stat-card-value">€${total.toFixed(2)}</div>
-                    <div class="stat-card-label">Totale</div>
-                </div>
-                <div class="stat-card">
                     <div class="stat-card-value">€${avg.toFixed(2)}</div>
                     <div class="stat-card-label">Media/giorno</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-card-value">${filtered.length}</div>
                     <div class="stat-card-label">Spese</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value">€${total.toFixed(2)}</div>
+                    <div class="stat-card-label">Totale</div>
                 </div>
             </div>
 
