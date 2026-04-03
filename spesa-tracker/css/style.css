@@ -609,6 +609,10 @@ body:has(.no-input-bar) .filter-panel-scroll {
     margin-bottom: -120px;
 }
 
+#page-timeline.no-gradient::before {
+    display: none;
+}
+
 #timeline-summary.hidden {
     display: none;
 }
@@ -801,10 +805,22 @@ body:has(.no-input-bar) .filter-panel-scroll {
     left: 0;
     right: 0;
     padding: 8px 12px;
-    background: var(--bg-secondary);
-    border-top: 1px solid var(--border);
+    background: transparent;
+    border-top: none;
     z-index: 100;
     touch-action: none;
+}
+
+#input-bar::before {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    top: -40px;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, var(--bg-primary) 0%, var(--bg-primary) 50%, transparent 100%);
+    z-index: -1;
+    pointer-events: none;
 }
 
 #input-bar.hidden {
@@ -1847,6 +1863,17 @@ body.no-scroll #app-main {
     padding-left: 12px;
     padding-right: 12px;
     padding-bottom: 8px;
+}
+
+.stats-sticky-header::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: -12px;
+    right: -12px;
+    height: 32px;
+    background: linear-gradient(to bottom, var(--bg-primary) 0%, transparent 100%);
+    pointer-events: none;
 }
 
 @media (min-width: 600px) {

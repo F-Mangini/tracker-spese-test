@@ -442,6 +442,9 @@ const App = {
         
         const summary = document.getElementById('timeline-summary');
         if (summary) summary.classList.add('hidden');
+        
+        const pageTimeline = document.getElementById('page-timeline');
+        if (pageTimeline) pageTimeline.classList.add('no-gradient');
 
         requestAnimationFrame(() => {
             const h = panel.offsetHeight;
@@ -462,6 +465,9 @@ const App = {
         
         const summary = document.getElementById('timeline-summary');
         if (summary) summary.classList.remove('hidden');
+
+        const pageTimeline = document.getElementById('page-timeline');
+        if (pageTimeline) pageTimeline.classList.remove('no-gradient');
 
         document.getElementById('app-main').style.marginTop = '';
         if (wasOpen && !fromPopstate) {
