@@ -1591,21 +1591,20 @@ body.expense-input-active #input-bar {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 4px;
-    padding: 6px 12px;
+    padding: 4px 8px;
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 24px;
+    border-radius: var(--radius-md);
     box-shadow: var(--shadow);
 }
 
 .period-nav-btn {
     border: none;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    font-size: 1.1rem;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -1616,7 +1615,6 @@ body.expense-input-active #input-bar {
 
 .period-nav-btn:hover:not(:disabled) {
     background: var(--accent-light);
-    border-color: var(--accent);
 }
 
 .period-nav-btn:disabled {
