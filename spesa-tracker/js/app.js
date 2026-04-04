@@ -539,8 +539,10 @@ const App = {
                 if (d >= monday) totSettimana += s.importo;
                 if (d.getMonth() === meseCorrente && d.getFullYear() === annoCorrente) totMese += s.importo;
             });
+            const nomeMese = oggi.toLocaleString('it-IT', { month: 'long' });
+            const nomeMeseCap = nomeMese.charAt(0).toUpperCase() + nomeMese.slice(1);
 
-            info.textContent = `Oggi: €${totOggi.toFixed(2)} · Settimana: €${totSettimana.toFixed(2)} · Mese: €${totMese.toFixed(2)}`;
+            info.textContent = `Oggi: €${totOggi.toFixed(2)} · Settimana: €${totSettimana.toFixed(2)} · ${nomeMeseCap}: €${totMese.toFixed(2)}`;
         }
     },
 

@@ -22,7 +22,7 @@ const CATEGORIES = [
     { id: 'takeaway', nome: 'Delivery', emoji: '🥡', keywords: ['deliveroo', 'glovo', 'just eat', 'justeat', 'uber eats', 'ubereats', 'takeaway', 'asporto', 'delivery', 'consegna', 'spedizione'] },
     { id: 'tech', nome: 'Tech', emoji: '💻', keywords: ['computer', 'pc', 'laptop', 'tablet', 'cuffie', 'caricatore', 'amazon', 'elettronica', 'monitor', 'tastiera', 'mouse', 'cavo', 'usb', 'hard disk', 'ssd', 'iphone', 'samsung', 'apple', 'telefono nuovo'] },
     { id: 'telefono', nome: 'Telefono', emoji: '📱', keywords: ['ricarica', 'iliad', 'vodafone', 'tim', 'wind', 'tre', 'ho mobile', 'fastweb', 'sim'] },
-    { id: 'trasporti', nome: 'Trasporti', emoji: '🚗', keywords: ['benzina', 'diesel', 'treno', 'bus', 'metro', 'taxi', 'uber', 'autostrada', 'parcheggio', 'bollo', 'assicurazione', 'meccanico', 'gomme', 'italo', 'trenitalia', 'flixbus', 'monopattino'] },
+    { id: 'trasporti', nome: 'Trasporti', emoji: '🚗', keywords: ['carburante', 'benzina', 'diesel', 'treno', 'bus', 'metro', 'taxi', 'uber', 'autostrada', 'parcheggio', 'bollo', 'assicurazione', 'meccanico', 'gomme', 'italo', 'trenitalia', 'flixbus', 'monopattino'] },
     { id: 'viaggi', nome: 'Viaggi', emoji: '✈️', keywords: ['volo', 'voli', 'aereo', 'hotel', 'albergo', 'airbnb', 'booking', 'vacanza', 'viaggio', 'ostello'] },
     { id: 'altro', nome: 'Altro', emoji: '📦', keywords: [] }
 ];
