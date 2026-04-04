@@ -964,7 +964,7 @@ body.expense-input-active #input-bar {
     z-index: 100;
 }
 
-#app-main:not(.no-input-bar) ~ #bottom-nav::before {
+#app-main:not(.no-input-bar)~#bottom-nav::before {
     display: none;
 }
 
@@ -1899,12 +1899,12 @@ body.no-scroll #app-main {
     top: 0;
     z-index: 94;
     display: block;
-    height: 160px;
-    background: linear-gradient(to bottom, var(--bg-primary) 0%, var(--bg-primary) 85px, transparent 100%);
+    height: 130px;
+    background: linear-gradient(to bottom, var(--bg-primary) 0%, var(--bg-primary) 65px, transparent 100%);
     pointer-events: none;
     margin-left: -12px;
     margin-right: -12px;
-    margin-bottom: -160px;
+    margin-bottom: -130px;
 }
 
 @media (min-width: 600px) {
