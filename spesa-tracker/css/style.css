@@ -838,7 +838,7 @@ body:has(.no-input-bar) .filter-panel-scroll {
     left: 0;
     right: 0;
     opacity: 0.8;
-    background: linear-gradient(to top, var(--bg-primary) 0%, var(--bg-primary) 75%, transparent 100%);
+    background: linear-gradient(to top, var(--bg-primary) 0%, var(--bg-primary) 65%, transparent 100%);
     z-index: -1;
     pointer-events: none;
 }
