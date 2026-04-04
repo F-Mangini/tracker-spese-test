@@ -439,10 +439,10 @@ const App = {
         document.getElementById('btn-filter-toggle').classList.add('active');
 
         history.pushState({ panel: 'filter' }, '');
-        
+
         const summary = document.getElementById('timeline-summary');
         if (summary) summary.classList.add('hidden');
-        
+
         const pageTimeline = document.getElementById('page-timeline');
         if (pageTimeline) pageTimeline.classList.add('filter-open');
 
@@ -462,7 +462,7 @@ const App = {
         document.getElementById('advanced-filters').classList.add('hidden');
         document.getElementById('btn-advanced-toggle').classList.remove('active');
         document.body.classList.remove('no-scroll');
-        
+
         const summary = document.getElementById('timeline-summary');
         if (summary) summary.classList.remove('hidden');
 
@@ -516,7 +516,7 @@ const App = {
         } else {
             badge.classList.add('hidden');
             resetBtn.classList.add('hidden');
-            
+
             const allSpese = Storage.getSpese();
             const oggi = new Date();
             const oggiKey = this.dateKey(oggi);
@@ -2634,7 +2634,7 @@ const App = {
             </div>
 
             <div class="about-section">
-                <p>💰 SpesaTracker v2.3.0</p>
+                <p>💰 SpesaTracker v2.3.1</p>
                 <p>Dati locali · Nessun server · Nessun costo</p>
             </div>
         `;
@@ -2672,7 +2672,7 @@ const App = {
 
                 const fileName = file.name.toLowerCase();
                 const fileType = file.type ? file.type.toLowerCase() : '';
-                
+
                 const isJson = fileName.endsWith('.json') || fileType.includes('json');
                 const isCsv = fileName.endsWith('.csv') || fileType.includes('csv') || fileType.includes('comma-separated-values');
 
