@@ -790,10 +790,17 @@ body:has(.no-input-bar) .filter-panel-scroll {
 /* ============================================
    EMPTY STATE
    ============================================ */
-.empty-state {
+.empty-state, .stats-empty {
     text-align: center;
     padding: 60px 20px;
     color: var(--text-secondary);
+}
+
+.stats-empty {
+    font-size: 1.1rem;
+    font-weight: 600;
+    position: relative;
+    z-index: 10;
 }
 
 .empty-icon {
