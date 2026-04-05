@@ -602,8 +602,7 @@ body:has(.no-input-bar) .filter-panel-scroll {
     z-index: 97;
     display: block;
     opacity: 0.8;
-    margin-top: -12px;
-    height: 116px;
+    height: 104px;
     background: linear-gradient(to bottom, var(--bg-primary) 0%, var(--bg-primary) calc(100% - 30px), transparent 100%);
     pointer-events: none;
     margin-left: -12px;
@@ -620,15 +619,15 @@ body:has(.no-input-bar) .filter-panel-scroll {
     z-index: 97;
     display: block;
     opacity: 0.6;
-    height: 20px;
-    background: linear-gradient(to bottom, var(--bg-primary) 0%, var(--bg-primary) 12px, transparent 100%);
+    height: 8px;
+    background: linear-gradient(to bottom, var(--bg-primary) 0%, transparent 100%);
     pointer-events: none;
 }
 
 #page-timeline.filter-open::before {
-    height: 28px;
+    height: 16px;
     opacity: 0.6;
-    background: linear-gradient(to bottom, var(--bg-primary) 0%, var(--bg-primary) 12px, transparent 100%);
+    background: linear-gradient(to bottom, var(--bg-primary) 0%, transparent 100%);
     margin-bottom: -16px;
 }
 
@@ -1905,9 +1904,8 @@ body.no-scroll #app-main {
     z-index: 94;
     display: block;
     opacity: 0.8;
-    margin-top: -12px;
-    height: 132px;
-    background: linear-gradient(to bottom, var(--bg-primary) 0%, var(--bg-primary) 106px, transparent 100%);
+    height: 120px;
+    background: linear-gradient(to bottom, var(--bg-primary) 0%, var(--bg-primary) 94px, transparent 100%);
     pointer-events: none;
     margin-left: -12px;
     margin-right: -12px;
