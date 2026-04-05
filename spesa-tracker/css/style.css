@@ -619,7 +619,7 @@ body:has(.no-input-bar) .filter-panel-scroll {
     z-index: 97;
     display: block;
     opacity: 0.6;
-    height: 8px;
+    height: 16px;
     background: linear-gradient(to bottom, var(--bg-primary) 0%, transparent 100%);
     pointer-events: none;
 }

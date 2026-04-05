@@ -2636,7 +2636,7 @@ const App = {
             </div>
 
             <div class="about-section">
-                <p>💰 SpesaTracker v2.3.3</p>
+                <p>💰 SpesaTracker v2.3.4</p>
                 <p>Dati locali · Nessun server · Nessun costo</p>
             </div>
         `;
