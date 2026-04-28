@@ -1903,7 +1903,7 @@ body.no-scroll #app-main {
 }
 
 /* Nascondi barra di scorrimento su tutte le pagine (tranne Timeline) e componenti */
-#app-main:not(:has(#page-timeline.active)),
+#app-main:has(#page-timeline.hidden),
 .filter-panel-scroll,
 .modal-body,
 .sd-list {
@@ -1911,7 +1911,7 @@ body.no-scroll #app-main {
     -ms-overflow-style: none;
 }
 
-#app-main:not(:has(#page-timeline.active))::-webkit-scrollbar,
+#app-main:has(#page-timeline.hidden)::-webkit-scrollbar,
 .filter-panel-scroll::-webkit-scrollbar,
 .modal-body::-webkit-scrollbar,
 .sd-list::-webkit-scrollbar {
