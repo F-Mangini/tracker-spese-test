@@ -1061,7 +1061,8 @@ body.expense-input-active #input-bar {
     width: 100%;
     max-width: 480px;
     max-height: 90vh;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
     animation: modalIn 0.3s ease;
 }
 
@@ -1135,6 +1136,7 @@ body.expense-input-active #input-bar {
     justify-content: space-between;
     padding: 20px 20px 12px;
     border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
 }
 
 .modal-header h2 {
@@ -1168,14 +1170,19 @@ body.expense-input-active #input-bar {
 }
 
 .modal-body {
-    padding: 16px 20px 0;
+    padding: 16px 20px 16px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
 }
 
 .modal-footer {
-    padding: 0 20px 44px;
+    padding: 12px 20px 44px;
     display: flex;
     gap: 12px;
     justify-content: space-between;
+    flex-shrink: 0;
+    border-top: 1px solid var(--border);
 }
 
 /* Form */
