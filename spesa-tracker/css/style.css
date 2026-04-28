@@ -1902,6 +1902,22 @@ body.no-scroll #app-main {
     overflow: hidden !important;
 }
 
+/* Nascondi barra di scorrimento su tutte le pagine (tranne Timeline) e componenti */
+#app-main:not(:has(#page-timeline.active)),
+.filter-panel-scroll,
+.modal-body,
+.sd-list {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+#app-main:not(:has(#page-timeline.active))::-webkit-scrollbar,
+.filter-panel-scroll::-webkit-scrollbar,
+.modal-body::-webkit-scrollbar,
+.sd-list::-webkit-scrollbar {
+    display: none;
+}
+
 /* ============================================
    STATS STICKY HEADER
    ============================================ */
