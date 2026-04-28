@@ -2195,8 +2195,6 @@ const App = {
                 </div>
             </div>
 
-            ${hasNonDateFilters ? '<div class="stats-filter-note">🔍 Filtri attivi applicati ai dati</div>' : ''}
-
             <div class="stats-cards">
                 <div class="stat-card">
                     <div class="stat-card-value">€${avg.toFixed(2)}</div>

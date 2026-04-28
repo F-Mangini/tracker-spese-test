@@ -1168,11 +1168,11 @@ body.expense-input-active #input-bar {
 }
 
 .modal-body {
-    padding: 16px 20px;
+    padding: 16px 20px 8px;
 }
 
 .modal-footer {
-    padding: 12px 20px 20px;
+    padding: 0 20px 28px;
     display: flex;
     gap: 12px;
     justify-content: space-between;
