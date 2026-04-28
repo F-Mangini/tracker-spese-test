@@ -1817,8 +1817,16 @@ const App = {
         };
 
         input.addEventListener('mousedown', e => {
+            const allTags = this.getAllTags();
+            const availableCount = allTags.filter(t => !this._editTags.includes(t)).length;
+
             if (!container.classList.contains('open')) {
                 e.preventDefault();
+                if (availableCount === 0) {
+                    isEditable = true;
+                    input.readOnly = false;
+                    input.value = '';
+                }
                 input.focus();
                 open();
             } else if (!isEditable) {
