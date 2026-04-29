@@ -1616,16 +1616,16 @@ body.expense-input-active #input-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 8px 8px;
+    padding: 6px 8px;
 }
 
 .period-nav-btn {
     border: none;
     background: transparent;
     border-radius: var(--radius-sm);
-    width: 32px;
-    height: 32px;
-    font-size: 1rem;
+    width: 28px;
+    height: 28px;
+    font-size: 0.95rem;
     cursor: pointer;
     display: flex;
     align-items: center;
