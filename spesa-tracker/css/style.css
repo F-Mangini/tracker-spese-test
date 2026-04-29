@@ -1136,8 +1136,18 @@ body.expense-input-active #input-bar {
     align-items: center;
     justify-content: space-between;
     padding: 20px 20px 12px;
-    border-bottom: 1px solid var(--border);
     flex-shrink: 0;
+    position: relative;
+}
+
+.modal-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 20px;
+    right: 20px;
+    height: 1px;
+    background: var(--border);
 }
 
 .modal-header h2 {
@@ -1183,7 +1193,17 @@ body.expense-input-active #input-bar {
     gap: 12px;
     justify-content: space-between;
     flex-shrink: 0;
-    border-top: 1px solid var(--border);
+    position: relative;
+}
+
+.modal-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 20px;
+    right: 20px;
+    height: 1px;
+    background: var(--border);
 }
 
 /* Form */
