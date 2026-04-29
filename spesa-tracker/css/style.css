@@ -1578,11 +1578,18 @@ body.expense-input-active #input-bar {
 .stats-period-selector {
     display: flex;
     gap: 4px;
-    margin-bottom: 12px;
-    background: var(--bg-secondary);
-    padding: 4px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
+    padding: 6px 8px;
+    position: relative;
+}
+
+.stats-period-selector::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 12px;
+    right: 12px;
+    height: 1px;
+    background: var(--border);
 }
 
 .period-btn {
@@ -1609,12 +1616,7 @@ body.expense-input-active #input-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 4px;
-    padding: 4px 8px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow);
+    padding: 6px 8px 8px;
 }
 
 .period-nav-btn {
@@ -1926,6 +1928,12 @@ body.no-scroll #app-main {
     top: 12px;
     z-index: 95;
     margin-bottom: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
 }
 
 #page-stats::before {
