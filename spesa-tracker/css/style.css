@@ -1144,8 +1144,8 @@ body.expense-input-active #input-bar {
     content: '';
     position: absolute;
     bottom: 0;
-    left: 20px;
-    right: 20px;
+    left: 14px;
+    right: 14px;
     height: 1px;
     background: var(--border);
 }
