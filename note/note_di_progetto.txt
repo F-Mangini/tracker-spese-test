@@ -10,6 +10,9 @@ BUG PC: scroll deve essere possibile mentre il pannello filtri è completamente 
 FEAT PC: Voglio che con tasto Invio si confermi la modifica alla spesa.
 
 
+FEAT: Vorrei che l'applicazione una volta scaricata in locale sia stabile e che si aggiorni solo quando l'utente lo richiede (da predisporre un modo direttamente nell'app) potendo scegliere tra una lista di versioni che io, il maintener, metto a disposizione (di default consiglia l'ultima disponibile). In modo che posso lavorare a modifiche agilmente su versioni nuove mentre alcune versioni vecchie rimangono stabili e affidabili. Da capire come fare ad avere più versioni disponibili allo stesso tempo.
+
+
 BUG: riassunto nella tendina non si aggiorna live quando si aggiungono o tolgono spese.
 
 FEAT: pannello filtri regolabile e bloccabile (tasto lucchetto) tramite pressione prolungata (chiedere maggiori dettagli per questa feature).
