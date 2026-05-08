@@ -38,6 +38,7 @@ Non e ancora una PWA completamente offline: Chart.js viene caricato da CDN e non
 |   +-- AGENT_NOTES.md
 |   +-- CODE_REVIEW.md
 |   +-- CURRENT_STATE.md
+|   +-- DEPLOYMENT_STRATEGY.md
 |   +-- DEVELOPMENT_GUIDE.md
 |   +-- ROADMAP.md
 +-- note/
@@ -49,6 +50,7 @@ Non e ancora una PWA completamente offline: Chart.js viene caricato da CDN e non
     +-- js/
         +-- app.js
         +-- categories.js
+        +-- config.js
         +-- parser.js
         +-- storage.js
 ```
@@ -57,6 +59,7 @@ Non e ancora una PWA completamente offline: Chart.js viene caricato da CDN e non
 
 - [Stato corrente](docs/CURRENT_STATE.md): cosa e implementato oggi e come funziona.
 - [Review tecnica](docs/CODE_REVIEW.md): problemi, rischi e priorita del refactor.
+- [Strategia stabile/dev](docs/DEPLOYMENT_STRATEGY.md): come separare versione stabile e versione di test.
 - [Guida sviluppo](docs/DEVELOPMENT_GUIDE.md): regole pratiche per refactor e nuove feature.
 - [Roadmap](docs/ROADMAP.md): backlog ordinato a partire dagli appunti.
 - [Note per agenti](docs/AGENT_NOTES.md): memoria operativa per Codex e altri assistenti.
@@ -78,5 +81,10 @@ Poi aprire `http://localhost:8000`.
 ## Deploy
 
 Il progetto e pensato per GitHub Pages: la cartella `spesa-tracker/` contiene tutti gli asset necessari per il deploy statico.
+
+Durante il refactor, il deploy previsto separa stabile e sviluppo:
+
+- `/` e `/stable/`: versione stabile da `main`;
+- `/dev/`: versione di sviluppo da `codex/refactor`, con storage locale separato.
 
 Prima di modificare la logica dei dati, leggere `docs/CURRENT_STATE.md` e `docs/DEVELOPMENT_GUIDE.md`.

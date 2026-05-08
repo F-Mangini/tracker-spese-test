@@ -3,7 +3,11 @@
    ============================================ */
 
 const Storage = {
-    KEY: 'spesa-tracker-data',
+    KEY: (
+        typeof window !== 'undefined' &&
+        window.SPESA_TRACKER_CONFIG &&
+        window.SPESA_TRACKER_CONFIG.storageKey
+    ) || 'spesa-tracker-data',
 
     /* --- Struttura dati predefinita --- */
     _defaultData() {

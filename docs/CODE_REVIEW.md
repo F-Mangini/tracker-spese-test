@@ -26,11 +26,12 @@ L'app e funzionante e coerente con il suo obiettivo originario: una web app loca
 
 Priorita consigliata:
 
+0. Separare subito canale stabile e canale dev, con storage separato se condividono lo stesso dominio.
 1. Mettere guardrail su dati, import/export e salvataggi.
 2. Aggiungere test minimi per parser, storage e filtri prima di refactor larghi.
 3. Spezzare `app.js` in aree funzionali senza cambiare UX.
 4. Stabilizzare history/back button e gestione modali/tastiera.
-5. Poi affrontare PWA/offline/versioni controllate.
+5. Poi affrontare PWA/offline/versioni controllate definitive.
 
 Non sono stati trovati errori di sintassi JavaScript. Non ci sono backend, chiamate API dati o evidente esfiltrazione di dati personali.
 
@@ -401,6 +402,15 @@ Direzione di fix:
 - Collegare versione a una sorgente unica quando si progettano release/versioni.
 
 ## Ordine di Refactor Consigliato
+
+### Fase 0 - Canale stabile/dev sicuro
+
+- Mantenere `main` come fonte della versione stabile usata quotidianamente.
+- Usare `codex/refactor` come fonte della versione di sviluppo.
+- Predisporre un link stabile e un link dev sempre distinguibili.
+- Se stabile e dev sono servite dallo stesso dominio GitHub Pages, configurare storage key diverse.
+- Implementazione iniziale: workflow GitHub Pages che pubblica `/`, `/stable/` e `/dev/`, con `spesa-tracker-data-dev` per la dev.
+- Vedere `docs/DEPLOYMENT_STRATEGY.md`.
 
 ### Fase 1 - Protezione dati
 

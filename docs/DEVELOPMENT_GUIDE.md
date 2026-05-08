@@ -75,6 +75,7 @@ Usare questi file come fonti:
 - `README.md`: panoramica pubblica e istruzioni essenziali.
 - `docs/CODE_REVIEW.md`: mappa dei rischi tecnici e ordine consigliato per il refactor.
 - `docs/CURRENT_STATE.md`: stato tecnico implementato.
+- `docs/DEPLOYMENT_STRATEGY.md`: separazione stabile/dev per testare il refactor senza rischiare l'uso quotidiano.
 - `docs/ROADMAP.md`: priorita e idee future ordinate.
 - `docs/AGENT_NOTES.md`: contesto operativo per assistenti AI.
 - `note/note_di_progetto.txt`: appunti grezzi, storici, non necessariamente ordinati.

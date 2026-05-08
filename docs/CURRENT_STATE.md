@@ -8,6 +8,7 @@ SpesaTracker e una web app statica, senza build system e senza framework.
 
 - `spesa-tracker/index.html` definisce la struttura dell'app, carica Chart.js da CDN e include gli script locali.
 - `spesa-tracker/css/style.css` contiene tutto lo stile, incluse variabili tema, layout mobile, modali, filtri, timeline, statistiche e impostazioni.
+- `spesa-tracker/js/config.js` contiene configurazione runtime minima, inclusa la chiave `localStorage`.
 - `spesa-tracker/js/categories.js` contiene categorie e metodi di pagamento statici.
 - `spesa-tracker/js/parser.js` interpreta l'input testuale e crea una spesa.
 - `spesa-tracker/js/storage.js` gestisce persistenza, import/export e utility dati.
@@ -20,6 +21,8 @@ Per la mappa dettagliata dei rischi tecnici e dell'ordine consigliato del refact
 ## Dati Locali
 
 I dati sono salvati in `localStorage` con chiave `spesa-tracker-data`.
+
+La chiave puo essere sovrascritta da `window.SPESA_TRACKER_CONFIG.storageKey`. Questo serve per pubblicare una versione dev sullo stesso dominio GitHub Pages senza condividere i dati reali della stabile.
 
 La struttura principale e:
 
