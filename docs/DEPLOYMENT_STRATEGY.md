@@ -27,6 +27,8 @@ https://f-mangini.github.io/tracker-spese-test/stable/ -> stabile
 https://f-mangini.github.io/tracker-spese-test/dev/    -> sviluppo
 ```
 
+Il vecchio URL `https://f-mangini.github.io/tracker-spese-test/spesa-tracker/` non e piu il target principale con questa strategia e puo restituire 404.
+
 ## Vincolo Critico: `localStorage`
 
 `localStorage` e legato all'origine, non al path.
@@ -95,6 +97,8 @@ Il workflow `.github/workflows/pages.yml`:
 - copia `dev-src/spesa-tracker/` in `public/dev/`;
 - sovrascrive la config dev con storage key separata;
 - pubblica `public/` su GitHub Pages.
+
+Nota importante: il workflow deve esistere anche sul branch di default (`main`). Se resta solo su `codex/refactor`, GitHub Pages impostato su Actions puo non avere un workflow valido da eseguire. Per questo il workflow e stato aggiunto anche a `main` come modifica infrastrutturale minima, senza portare il refactor nella stabile.
 
 ## Azione Manuale Richiesta al Maintainer
 
