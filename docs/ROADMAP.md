@@ -4,9 +4,12 @@ Questa roadmap ordina gli appunti grezzi in `note/note_di_progetto.txt`. Non sos
 
 ## Refactor e Stabilita
 
+Stato della fase iniziale:
+
+- Completato: canale stabile/dev sicuro con `/` e `/stable/` da `main`, `/dev/` da `codex/refactor` e storage key separata per la dev.
+
 Priorita della fase attuale:
 
-- Predisporre un canale stabile/dev sicuro prima dei refactor strutturali; vedere `docs/DEPLOYMENT_STRATEGY.md`.
 - Usare `docs/CODE_REVIEW.md` come mappa iniziale dei rischi tecnici.
 - Affrontare prima guardrail dati, import/export e salvataggi.
 - Aggiungere test minimi su parser, storage, filtri e aggregazioni.
