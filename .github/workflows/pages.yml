@@ -43,9 +43,9 @@ jobs:
 
           mkdir -p public public/stable public/dev
 
-          cp -R stable-src/spesa-tracker/. public/
-          cp -R stable-src/spesa-tracker/. public/stable/
-          cp -R dev-src/spesa-tracker/. public/dev/
+          cp -R stable-src/app/. public/
+          cp -R stable-src/app/. public/stable/
+          cp -R dev-src/app/. public/dev/
 
           cat > public/dev/js/config.js <<'EOF'
           /* ============================================
