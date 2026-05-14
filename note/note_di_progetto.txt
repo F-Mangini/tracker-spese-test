@@ -1,0 +1,233 @@
+# ELENCO MODIFICHE DA APPORTARE
+
+## aggiunte del 14/05/2026
+
+FEAT: Cambiare il nome della repository
+
+FEAT: Cambiare nome app e icona per la versione dev
+
+DEV: creare AGENTS.md e docs/AGENTS.md. E da qualche parte una lista di tutti e soli i file di documentazione e i file AGENTS.md?
+
+DEV: nel AGENTS.md dobbiamo scrivere che l'agente deve spiegare (in chat) cosa è stato fatto in ciascuna sua modifica in modo che il maintainer possa tenere traccia del funzionamento del codice e costruire un understanding dello stesso.
+
+DEV: riflettere su quali altre strutture dati si potrebbero utilizzare
+
+FEAT: sia con JSON che CSV mettere possibilità di scegliere se aggiungere le spese (verranno assegnati nuovi id se quelli usati sono già presenti o comunque da capire come gestire la cosa) o sostituirle.
+
+FEAT: Possibilità di copiare spese in vari formati (json, csv o tsv da decidere, md table)
+
+FEAT: import e export con un solo tasto, al posto dei due separati attuali e solo dopo possibilità di scelta tra i vari formati file (aggiungere tsv e md table)
+
+BUG: scrollando la timeline si scrollano contemporaneamente anche le statistiche e le impostazioni, e quando si cambia pagina non ci si trova in cima. Questo non deve succedere.
+
+BUG: quando il pannello dei filtri è aperto, non per intero, e seleziono una spesa e richiudo la spesa, se poi tento di andare indietro per chiudere il pannello dei filtri mi si chiude l'app invece. La gestione delle chiusure delle finestre e dei pannelli va rivista.
+
+FEAT: verificare la sicurezza dell'app dal punto di vista della privacy e valutare di utilizzare encryption dei dati.
+
+## dal file originale del 08/05/2026
+
+BUG: Animazione buggata quando si fa swipe indietro (tramite gesture telefono) dal lato sinistro dello schermo. (buggato sul mio vecchio realme 9, funzionante sul mio nuovo Xiaomi 15)🟡
+
+FEAT: Voglio le Categorie in ordine alfabetico (attualmente lo sono solo perché scritte in ordine nel codice) (e selezionabili da tab personalizzazione, il tab personalizzazione non esiste ancora, sarà da aggiungere dopo il refactor). 🟡
+
+
+BUG PC: scroll deve essere possibile mentre il pannello filtri è completamente aperto (solo su pc).
+
+FEAT PC: Voglio che con tasto Invio si confermi la modifica alla spesa.
+
+
+FEAT: Vorrei che l'applicazione una volta scaricata in locale sia stabile e che si aggiorni solo quando l'utente lo richiede (da predisporre un modo direttamente nell'app) potendo scegliere tra una lista di versioni che io, il maintener, metto a disposizione (di default consiglia l'ultima disponibile). In modo che posso lavorare a modifiche agilmente su versioni nuove mentre alcune versioni vecchie rimangono stabili e affidabili. Da capire come fare ad avere più versioni disponibili allo stesso tempo.
+
+
+BUG: riassunto nella tendina non si aggiorna live quando si aggiungono o tolgono spese.
+
+FEAT: pannello filtri regolabile e bloccabile (tasto lucchetto) tramite pressione prolungata (chiedere maggiori dettagli per questa feature).
+
+FEAT: pannello filtri apribile e chiudibile facendo swipe sulla barra in basso (dove si trova il riassunto) e in alto (dove si trova il nome app e i tast per filtri e tema).
+
+FEAT: pannello filtri scrollabile anche quando non completamente aperto.
+
+
+FEAT: Voglio che l'App sia scaricabile in locale e totalmente funzionante offline.
+
+BUG: Quando chiudo l'app con un indietro, deve rimanere nei recenti del telefono e non chiudersi del tutto.
+
+FEAT: Voglio che scorrendo a destra e sinistra si scorra tra le pagine (timeline, statistiche, impostazioni).
+
+
+BUG: sistemare animazione barra di inserimento (non si muove insieme alla tastiera quando si apre e si chiude)
+
+BUG: Voglio che la barra di inserimento scompaia quando il pannello filtri è completamente aperto.
+
+
+FEAT: Voglio aggiungere una sezione "Cestino" con spese cancellate, ripristinabili.
+
+FEAT: Voglio che facendo swipe sulle spese compaia un'opzione per eliminazione rapida della spesa.
+
+FEAT: Voglio che tenendo premuto su una spesa si vada in modalità selezione per selezionare spese con opzione in alto per cancellare o per selezionare tutte (in questa modalità i filtri applicati rimangono attivi, quindi se ad esempio si ha attivo il filtro "Supermercato" e si selezionano tutte le spese, verranno selezionate tutte e sole le spese di categoria "Supermercato").
+
+FEAT: Voglio aggiungere una sezione per spese ricorrenti: per poterle schedulare in modo che si inseriscono in automatico quando arriva la data.
+
+FEAT: Backup schedulato (download automatico del file json? Da capire come gestire per evitare di accumulare file su file).
+
+
+FEAT: Voglio un date filter picker custom con barra che collega la data di inizio e data di fine e facile switch tra la selezione dell'inizio e quello della fine (lo immagino simile a quelli che vengono usati sui siti per prenotazione di hotel e voli).
+
+
+FEAT: Voglio suggerimenti di categorie e pagamenti mentre si scrive nella barra di ricerca. E anche di tag se si mette il #. Selezionabili e inseriti automaticamente nelle sezioni apposite.
+Due tasti, uno per aggiungere, uno per escludere. Diventano rimuovi e escludi se il filtro è già stato aggiunto. (chiedere dettagli per questa feature)
+
+FEAT: Voglio che i tag siano cercabili solo se si mette il # prima del testo di ricerca (es. #inviagg troverà qualsiasi spesa con tag che inizia per "inviagg").
+
+
+FEAT: Voglio aggiungere gli accrediti (oltre alle spese) (bassa priorità).
+
+
+FEAT: Voglio filtri pre-impostati da tab personalizzazione (ancora non esistente) che rimangono attivi anche se esco e rientro nell'app.
+
+FEAT: Voglio che sia possibile la customizzazione delle categorie da tab personalizzazione. Cambiarne il colore associato, quelle attive e non attive, aggiungerne di nuove, rimuoverle, cambiarne le keyword.
+
+FEAT: Voglio aggiungere le selezioni negative (escludere dai risultati tutto ciò che rientra nel filtro) (con toggle a tre fasi: fase verde: includi; fase rossa: escludi; fase normale: niente)
+
+
+FEAT: Voglio aggiungere filtri per i tag (con possibilità di selezionare tutti i tag, tutte le spese senza tag, e cercare tag da aggiungere al filtro attuale) (chiedere più info per questa feature)
+
+
+FEAT: Colori specifici per categoria (ogni categoria deve avere un colore stabile personalizzabile).
+
+FEAT: Grafico spese nel tempo colorato in base alle categorie (le barre verticali sono colorate della categoria della spesa. Se più spese contribuiscono la barra viene divisa nei vari colori in percentuale rispetto a come le spese contribuiscono, però solo le spese che contribuiscono per almeno il 10% del totale). (chiedere dettagli)
+
+FEAT: Grafico a torta con label principali (percentuali alte) vicine e elenco sotto per percentuali basse.
+
+FEAT: Andamento nel tempo con linee verticali tratteggiate che separano le settimane (per i riassunti mensili: sull'asse delle x ci sono i giorni). Linea tra la domenica e il lunedì.
+Linee separano i mesi quando sull'asse delle x sono riportate le settimane.
+Linee separano gli anni quando sull'asse delle x sono riportati i mesi.
+
+
+FEAT: Migliorare estetica UI.
+
+FEAT: Sostituire emoji con icone.
+
+FEAT: Cambiare favicon.
+
+
+
+
+# ELENCO MODIFICHE APPORTATE O SCARTATE
+
+FEAT: La tastiera deve mostrare i numeri in alto subito. Come quando si inserisce un numero di carta di credito.❌
+
+FEAT: Suggerimento tag: ultimo usato, più usato.✅
+
+FEAT: Tag in sezione a parte.✅
+
+BUG: Con tasto indietro si chiude la sezione dei filtri approfonditi, facendo di nuovo indietro si chiude anche la sezione dei filtri base.✅
+BUG: Con indietro si chiude anche il modifica spesa.✅
+
+FEAT: Se premo "invio" mentre cerco da barra di ricerca si chiude la tastiera.✅
+
+FEAT: Aggiungere buoni pasto nei metodi di pagamento. ✅
+
+FEAT: In modifica spesa se premo invio si deve chiudere la tastiera. E se sono in "pagamento" o "categoria" o "tag" e premo invio la prima opzione disponibile nel dropdown viene inserita (es. Ho scritto con e la prima opzione è contanti, viene inserito contanti). In tag viene inserito il tag più in alto già esistente, oppure se non ce ne sono (lista di suggerimenti vuota) viene creato un nuovo tag. (Es. Se ho scritto inv ed esiste il tag inviaggio viene inserito il tag esistente inviaggio e non creato un nuovo tag inv; se invece ho scritto inviaggiovienna e non esistono tag inizianti in questo modo, quindi la lista di suggerimenti sarà vuota, quando premo invio verrà creato il nuovo tag inviaggiovienna).✅
+
+BUG: Quando sono in tag e premo cancella non si devono eliminare i tag già inseriti.✅
+
+BUG: Quando inserisco un tag non si deseleziona il campo.✅
+
+FEAT: Modificare nomi categorie.✅
+
+BUG: Rimuovere il puntino in basso a destra dei campi textarea.✅
+
+BUG: Quando si invia una spesa o si preme invio deselezionare l'inseritore.✅
+
+BUG: Se faccio indietro la barra di inserimento si deve deselezionare.✅
+
+BUG: Barra di inserimento spesa non deve poter scorrere su e giù.✅
+
+BUG: Quando la barra di ricerca è selezionata il tasto invio della tastiera deve diventare di ricerca (lente di ingrandimento) al momento è con simbolo per andare a capo.✅
+
+BUG: Quando sono nella pagina delle statistiche e chiudo i filtri da bottone sullo schermo devo rimanere nella pagina filtri, non tornare alla pagina timeline.✅
+
+BUG: Deselezionare selettore date nei filtri quando si sceglie una data.✅
+
+FEAT: Se sono in una pagina che non è timeline e faccio indietro vado alla timeline.✅
+
+BUG: Quando il modifica spesa è aperto non si deve poter scorrere su e giù nella pagina.✅
+BUG: Stessa cosa quando il pannello di ricerca è completamente aperto.✅
+
+BUG: Categoria e pagamento dopo la selezione devono deselezionarsi.✅
+
+BUG: quando si fa indietro e il pop up della conferma di cancellazione della spesa è aperto si deve chiudere quello e non il modifica spesa sottostante.✅
+
+BUG: Animazione di chiusura di modifica spesa verso il basso.✅
+
+BUG: Quando si scrive nell'inseritore solo la parte di inserimento deve spuntare da sotto la tastiera, non anche la barra di selezione delle pagine.✅
+
+BUG: Quando la barra di inserimento spesa è selezionata deve rimanere sempre visibile a schermo sopra la tastiera.✅
+
+BUG: quando si scrolla e la barra di inserimento è selezionata, questa non deve muoversi.✅
+
+BUG: se si fa pressione lunga sulla barra di inserimento questa sparisce in basso, sotto la barra delle pagine.✅
+
+BUG: la barra delle pagine non deve mai sparire. Può rimanere in basso quando si apre la tastiera.✅
+
+BUG: Tendina e tastiera per inserimento spesa contemporaneamente sono un po' buggate.✅
+
+BUG: se cerco 'b' nelle categorie bar deve venire prima di abbigliamento.✅
+
+BUG: Migliorare parser.✅
+
+FEAT: Aggiungere Welfare nei metodi di pagamento.✅
+
+BUG: Rimuovere la barra con inserimenti rapidi di password, pagamenti, ecc.✅
+
+BUG: Se seleziono diversi campi del modifica spesa di seguito e poi vado indietro capita che si chiuda l'app. Non vengono contate bene le finestre aperte.✅
+
+BUG: Se più keyword di categorie vengono trovati in una spesa, la categoria scelta è quella del primo match.✅
+
+FEAT: Rendi la barra per filtrare l'importo più corta.✅
+
+FEAT: Cambiare da ultimi sette giorni a ultima settimana.✅
+
+BUG: Fix import da csv.✅
+
+BUG: Sistemare UI di import (scritta elimina anche quando non ci sono dati) e esportazione dati (conferma l'esportazione prima di effettuarla veramente).✅
+
+BUG: Se sto scrivendo nella barra di ricerca (selezionata e tastiera aperta) devo comunque poter scrollare la pagina.✅
+
+BUG: Togliere effetto celestino quando si clicca.✅
+
+FEAT: Aggiungere carburante in trasporti. ✅
+
+BUG: Aumentare spazio in alto in tutte le finestre. (Revert ultimo commit)✅
+
+FEAT: Barra superiore delle pagine statistiche e timeline fissa in alto. Non deve andare via scrollando.
+(Non deve essere premuta contro il bordo superiore)
+Aggiungere trasparenza in quella zona. ✅
+
+FEAT: Al posto di oggi, mese, n_spese. Mettere oggi, settimana, mese.
+Anche nella barra in basso del pannello dei filtri.
+Allineare al centro scritta. ✅
+
+BUG: rimuovere la scritta "filtri applicati" nella pagina delle statistiche. ✅
+
+BUG: separa visivamente e blocca header e i tasti chiudi, salva ed elimina nel menù di modifica spesa. ✅
+
+BUG: rimuovi la barra dello scroll.✅
+
+FEAT: unire barra data corrente e barra selezione settimana, mese, anno, custom. ✅
+
+
+
+
+
+# ELENCO MODIFICHE DA APPORTARE (MOLTO POCO PRIORITARIE)
+
+FORSE
+Colore della UI che cambia in base a quanto si sta sforando il budget.
+
+Foto scontrini, OCR, e parsing automatico.
+
+
+MOLTO FORSE
+Chatbot per query sui dati (già filtrati!)

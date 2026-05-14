@@ -4,11 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SpesaTracker</title>
+    <title>Where's My Money?</title>
     <meta name="description" content="Traccia le tue spese quotidiane">
     <meta name="theme-color" content="#10b981">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="WMM">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -16,7 +20,7 @@
 <body ontouchstart="">
 
     <header id="app-header">
-        <h1>💰 SpesaTracker</h1>
+        <h1>Where's My Money?</h1>
         <div class="header-actions">
             <button id="btn-filter-toggle" class="header-btn" aria-label="Filtri" title="Filtri e ricerca">
                 🔍
@@ -210,6 +214,7 @@
     <div id="toast" class="toast hidden"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="js/config.js"></script>
     <script src="js/categories.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/parser.js"></script>

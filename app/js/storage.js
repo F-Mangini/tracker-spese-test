@@ -3,7 +3,11 @@
    ============================================ */
 
 const Storage = {
-    KEY: 'spesa-tracker-data',
+    KEY: (
+        typeof window !== 'undefined' &&
+        window.SPESA_TRACKER_CONFIG &&
+        window.SPESA_TRACKER_CONFIG.storageKey
+    ) || 'spesa-tracker-data',
 
     /* --- Struttura dati predefinita --- */
     _defaultData() {
@@ -130,7 +134,7 @@ const Storage = {
                 if (dateParts.length === 3) {
                     const [dd, mm, yyyy] = dateParts;
                     const time = parts[1] ? parts[1].trim() : '12:00';
-                    dateISO = `${yyyy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}T${time}:00`;
+                    dateISO = `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}T${time}:00`;
                 } else {
                     dateISO = new Date().toISOString();
                 }
