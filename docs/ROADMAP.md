@@ -20,7 +20,7 @@ Priorita della fase attuale:
 
 Interventi di contesto e distribuzione:
 
-- Rinominare la repository in `tracker-spese`, aggiornando di conseguenza URL GitHub Pages, documentazione e riferimenti interni.
+- Repository rinominata in `tracker-spese`; mantenere allineati URL GitHub Pages, documentazione e riferimenti interni.
 - Distinguere la versione dev dalla stabile anche a colpo d'occhio: nome app, icona, manifest e storage key devono rendere chiaro quando si sta usando il canale di sviluppo.
 - Evitare che la dev sembri la versione quotidiana stabile, soprattutto su Android quando l'app e installata o aggiunta alla home.
 

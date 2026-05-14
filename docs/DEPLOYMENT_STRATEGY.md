@@ -29,7 +29,7 @@ https://f-mangini.github.io/tracker-spese/dev/    -> sviluppo
 
 Se la repository viene rinominata, questi URL devono essere aggiornati nella documentazione e verificati su GitHub Pages dopo il primo deploy.
 
-Il vecchio URL `https://f-mangini.github.io/tracker-spese-test/spesa-tracker/` non e piu il target principale con questa strategia e puo restituire 404.
+Gli URL del nome repository precedente non sono piu il target principale con questa strategia e possono restituire 404.
 
 ## Vincolo Critico: `localStorage`
 
@@ -66,9 +66,9 @@ Usare GitHub Pages con un unico sito, ma pubblicare due cartelle:
 Per farlo in modo pulito, usare una GitHub Action che assembla l'artefatto Pages:
 
 1. checkout di `main`;
-2. copia di `spesa-tracker/` in `public/stable/` e opzionalmente in `public/`;
+2. copia di `app/` in `public/stable/` e opzionalmente in `public/`;
 3. checkout di `codex/refactor`;
-4. copia di `spesa-tracker/` in `public/dev/`;
+4. copia di `app/` in `public/dev/`;
 5. per la build dev, impostare una storage key separata;
 6. deploy di `public/` su GitHub Pages.
 
@@ -80,7 +80,7 @@ Prima di pubblicare una dev accanto alla stabile, rendere configurabile la chiav
 
 Implementazione scelta:
 
-- `spesa-tracker/js/config.js` definisce `window.SPESA_TRACKER_CONFIG`;
+- `app/js/config.js` definisce `window.SPESA_TRACKER_CONFIG`;
 - `index.html` carica `config.js` prima di `storage.js`;
 - `storage.js` usa `window.SPESA_TRACKER_CONFIG.storageKey` con fallback a `spesa-tracker-data`;
 - la stabile usa `spesa-tracker-data`;
@@ -97,8 +97,9 @@ Il workflow `.github/workflows/pages.yml`:
 - parte su push verso `main` o `codex/refactor`;
 - fa checkout di `main` in `stable-src`;
 - fa checkout di `codex/refactor` in `dev-src`;
-- copia `stable-src/spesa-tracker/` in `public/` e `public/stable/`;
-- copia `dev-src/spesa-tracker/` in `public/dev/`;
+- copia `stable-src/app/` in `public/` e `public/stable/`;
+- copia `dev-src/app/` in `public/dev/`;
+- durante la migrazione accetta ancora `spesa-tracker/` come fallback se un branch non e stato allineato;
 - sovrascrive la config dev con storage key separata;
 - pubblica `public/` su GitHub Pages.
 

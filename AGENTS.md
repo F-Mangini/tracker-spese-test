@@ -82,12 +82,12 @@ Non creare altri file di documentazione senza una ragione chiara. Se serve un nu
 
 ## Aree Sensibili
 
-- `spesa-tracker/js/app.js`: molto grande, contiene UI state, rendering, eventi e workaround mobile.
-- `spesa-tracker/js/storage.js`: rischio dati; ogni modifica deve rispettare backup/import.
+- `app/js/app.js`: molto grande, contiene UI state, rendering, eventi e workaround mobile.
+- `app/js/storage.js`: rischio dati; ogni modifica deve rispettare backup/import.
 - `Storage.KEY`: se si pubblica una versione dev sullo stesso dominio della stabile, non deve usare la stessa chiave dati della stabile.
-- Configurazione runtime minima: `spesa-tracker/js/config.js`, caricato prima di `storage.js`.
+- Configurazione runtime minima: `app/js/config.js`, caricato prima di `storage.js`.
 - Workflow Pages: `.github/workflows/pages.yml` assembla stabile da `main` e dev da `codex/refactor`.
-- `spesa-tracker/js/parser.js`: impatta l'inserimento rapido, flusso principale dell'app.
+- `app/js/parser.js`: impatta l'inserimento rapido, flusso principale dell'app.
 - Gestione back button, modali, filtri, tastiera mobile e scroll: molte parti sono state sistemate dopo bug concreti.
 
 ## Stile di Lavoro Consigliato

@@ -6,13 +6,13 @@ Questo documento descrive lo stato reale della codebase al momento dell'avvio de
 
 Where's My Money? e una web app statica, senza build system e senza framework.
 
-- `spesa-tracker/index.html` definisce la struttura dell'app, carica Chart.js da CDN e include gli script locali.
-- `spesa-tracker/css/style.css` contiene tutto lo stile, incluse variabili tema, layout mobile, modali, filtri, timeline, statistiche e impostazioni.
-- `spesa-tracker/js/config.js` contiene configurazione runtime minima, inclusa la chiave `localStorage`.
-- `spesa-tracker/js/categories.js` contiene categorie e metodi di pagamento statici.
-- `spesa-tracker/js/parser.js` interpreta l'input testuale e crea una spesa.
-- `spesa-tracker/js/storage.js` gestisce persistenza, import/export e utility dati.
-- `spesa-tracker/js/app.js` contiene lo stato UI e quasi tutta la logica applicativa.
+- `app/index.html` definisce la struttura dell'app, carica Chart.js da CDN e include gli script locali.
+- `app/css/style.css` contiene tutto lo stile, incluse variabili tema, layout mobile, modali, filtri, timeline, statistiche e impostazioni.
+- `app/js/config.js` contiene configurazione runtime minima, inclusa la chiave `localStorage`.
+- `app/js/categories.js` contiene categorie e metodi di pagamento statici.
+- `app/js/parser.js` interpreta l'input testuale e crea una spesa.
+- `app/js/storage.js` gestisce persistenza, import/export e utility dati.
+- `app/js/app.js` contiene lo stato UI e quasi tutta la logica applicativa.
 
 La struttura attuale e intenzionalmente semplice ma `app.js` e diventato il centro di molte responsabilita: navigazione, filtri, input, modal, tag, statistiche, import/export e gestione mobile.
 

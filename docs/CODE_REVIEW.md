@@ -1,6 +1,6 @@
 # Code Review Tecnica
 
-Review eseguita il 2026-05-08 su `spesa-tracker/`, con lettura statica completa dei file principali e controllo sintattico tramite `node --check`.
+Review eseguita il 2026-05-08 su `app/`, con lettura statica completa dei file principali e controllo sintattico tramite `node --check`.
 
 Obiettivo: capire cosa rende rischioso il refactor e ordinare i problemi per gravita e difficolta. Questa non e una lista di task obbligatori immediati: e una mappa dei rischi.
 
@@ -64,7 +64,7 @@ Nota privacy: questa osservazione non sostituisce una review privacy dedicata. L
 
 - **Gravita**: Estrema
 - **Difficolta**: Media
-- **File**: `spesa-tracker/js/storage.js:22`, `spesa-tracker/js/storage.js:37`, `spesa-tracker/js/storage.js:53`
+- **File**: `app/js/storage.js:22`, `app/js/storage.js:37`, `app/js/storage.js:53`
 
 Problema:
 
@@ -88,7 +88,7 @@ Direzione di fix:
 
 - **Gravita**: Alta
 - **Difficolta**: Media
-- **File**: `spesa-tracker/js/storage.js:109`, `spesa-tracker/js/app.js:2699`
+- **File**: `app/js/storage.js:109`, `app/js/app.js:2699`
 
 Problema:
 
@@ -108,7 +108,7 @@ Direzione di fix:
 
 - **Gravita**: Alta
 - **Difficolta**: Alta
-- **File**: `spesa-tracker/js/app.js:14`
+- **File**: `app/js/app.js:14`
 
 Problema:
 
@@ -131,7 +131,7 @@ Direzione di fix:
 
 - **Gravita**: Alta
 - **Difficolta**: Alta
-- **File**: `spesa-tracker/js/app.js:120`, `spesa-tracker/js/app.js:192`, `spesa-tracker/js/app.js:261`, `spesa-tracker/js/app.js:816`, `spesa-tracker/js/app.js:1190`, `spesa-tracker/js/app.js:1386`, `spesa-tracker/js/app.js:1899`
+- **File**: `app/js/app.js:120`, `app/js/app.js:192`, `app/js/app.js:261`, `app/js/app.js:816`, `app/js/app.js:1190`, `app/js/app.js:1386`, `app/js/app.js:1899`
 
 Problema:
 
@@ -158,7 +158,7 @@ Direzione di fix:
 
 - **Gravita**: Alta
 - **Difficolta**: Media
-- **File**: `spesa-tracker/js/parser.js:16`, `spesa-tracker/js/parser.js:21`, `spesa-tracker/js/app.js:1929`
+- **File**: `app/js/parser.js:16`, `app/js/parser.js:21`, `app/js/app.js:1929`
 
 Problemi:
 
@@ -199,7 +199,7 @@ Direzione di fix:
 
 - **Gravita**: Alta
 - **Difficolta**: Alta
-- **File**: `spesa-tracker/index.html:212`, `spesa-tracker/manifest.json:1`
+- **File**: `app/index.html:212`, `app/manifest.json:1`
 
 Problema:
 
@@ -219,7 +219,7 @@ Direzione di fix:
 
 - **Gravita**: Media
 - **Difficolta**: Media
-- **File**: `spesa-tracker/js/storage.js:90`, `spesa-tracker/js/storage.js:120`, `spesa-tracker/js/storage.js:159`
+- **File**: `app/js/storage.js:90`, `app/js/storage.js:120`, `app/js/storage.js:159`
 
 Problema:
 
@@ -238,7 +238,7 @@ Direzione di fix:
 
 - **Gravita**: Media
 - **Difficolta**: Media
-- **File**: `spesa-tracker/js/app.js:293`, `spesa-tracker/js/app.js:1001`, `spesa-tracker/js/app.js:1027`, `spesa-tracker/js/app.js:1483`, `spesa-tracker/js/app.js:1969`, `spesa-tracker/js/app.js:2190`
+- **File**: `app/js/app.js:293`, `app/js/app.js:1001`, `app/js/app.js:1027`, `app/js/app.js:1483`, `app/js/app.js:1969`, `app/js/app.js:2190`
 
 Problema:
 
@@ -258,7 +258,7 @@ Direzione di fix:
 
 - **Gravita**: Media
 - **Difficolta**: Media
-- **File**: `spesa-tracker/js/storage.js:8`, `spesa-tracker/js/storage.js:26`
+- **File**: `app/js/storage.js:8`, `app/js/storage.js:26`
 
 Problema:
 
@@ -279,7 +279,7 @@ Direzione di fix:
 
 - **Gravita**: Media
 - **Difficolta**: Alta
-- **File**: `spesa-tracker/css/style.css:72`, `spesa-tracker/css/style.css:167`, `spesa-tracker/css/style.css:546`, `spesa-tracker/css/style.css:828`, `spesa-tracker/css/style.css:1030`, `spesa-tracker/css/style.css:1919`
+- **File**: `app/css/style.css:72`, `app/css/style.css:167`, `app/css/style.css:546`, `app/css/style.css:828`, `app/css/style.css:1030`, `app/css/style.css:1919`
 
 Problema:
 
@@ -301,7 +301,7 @@ Direzione di fix:
 
 - **Gravita**: Media
 - **Difficolta**: Bassa
-- **File**: `spesa-tracker/js/app.js:481`, `spesa-tracker/js/app.js:500`, `spesa-tracker/js/app.js:939`
+- **File**: `app/js/app.js:481`, `app/js/app.js:500`, `app/js/app.js:939`
 
 Problema:
 
@@ -324,7 +324,7 @@ Direzione di fix:
 
 - **Gravita**: Media
 - **Difficolta**: Media
-- **File**: `spesa-tracker/js/categories.js:5`, `spesa-tracker/js/parser.js:76`
+- **File**: `app/js/categories.js:5`, `app/js/parser.js:76`
 
 Problema:
 
@@ -345,7 +345,7 @@ Direzione di fix:
 
 - **Gravita**: Media
 - **Difficolta**: Media
-- **File**: `spesa-tracker/manifest.json:12`, `spesa-tracker/index.html:10`
+- **File**: `app/manifest.json:12`, `app/index.html:10`
 
 Problema:
 
@@ -361,7 +361,7 @@ Direzione di fix:
 
 - **Gravita**: Bassa
 - **Difficolta**: Media
-- **File**: `spesa-tracker/index.html:6`, `spesa-tracker/index.html:36`, `spesa-tracker/js/app.js:1477`
+- **File**: `app/index.html:6`, `app/index.html:36`, `app/js/app.js:1477`
 
 Problema:
 
@@ -384,7 +384,7 @@ Direzione di fix:
 
 - **Gravita**: Bassa
 - **Difficolta**: Bassa
-- **File**: `spesa-tracker/js/app.js:51`, `spesa-tracker/js/app.js:90`, `spesa-tracker/js/app.js:2181`, `spesa-tracker/css/style.css:1676`
+- **File**: `app/js/app.js:51`, `app/js/app.js:90`, `app/js/app.js:2181`, `app/css/style.css:1676`
 
 Problemi:
 

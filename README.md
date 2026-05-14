@@ -43,7 +43,7 @@ Non e ancora una PWA completamente offline: Chart.js viene caricato da CDN e non
 |   +-- ROADMAP.md
 +-- note/
 |   +-- note_di_progetto.txt
-+-- spesa-tracker/
++-- app/
     +-- index.html
     +-- manifest.json
     +-- css/style.css
@@ -71,12 +71,12 @@ Questa lista deve restare completa: se nasce un nuovo documento, va aggiunto qui
 
 ## Sviluppo Locale
 
-L'app non richiede build. Si puo aprire direttamente `spesa-tracker/index.html` oppure servire la cartella con un server statico.
+L'app non richiede build. Si puo aprire direttamente `app/index.html` oppure servire la cartella con un server statico.
 
 Esempio:
 
 ```powershell
-cd spesa-tracker
+cd app
 python -m http.server 8000
 ```
 
@@ -84,7 +84,7 @@ Poi aprire `http://localhost:8000`.
 
 ## Deploy
 
-Il progetto e pensato per GitHub Pages: la repository pubblica target e `tracker-spese`, mentre la cartella `spesa-tracker/` contiene tutti gli asset necessari per il deploy statico.
+Il progetto e pensato per GitHub Pages: la repository pubblica target e `tracker-spese`, mentre la cartella `app/` contiene tutti gli asset necessari per il deploy statico.
 
 Durante il refactor, il deploy previsto separa stabile e sviluppo:
 
