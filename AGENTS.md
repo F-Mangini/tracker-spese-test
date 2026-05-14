@@ -71,7 +71,7 @@ Non creare altri file di documentazione senza una ragione chiara. Se serve un nu
 - Evitare framework e build step finche non sono chiaramente necessari.
 - Evitare refactor larghi e simultanei.
 - Prima dei refactor larghi, affrontare o almeno considerare i rischi in `docs/CODE_REVIEW.md`.
-- Prima dei refactor larghi, definire o mantenere un canale dev testabile senza impattare la versione stabile su `main`.
+- Lavora sempre sulla versione dev su `codex/refactor`, mai sulla versione stabile su `main`.
 - Non cambiare schema dati senza fallback per vecchi dati.
 - Non rimuovere workaround mobile senza capire quale bug risolvevano.
 - Non sostituire i `textarea` usati come input/dropdown senza verificare l'effetto sui suggerimenti/autofill della tastiera mobile.

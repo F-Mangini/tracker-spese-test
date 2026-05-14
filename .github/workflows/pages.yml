@@ -43,24 +43,9 @@ jobs:
 
           mkdir -p public public/stable public/dev
 
-          app_source() {
-            local base="$1"
-            if [ -d "$base/app" ]; then
-              echo "$base/app"
-            elif [ -d "$base/spesa-tracker" ]; then
-              echo "$base/spesa-tracker"
-            else
-              echo "Missing static app directory in $base" >&2
-              exit 1
-            fi
-          }
-
-          stable_app="$(app_source stable-src)"
-          dev_app="$(app_source dev-src)"
-
-          cp -R "$stable_app"/. public/
-          cp -R "$stable_app"/. public/stable/
-          cp -R "$dev_app"/. public/dev/
+          cp -R stable-src/app/. public/
+          cp -R stable-src/app/. public/stable/
+          cp -R dev-src/app/. public/dev/
 
           cat > public/dev/js/config.js <<'EOF'
           /* ============================================

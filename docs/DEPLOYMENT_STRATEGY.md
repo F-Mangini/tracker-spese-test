@@ -99,7 +99,6 @@ Il workflow `.github/workflows/pages.yml`:
 - fa checkout di `codex/refactor` in `dev-src`;
 - copia `stable-src/app/` in `public/` e `public/stable/`;
 - copia `dev-src/app/` in `public/dev/`;
-- durante la migrazione accetta ancora `spesa-tracker/` come fallback se un branch non e stato allineato;
 - sovrascrive la config dev con storage key separata;
 - pubblica `public/` su GitHub Pages.
 
