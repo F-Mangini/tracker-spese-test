@@ -4,7 +4,9 @@ Questo progetto e personale ed e mantenuto da una sola persona. Le soluzioni dev
 
 ## Contesto
 
-- Nome app: SpesaTracker.
+- Nome app stabile attuale: `Where's My Money?`.
+- Nome breve per scorciatoia mobile/PWA: `WMM`.
+- Nome repository target: `tracker-spese`.
 - Scopo: tracker spese semplice, privato, locale.
 - Uso reale: quotidiano su Android.
 - Deploy: GitHub Pages / hosting statico.
@@ -41,6 +43,29 @@ Leggere, nell'ordine:
 
 Non considerare `note/note_di_progetto.txt` come specifica finale: e una raccolta raw di appunti. La roadmap curata decide priorita e raggruppamenti, ma gli appunti possono contenere dettagli utili non ancora formalizzati.
 
+## Documentazione Ufficiale
+
+I file documentali ufficiali da mantenere allineati sono:
+
+- `README.md`: panoramica pubblica, struttura, link alla documentazione e istruzioni essenziali.
+- `AGENTS.md`: contesto operativo per Codex e altri assistenti AI.
+- `docs/CURRENT_STATE.md`: stato tecnico implementato.
+- `docs/CODE_REVIEW.md`: rischi tecnici, priorita e ordine consigliato del refactor.
+- `docs/DEPLOYMENT_STRATEGY.md`: separazione stabile/dev e strategia GitHub Pages.
+- `docs/DEVELOPMENT_GUIDE.md`: regole pratiche per sviluppo, refactor e nuove feature.
+- `docs/ROADMAP.md`: backlog curato e ordinato a partire dagli appunti.
+- `note/note_di_progetto.txt`: appunti raw e storici del maintainer.
+
+Non creare altri file di documentazione senza una ragione chiara. Se serve un nuovo documento, aggiornare anche `README.md` e questa lista.
+
+## Comunicazione con il Maintainer
+
+- Dopo ogni modifica, spiegare in chat cosa e stato cambiato e perche.
+- Quando la modifica tocca codice non banale, descrivere anche il comportamento interessato, non solo i file modificati.
+- Segnalare rischi residui, test eseguiti e test non eseguiti.
+- Aiutare il maintainer a costruire comprensione del codice: evitare risposte opache tipo "fatto" quando una spiegazione breve puo rendere piu chiaro il sistema.
+- Se una scelta non e deducibile dalla codebase o dagli appunti, chiedere al maintainer invece di inventare una policy complessa.
+
 ## Vincoli
 
 - Evitare framework e build step finche non sono chiaramente necessari.
@@ -71,4 +96,4 @@ Non considerare `note/note_di_progetto.txt` come specifica finale: e una raccolt
 - Preferire modifiche piccole, verificabili e documentate.
 - Separare refactor da nuove feature quando possibile.
 - Durante il refactor, preservare l'esperienza utente esistente salvo bug dichiarati.
-- Quando una scelta non e deducibile dalla codebase o dagli appunti, chiedere al maintainer invece di inventare una policy complessa.
+- Tenere distinta la versione stabile dalla versione dev anche a livello di nome app, icona e storage quando vengono pubblicate fianco a fianco.

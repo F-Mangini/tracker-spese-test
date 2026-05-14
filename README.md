@@ -1,6 +1,6 @@
-# SpesaTracker
+# Where's My Money?
 
-SpesaTracker e una web app personale per tracciare le spese quotidiane in modo semplice, privato e locale.
+Where's My Money? e una web app personale per tracciare le spese quotidiane in modo semplice, privato e locale.
 
 L'app nasce per essere veloce da usare, soprattutto da smartphone Android: si apre, si scrive una spesa in linguaggio naturale, e il dato resta nel browser dell'utente. Non richiede backend, account o servizi esterni per salvare le spese.
 
@@ -34,8 +34,8 @@ Non e ancora una PWA completamente offline: Chart.js viene caricato da CDN e non
 ```text
 .
 +-- README.md
++-- AGENTS.md
 +-- docs/
-|   +-- AGENT_NOTES.md
 |   +-- CODE_REVIEW.md
 |   +-- CURRENT_STATE.md
 |   +-- DEPLOYMENT_STRATEGY.md
@@ -57,13 +57,17 @@ Non e ancora una PWA completamente offline: Chart.js viene caricato da CDN e non
 
 ## Documentazione
 
+File documentali ufficiali:
+
+- [Note per agenti](AGENTS.md): memoria operativa per Codex e altri assistenti.
 - [Stato corrente](docs/CURRENT_STATE.md): cosa e implementato oggi e come funziona.
 - [Review tecnica](docs/CODE_REVIEW.md): problemi, rischi e priorita del refactor.
 - [Strategia stabile/dev](docs/DEPLOYMENT_STRATEGY.md): come separare versione stabile e versione di test.
 - [Guida sviluppo](docs/DEVELOPMENT_GUIDE.md): regole pratiche per refactor e nuove feature.
 - [Roadmap](docs/ROADMAP.md): backlog ordinato a partire dagli appunti.
-- [Note per agenti](docs/AGENT_NOTES.md): memoria operativa per Codex e altri assistenti.
 - [Appunti raw](note/note_di_progetto.txt): fonte grezza e storica delle idee.
+
+Questa lista deve restare completa: se nasce un nuovo documento, va aggiunto qui e in `AGENTS.md`.
 
 ## Sviluppo Locale
 
@@ -80,7 +84,7 @@ Poi aprire `http://localhost:8000`.
 
 ## Deploy
 
-Il progetto e pensato per GitHub Pages: la cartella `spesa-tracker/` contiene tutti gli asset necessari per il deploy statico.
+Il progetto e pensato per GitHub Pages: la repository pubblica target e `tracker-spese`, mentre la cartella `spesa-tracker/` contiene tutti gli asset necessari per il deploy statico.
 
 Durante il refactor, il deploy previsto separa stabile e sviluppo:
 

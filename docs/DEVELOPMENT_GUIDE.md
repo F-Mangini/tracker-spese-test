@@ -77,8 +77,10 @@ Usare questi file come fonti:
 - `docs/CURRENT_STATE.md`: stato tecnico implementato.
 - `docs/DEPLOYMENT_STRATEGY.md`: separazione stabile/dev per testare il refactor senza rischiare l'uso quotidiano.
 - `docs/ROADMAP.md`: priorita e idee future ordinate.
-- `docs/AGENT_NOTES.md`: contesto operativo per assistenti AI.
+- `AGENTS.md`: contesto operativo per assistenti AI.
 - `note/note_di_progetto.txt`: appunti grezzi, storici, non necessariamente ordinati.
+
+`README.md` e `AGENTS.md` contengono la lista completa dei file documentali ufficiali. Se si aggiunge o rimuove documentazione, aggiornare entrambe le liste nello stesso intervento.
 
 ## Processo Consigliato
 
@@ -90,5 +92,6 @@ Per ogni modifica non banale:
 4. Fare una modifica piccola e verificabile.
 5. Testare manualmente il flusso interessato.
 6. Aggiornare documentazione e roadmap se il significato del progetto cambia.
+7. Spiegare in chat cosa e stato cambiato, perche e quali test o verifiche sono stati eseguiti.
 
 Per ora non c'e una suite automatica. Quando si introduce testing, partire da parser, storage e funzioni di aggregazione statistiche: sono aree ad alto valore e basso costo rispetto alla UI mobile.

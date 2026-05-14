@@ -1,6 +1,6 @@
 {
-    "name": "SpesaTracker",
-    "short_name": "Spese",
+    "name": "Where's My Money?",
+    "short_name": "WMM",
     "description": "Traccia le tue spese quotidiane",
     "start_url": ".",
     "display": "standalone",

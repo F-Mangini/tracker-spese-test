@@ -4,7 +4,7 @@ Questo documento descrive lo stato reale della codebase al momento dell'avvio de
 
 ## Architettura
 
-SpesaTracker e una web app statica, senza build system e senza framework.
+Where's My Money? e una web app statica, senza build system e senza framework.
 
 - `spesa-tracker/index.html` definisce la struttura dell'app, carica Chart.js da CDN e include gli script locali.
 - `spesa-tracker/css/style.css` contiene tutto lo stile, incluse variabili tema, layout mobile, modali, filtri, timeline, statistiche e impostazioni.
@@ -143,6 +143,8 @@ La pagina impostazioni include:
 - import CSV, che aggiunge le spese importate;
 - informazioni su numero spese, periodo coperto e spazio usato;
 - cancellazione completa dei dati con conferma.
+
+La roadmap prevede di rendere import/export piu coerenti: un solo flusso UI, scelta del formato dopo il comando, possibilita di aggiungere o sostituire sia per JSON sia per CSV e gestione esplicita degli id duplicati.
 
 Il toggle tema nell'header e pensato come cambio temporaneo; la preferenza stabile del tema si modifica dalle impostazioni.
 

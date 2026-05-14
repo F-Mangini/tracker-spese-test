@@ -35,6 +35,8 @@ Priorita consigliata:
 
 Non sono stati trovati errori di sintassi JavaScript. Non ci sono backend, chiamate API dati o evidente esfiltrazione di dati personali.
 
+Nota privacy: questa osservazione non sostituisce una review privacy dedicata. La roadmap prevede di verificare in modo esplicito dati salvati nel browser, asset caricati da rete, backup esportati, uso su device condivisi e possibilita/limiti di una eventuale cifratura locale.
+
 ## Findings Principali
 
 | ID | Problema | Gravita | Difficolta | Area |

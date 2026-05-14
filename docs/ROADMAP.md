@@ -14,6 +14,15 @@ Priorita della fase attuale:
 - Separare progressivamente logica dati, rendering e gestione UI oggi concentrate in `app.js`.
 - Rendere piu leggibili filtri, modali, navigazione e statistiche.
 - Mantenere documentazione aggiornata a ogni cambiamento strutturale.
+- Mantenere `AGENTS.md` in root come riferimento operativo per gli assistenti.
+
+## Repository e Canali
+
+Interventi di contesto e distribuzione:
+
+- Rinominare la repository in `tracker-spese`, aggiornando di conseguenza URL GitHub Pages, documentazione e riferimenti interni.
+- Distinguere la versione dev dalla stabile anche a colpo d'occhio: nome app, icona, manifest e storage key devono rendere chiaro quando si sta usando il canale di sviluppo.
+- Evitare che la dev sembri la versione quotidiana stabile, soprattutto su Android quando l'app e installata o aggiunta alla home.
 
 ## Bug e Miglioramenti Vicini
 
@@ -26,7 +35,21 @@ Elementi emersi dagli appunti come utili nel breve periodo:
 - Sistemare animazione e posizione della barra di inserimento durante apertura/chiusura tastiera.
 - Nascondere la barra di inserimento quando il pannello filtri e completamente aperto.
 - Rendere il pannello filtri scrollabile anche quando non completamente aperto.
+- Separare lo scroll tra timeline, statistiche e impostazioni: lo scroll di una pagina non deve trascinare le altre, e il cambio pagina deve riportare in alto la vista attiva quando appropriato.
+- Rivedere la gestione di chiusura di pannelli, modali e history quando filtri parzialmente aperti e modifica spesa interagiscono tra loro.
 - Evitare che l'app si chiuda completamente quando viene chiusa con indietro, mantenendola nei recenti dove possibile.
+
+## Dati, Privacy e Import/Export
+
+Priorita legate ai dati locali:
+
+- Eseguire una review privacy esplicita: quali dati restano nel browser, quali asset o librerie vengono caricati da rete e quali rischi esistono in caso di device condiviso o backup esportati.
+- Valutare se e quando introdurre cifratura locale dei dati, chiarendo impatto su recupero dati, backup e usabilita quotidiana.
+- Riflettere su strutture dati alternative prima di estendere molto il modello attuale, soprattutto per categorie personalizzabili, tag, cestino, ricorrenze e versioni schema.
+- Per import JSON, CSV e futuri TSV/Markdown, offrire scelta esplicita tra aggiungere ai dati esistenti e sostituire i dati esistenti.
+- Definire una policy per id duplicati in import aggiuntivi: rigenerare id in conflitto o normalizzare con riepilogo prima del commit.
+- Unificare import/export in un flusso UI unico con scelta successiva tra formati disponibili, invece di avere pulsanti separati per ogni formato.
+- Aggiungere formati copia/esportazione rapida per spese selezionate o filtrate: JSON, CSV/TSV e tabella Markdown.
 
 ## Offline e Installazione
 

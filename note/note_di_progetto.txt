@@ -1,5 +1,33 @@
 # ELENCO MODIFICHE DA APPORTARE
 
+## aggiunte del 14/05/2026
+
+FEAT: Cambiare il nome della repository
+
+FEAT: Cambiare nome app e icona per la versione dev
+
+DEV: creare AGENTS.md e docs/AGENTS.md. E da qualche parte una lista di tutti e soli i file di documentazione e i file AGENTS.md?
+
+DEV: nel AGENTS.md dobbiamo scrivere che l'agente deve spiegare (in chat) cosa è stato fatto in ciascuna sua modifica in modo che il maintainer possa tenere traccia del funzionamento del codice e costruire un understanding dello stesso.
+
+FEAT: review della privacy
+
+DEV: riflettere su quali altre strutture dati si potrebbero utilizzare
+
+FEAT: sia con JSON che CSV mettere possibilità di scegliere se aggiungere le spese (verranno assegnati nuovi id se quelli usati sono già presenti o comunque da capire come gestire la cosa) o sostituirle.
+
+FEAT: Possibilità di copiare spese in vari formati (json, csv o tsv da decidere, md table)
+
+FEAT: import e export con un solo tasto, al posto dei due separati attuali e solo dopo possibilità di scelta tra i vari formati file (aggiungere tsv e md table)
+
+BUG: scrollando la timeline si scrollano contemporaneamente anche le statistiche e le impostazioni, e quando si cambia pagina non ci si trova in cima. Questo non deve succedere.
+
+BUG: quando il pannello dei filtri è aperto, non per intero, e seleziono una spesa e richiudo la spesa, se poi tento di andare indietro per chiudere il pannello dei filtri mi si chiude l'app invece. La gestione delle chiusure delle finestre e dei pannelli va rivista.
+
+FEAT: verificare la sicurezza dell'app dal punto di vista della privacy e valutare di utilizzare encryption dei dati.
+
+## dal file originale del 08/05/2026
+
 BUG: Animazione buggata quando si fa swipe indietro (tramite gesture telefono) dal lato sinistro dello schermo. (buggato sul mio vecchio realme 9, funzionante sul mio nuovo Xiaomi 15)🟡
 
 FEAT: Voglio le Categorie in ordine alfabetico (attualmente lo sono solo perché scritte in ordine nel codice) (e selezionabili da tab personalizzazione, il tab personalizzazione non esiste ancora, sarà da aggiungere dopo il refactor). 🟡

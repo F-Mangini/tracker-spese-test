@@ -19,13 +19,15 @@ Avere due accessi sempre chiari:
 
 Questo non e ancora il sistema definitivo di aggiornamenti controllati dall'app. E il canale minimo per lavorare in sicurezza prima della futura PWA/version manager.
 
-URL attesi per questa repository:
+URL attesi per questa repository dopo la rinomina a `tracker-spese`:
 
 ```text
-https://f-mangini.github.io/tracker-spese-test/        -> stabile
-https://f-mangini.github.io/tracker-spese-test/stable/ -> stabile
-https://f-mangini.github.io/tracker-spese-test/dev/    -> sviluppo
+https://f-mangini.github.io/tracker-spese/        -> stabile
+https://f-mangini.github.io/tracker-spese/stable/ -> stabile
+https://f-mangini.github.io/tracker-spese/dev/    -> sviluppo
 ```
+
+Se la repository viene rinominata, questi URL devono essere aggiornati nella documentazione e verificati su GitHub Pages dopo il primo deploy.
 
 Il vecchio URL `https://f-mangini.github.io/tracker-spese-test/spesa-tracker/` non e piu il target principale con questa strategia e puo restituire 404.
 
@@ -83,6 +85,8 @@ Implementazione scelta:
 - `storage.js` usa `window.SPESA_TRACKER_CONFIG.storageKey` con fallback a `spesa-tracker-data`;
 - la stabile usa `spesa-tracker-data`;
 - il workflow Pages sovrascrive `public/dev/js/config.js` con `spesa-tracker-data-dev`.
+
+Quando la dev viene pubblicata accanto alla stabile, deve essere distinguibile anche nel manifest e nella UI installata: nome app e icona dev non devono confondersi con quelli della versione quotidiana. Il nome stabile completo e `Where's My Money?`, con `WMM` come nome breve sotto l'icona mobile.
 
 Questa modifica e piccola ma tocca il salvataggio dati, quindi va fatta con cautela e verificata prima del refactor grosso.
 

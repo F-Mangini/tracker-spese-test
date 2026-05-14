@@ -2642,7 +2642,7 @@ const App = {
             </div>
 
             <div class="about-section">
-                <p>💰 SpesaTracker v2.3.4</p>
+                <p>💰 Where's My Money? v2.3.4</p>
                 <p>Dati locali · Nessun server · Nessun costo</p>
             </div>
         `;
