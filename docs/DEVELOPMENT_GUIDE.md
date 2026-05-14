@@ -37,6 +37,14 @@ Principi da rispettare quando verra progettata questa parte:
 - La strategia tecnica e ancora da definire: service worker, cache versionate, manifest di release, percorsi GitHub Pages separati o altra soluzione equivalente.
 - Ogni scelta deve proteggere i dati locali e chiarire cosa succede se una versione nuova introduce cambiamenti allo schema dati.
 
+## Promozione a Stabile
+
+Durante il refactor, il lavoro ordinario avviene su `codex/refactor`. Quando la dev e stata provata e va resa stabile, promuoverla con un merge intenzionale in `main`.
+
+Va bene portare tutto il branch dev su `main` quando tutte le modifiche contenute sono state validate e devono diventare quotidiane. In questo caso e preferibile un merge completo rispetto a copiare solo `app/`, perche documentazione, workflow, manifest e configurazione fanno parte del comportamento della release.
+
+Se invece solo alcune modifiche sono pronte, usare cherry-pick o un branch dedicato di release, evitando di trascinare feature non ancora validate.
+
 ## Linee Guida per i Dati
 
 `localStorage` e la sorgente principale. Prima di modificare `storage.js`, controllare:

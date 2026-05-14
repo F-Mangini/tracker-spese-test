@@ -6,11 +6,14 @@ Questo documento definisce il minimo necessario per lavorare al refactor senza p
 
 - `main` e la versione stabile.
 - `codex/refactor` e il branch su cui avviene il refactor.
-- GitHub Pages oggi pubblica la versione stabile da `main`.
+- GitHub Pages pubblica `/` e `/stable/` da `main`, e `/dev/` da `codex/refactor`.
+- Il workflow Pages parte solo da `main`, per rispettare le protection rules dell'environment `github-pages`.
 - La versione stabile e usata dal maintainer e da amici.
 - Il maintainer usa GitHub Free e non vuole fare upgrade.
 
 ## Obiettivo Immediato
+
+Stato: completato il 2026-05-15.
 
 Avere due accessi sempre chiari:
 
@@ -94,7 +97,7 @@ Questa modifica e piccola ma tocca il salvataggio dati, quindi va fatta con caut
 
 Il workflow `.github/workflows/pages.yml`:
 
-- parte su push verso `main` o `codex/refactor`;
+- parte su push verso `main` o con avvio manuale;
 - fa checkout di `main` in `stable-src`;
 - fa checkout di `codex/refactor` in `dev-src`;
 - copia `stable-src/app/` in `public/` e `public/stable/`;
@@ -102,7 +105,20 @@ Il workflow `.github/workflows/pages.yml`:
 - sovrascrive la config dev con storage key separata;
 - pubblica `public/` su GitHub Pages.
 
-Nota importante: il workflow deve esistere anche sul branch di default (`main`). Se resta solo su `codex/refactor`, GitHub Pages impostato su Actions puo non avere un workflow valido da eseguire. Per questo il workflow e stato aggiunto anche a `main` come modifica infrastrutturale minima, senza portare il refactor nella stabile.
+Nota importante: il workflow deve esistere sul branch di default (`main`) e il deploy deve partire da `main`. L'environment `github-pages` rifiuta deploy diretti da `codex/refactor`, quindi un push sulla dev non pubblica da solo il sito.
+
+## Promozione Dev a Stabile
+
+Quando la versione dev e stata testata ed e pronta per l'uso quotidiano:
+
+1. verificare `https://f-mangini.github.io/tracker-spese/dev/`;
+2. fare merge intenzionale di `codex/refactor` in `main`;
+3. controllare che `.github/workflows/pages.yml` resti triggerato solo da `main`;
+4. pushare `main`;
+5. attendere il workflow Pages;
+6. verificare `https://f-mangini.github.io/tracker-spese/` e `https://f-mangini.github.io/tracker-spese/stable/`.
+
+Portare tutto `codex/refactor` su `main` va bene quando tutto cio che contiene e pronto per diventare stabile. Se solo una parte e pronta, preferire cherry-pick o un branch di release. Copiare solo `app/` e sconsigliato come abitudine, perche anche documentazione, workflow, manifest e config possono essere parte della release.
 
 ## Azione Manuale Richiesta al Maintainer
 
@@ -142,12 +158,13 @@ Implementare subito service worker, manifest release, cache versionate e UI di a
 
 Prima del refactor strutturale:
 
-1. rendere configurabile `Storage.KEY`;
-2. predisporre pubblicazione dev con storage separato;
-3. pubblicare il workflow su GitHub;
-4. cambiare GitHub Pages Source a `GitHub Actions`;
-5. verificare gli URL stabile/dev;
-6. mantenere `main` come fonte stabile;
-7. usare `codex/refactor` per test e iterazione.
+Completato:
+
+- `Storage.KEY` e configurabile;
+- la dev usa storage separato;
+- il workflow pubblica stabile e dev da GitHub Actions;
+- gli URL stabile/dev sono verificabili;
+- `main` resta fonte stabile;
+- `codex/refactor` resta fonte della dev.
 
 La Fase 5 della code review resta valida per la PWA/version manager definitiva, ma viene preceduta da una fase piu piccola: canale stabile/dev sicuro.

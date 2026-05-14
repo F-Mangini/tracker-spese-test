@@ -407,6 +407,8 @@ Direzione di fix:
 
 ### Fase 0 - Canale stabile/dev sicuro
 
+Stato: completata il 2026-05-15.
+
 - Mantenere `main` come fonte della versione stabile usata quotidianamente.
 - Usare `codex/refactor` come fonte della versione di sviluppo.
 - Predisporre un link stabile e un link dev sempre distinguibili.

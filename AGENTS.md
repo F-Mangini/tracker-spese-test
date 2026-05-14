@@ -17,8 +17,9 @@ Questo progetto e personale ed e mantenuto da una sola persona. Le soluzioni dev
 - Obiettivo distribuzione: app installabile/offline stabile, con aggiornamenti scelti dall'utente da una lista di versioni pubblicate dal maintainer.
 - Branch stabile attuale: `main`.
 - Branch di lavoro/refactor: `codex/refactor`.
-- GitHub Pages deployata oggi: versione da `main`, usata dal maintainer e da amici per uso quotidiano.
-- Esigenza immediata prima/durante il refactor: avere un link stabile per l'uso quotidiano e un link separato per testare la versione di sviluppo.
+- GitHub Pages pubblica `/` e `/stable/` da `main`, e `/dev/` da `codex/refactor`.
+- Il workflow Pages deve partire da `main`: l'environment `github-pages` non accetta deploy diretti da `codex/refactor`.
+- Esigenza immediata completata: esiste un link stabile per l'uso quotidiano e un link separato per testare la versione di sviluppo.
 - Vincolo importante: se stabile e dev sono servite dallo stesso dominio GitHub Pages, anche con path diversi, condividono `localStorage`; la versione dev deve quindi usare una storage key separata o un'origine diversa per non rischiare i dati reali.
 
 ## Priorita Operative
@@ -71,7 +72,8 @@ Non creare altri file di documentazione senza una ragione chiara. Se serve un nu
 - Evitare framework e build step finche non sono chiaramente necessari.
 - Evitare refactor larghi e simultanei.
 - Prima dei refactor larghi, affrontare o almeno considerare i rischi in `docs/CODE_REVIEW.md`.
-- Lavora sempre sulla versione dev su `codex/refactor`, mai sulla versione stabile su `main`.
+- Lavora di default sulla versione dev su `codex/refactor`.
+- Toccare `main` solo per promozioni esplicite a stabile o per fix infrastrutturali minimi necessari al deploy.
 - Non cambiare schema dati senza fallback per vecchi dati.
 - Non rimuovere workaround mobile senza capire quale bug risolvevano.
 - Non sostituire i `textarea` usati come input/dropdown senza verificare l'effetto sui suggerimenti/autofill della tastiera mobile.

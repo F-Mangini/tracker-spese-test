@@ -91,4 +91,6 @@ Durante il refactor, il deploy previsto separa stabile e sviluppo:
 - `/` e `/stable/`: versione stabile da `main`;
 - `/dev/`: versione di sviluppo da `codex/refactor`, con storage locale separato.
 
+Quando una versione dev e stata testata ed e pronta per l'uso quotidiano, puo essere promossa con un merge intenzionale di `codex/refactor` in `main`. Il workflow GitHub Pages parte da `main` e pubblica sia la stabile sia la dev.
+
 Prima di modificare la logica dei dati, leggere `docs/CURRENT_STATE.md` e `docs/DEVELOPMENT_GUIDE.md`.
