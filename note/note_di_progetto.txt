@@ -10,8 +10,6 @@ DEV: creare AGENTS.md e docs/AGENTS.md. E da qualche parte una lista di tutti e 
 
 DEV: nel AGENTS.md dobbiamo scrivere che l'agente deve spiegare (in chat) cosa è stato fatto in ciascuna sua modifica in modo che il maintainer possa tenere traccia del funzionamento del codice e costruire un understanding dello stesso.
 
-FEAT: review della privacy
-
 DEV: riflettere su quali altre strutture dati si potrebbero utilizzare
 
 FEAT: sia con JSON che CSV mettere possibilità di scegliere se aggiungere le spese (verranno assegnati nuovi id se quelli usati sono già presenti o comunque da capire come gestire la cosa) o sostituirle.
