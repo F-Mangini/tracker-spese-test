@@ -21,11 +21,13 @@ Priorita della fase attuale:
 
 ## Repository e Canali
 
-Interventi di contesto e distribuzione:
+Stato: completato.
 
 - Repository rinominata in `tracker-spese`; mantenere allineati URL GitHub Pages, documentazione e riferimenti interni.
-- Distinguere la versione dev dalla stabile anche a colpo d'occhio: nome app, icona, manifest e storage key devono rendere chiaro quando si sta usando il canale di sviluppo.
-- Evitare che la dev sembri la versione quotidiana stabile, soprattutto su Android quando l'app e installata o aggiunta alla home.
+- Versione stabile e dev distinguibili con storage key separata, manifest separati e cartelle icone separate.
+- Stabile: `Where's My Money?` / `WMM`, manifest `app/manifest.json`, icone `app/icons/stable/`.
+- Dev: `Where's My Bug?` / `WMB`, manifest `app/manifest.dev.json`, icone `app/icons/dev/`.
+- Il workflow applica il branding dev solo nell'artefatto `/dev/`, cosi una promozione dev -> stabile non porta automaticamente nome e icona dev nella stabile.
 
 ## Bug e Miglioramenti Vicini
 
