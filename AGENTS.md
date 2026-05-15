@@ -6,6 +6,8 @@ Questo progetto e personale ed e mantenuto da una sola persona. Le soluzioni dev
 
 - Nome app stabile attuale: `Where's My Money?`.
 - Nome breve per scorciatoia mobile/PWA: `WMM`.
+- Nome app dev attuale: `Where's My Bug?`.
+- Nome breve dev per scorciatoia mobile/PWA: `WMB`.
 - Nome repository target: `tracker-spese`.
 - Scopo: tracker spese semplice, privato, locale.
 - Uso reale: quotidiano su Android.
@@ -89,6 +91,8 @@ Non creare altri file di documentazione senza una ragione chiara. Se serve un nu
 - `Storage.KEY`: se si pubblica una versione dev sullo stesso dominio della stabile, non deve usare la stessa chiave dati della stabile.
 - Configurazione runtime minima: `app/js/config.js`, caricato prima di `storage.js`.
 - Workflow Pages: `.github/workflows/pages.yml` assembla stabile da `main` e dev da `codex/refactor`.
+- Manifest stabile: `app/manifest.json`; manifest dev: `app/manifest.dev.json`, copiato dal workflow in `public/dev/manifest.json`.
+- Icone stabili: `app/icons/stable/`; icone dev: `app/icons/dev/`.
 - `app/js/parser.js`: impatta l'inserimento rapido, flusso principale dell'app.
 - Gestione back button, modali, filtri, tastiera mobile e scroll: molte parti sono state sistemate dopo bug concreti.
 

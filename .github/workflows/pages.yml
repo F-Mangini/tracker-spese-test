@@ -45,6 +45,13 @@ jobs:
           cp -R stable-src/app/. public/
           cp -R stable-src/app/. public/stable/
           cp -R dev-src/app/. public/dev/
+          cp dev-src/app/manifest.dev.json public/dev/manifest.json
+
+          sed -i \
+            -e 's#icons/stable/favicon-32.png#icons/dev/favicon-32.png#g' \
+            -e 's#icons/stable/favicon-16.png#icons/dev/favicon-16.png#g' \
+            -e 's#icons/stable/apple-touch-icon.png#icons/dev/apple-touch-icon.png#g' \
+            public/dev/index.html
 
           cat > public/dev/js/config.js <<'EOF'
           /* ============================================

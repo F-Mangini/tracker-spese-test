@@ -1,7 +1,7 @@
 {
-    "name": "Where's My Money?",
-    "short_name": "WMM",
-    "description": "Traccia le tue spese quotidiane",
+    "name": "Where's My Bug?",
+    "short_name": "WMB",
+    "description": "Versione di sviluppo di Where's My Money?",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#f0f2f5",
@@ -11,25 +11,25 @@
     "lang": "it",
     "icons": [
         {
-            "src": "icons/stable/icon-192.png",
+            "src": "icons/dev/icon-192.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "icons/stable/icon-512.png",
+            "src": "icons/dev/icon-512.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "icons/stable/maskable-192.png",
+            "src": "icons/dev/maskable-192.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "maskable"
         },
         {
-            "src": "icons/stable/maskable-512.png",
+            "src": "icons/dev/maskable-512.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"

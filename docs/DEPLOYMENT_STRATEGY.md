@@ -91,6 +91,14 @@ Implementazione scelta:
 
 Quando la dev viene pubblicata accanto alla stabile, deve essere distinguibile anche nel manifest e nella UI installata: nome app e icona dev non devono confondersi con quelli della versione quotidiana. Il nome stabile completo e `Where's My Money?`, con `WMM` come nome breve sotto l'icona mobile.
 
+Implementazione branding:
+
+- la stabile usa `app/manifest.json`, nome `Where's My Money?`, short name `WMM` e icone in `app/icons/stable/`;
+- la dev usa `app/manifest.dev.json`, nome `Where's My Bug?`, short name `WMB` e icone in `app/icons/dev/`;
+- il workflow copia `app/manifest.dev.json` in `public/dev/manifest.json`;
+- il workflow riscrive i link favicon/apple touch di `public/dev/index.html` da `icons/stable/` a `icons/dev/`;
+- il sorgente resta stabile di default, cosi una promozione dev -> stabile non porta per errore nome e icone dev nella stabile.
+
 Questa modifica e piccola ma tocca il salvataggio dati, quindi va fatta con cautela e verificata prima del refactor grosso.
 
 ## Workflow GitHub Pages
@@ -102,6 +110,8 @@ Il workflow `.github/workflows/pages.yml`:
 - fa checkout di `codex/refactor` in `dev-src`;
 - copia `stable-src/app/` in `public/` e `public/stable/`;
 - copia `dev-src/app/` in `public/dev/`;
+- sostituisce `public/dev/manifest.json` con `dev-src/app/manifest.dev.json`;
+- riscrive i link icone della dev verso `icons/dev/`;
 - sovrascrive la config dev con storage key separata;
 - pubblica `public/` su GitHub Pages.
 
