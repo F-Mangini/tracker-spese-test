@@ -51,6 +51,7 @@ jobs:
             -e 's#icons/stable/favicon-32.png#icons/dev/favicon-32.png#g' \
             -e 's#icons/stable/favicon-16.png#icons/dev/favicon-16.png#g' \
             -e 's#icons/stable/apple-touch-icon.png#icons/dev/apple-touch-icon.png#g' \
+            -e 's#<h1>Where'\''s My Money?</h1>#<h1>Where'\''s My <span style="color: #ff7c00;">Bug</span>?</h1>#g' \
             public/dev/index.html
 
           cat > public/dev/js/config.js <<'EOF'
