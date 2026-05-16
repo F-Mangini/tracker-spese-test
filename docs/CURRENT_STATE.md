@@ -50,7 +50,7 @@ Una spesa contiene normalmente:
 - `nota`: testo libero;
 - `creatoIl` e `modificatoIl`: date ISO gestite dallo storage.
 
-JSON e il formato di backup completo. CSV e pensato per interoperabilita con fogli di calcolo, ma non conserva tutta la ricchezza del modello dati, per esempio i tag non vengono esportati nel CSV attuale.
+JSON e il formato di backup completo dello stato oggi esistente, incluse le `impostazioni`. CSV e pensato per interoperabilita con fogli di calcolo, ma non conserva tutta la ricchezza del modello dati, per esempio i tag non vengono esportati nel CSV attuale.
 
 ## Funzioni Implementate
 
@@ -132,6 +132,8 @@ Le statistiche usano Chart.js e includono:
 
 I filtri non-data vengono applicati anche alle statistiche.
 
+Oggi la pagina statistiche e di sola lettura: da li non si apre direttamente la modale di modifica di una spesa.
+
 ### Impostazioni
 
 La pagina impostazioni include:
@@ -146,6 +148,8 @@ La pagina impostazioni include:
 
 La roadmap prevede di rendere import/export piu coerenti: un solo flusso UI, scelta del formato dopo il comando, possibilita di aggiungere o sostituire sia per JSON sia per CSV e gestione esplicita degli id duplicati.
 
+La roadmap prevede anche che eventuali personalizzazioni future, oltre alle impostazioni gia presenti, entrino nello stesso perimetro di backup/import per facilitare cambio dispositivo e ripristino completo.
+
 Il toggle tema nell'header e pensato come cambio temporaneo; la preferenza stabile del tema si modifica dalle impostazioni.
 
 ## Limiti Noti
@@ -155,6 +159,10 @@ Il toggle tema nell'header e pensato come cambio temporaneo; la preferenza stabi
 - Non esiste ancora un sistema di versioni installabili in parallelo o aggiornamenti controllati dall'utente.
 - `app.js` e molto grande e accoppia stato, rendering, eventi e workaround mobile.
 - Categorie e metodi sono statici nel codice, non personalizzabili dall'app.
+- Le categorie non hanno ancora icone o immagini personalizzabili dall'utente, ne un colore visivo mostrato direttamente sulle spese.
+- Non esiste ancora una modalita selezione con evidenza visiva dedicata e azioni bulk sulle spese.
+- Non esiste ancora supporto multi-account: tutto vive in un unico contenitore dati locale.
+- Nella pagina statistiche esiste almeno un problema noto di resa dell'empty state: il tip iniziale puo risultare coperto dall'effetto di trasparenza quando non ci sono spese.
 - Il CSV non preserva tutti i campi del modello dati.
 - La compatibilita iOS ha problemi UI noti ed e priorita bassa rispetto ad Android.
 - Il browser desktop e usabile ma non e ancora rifinito quanto l'esperienza mobile.

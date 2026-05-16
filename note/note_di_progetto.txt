@@ -1,6 +1,26 @@
-# ELENCO MODIFICHE DA APPORTARE
+# NOTE DEL MAINTAINER
 
-## aggiunte del 14/05/2026
+## ELENCO MODIFICHE DA APPORTARE E IDEE
+
+### Aggiunte del 16/05/2026
+
+FEAT: Icone categoria di default ma modificabili da personalizzazione.
+
+IDEA: Mettere immagini specifiche al posto dell'icona di categoria, le immagini vengono anche salvate e rimangono a disposizione per essere riutilizzate.
+Collegato a questo, il colore della categoria deve essere posto visivamente sulla spesa da qualche parte
+
+FEAT: possibilità di modificare le spese anche nella pagina delle statistiche
+
+FEAT: Quando si va in modalità selezione voglio che le spese vengano evidenziate con il bordo verde come quello della selezione dei campi di inserimento. Quando si clicca su elimina il bordo deve diventare rosso e deve comparire il pop-up di conferma.
+
+FEAT: Anche le impostazioni e le personalizzazioni devono andare in backup e devono poter essere importate se ad esempio si cambia dispositivo.
+
+BUG: Quando non c'è nessuna spesa, il tip iniziale nella pagina delle statistiche è coperto dall'effetto trasparenza. Non dovrebbe.
+
+IDEA: Forse, priorità bassa. Supportare più "account" nell'app, in modo che ognuno sia indipendente, con le sue spese. Stesse impostazioni? da ragionarci. Possibilità di inserire una spesa su più di un account? da ragionarci.
+
+
+### aggiunte del 14/05/2026
 
 FEAT: Cambiare il nome della repository
 
@@ -24,7 +44,7 @@ BUG: quando il pannello dei filtri è aperto, non per intero, e seleziono una sp
 
 FEAT: verificare la sicurezza dell'app dal punto di vista della privacy e valutare di utilizzare encryption dei dati.
 
-## dal file originale del 08/05/2026
+### dal file originale del 08/05/2026
 
 BUG: Animazione buggata quando si fa swipe indietro (tramite gesture telefono) dal lato sinistro dello schermo. (buggato sul mio vecchio realme 9, funzionante sul mio nuovo Xiaomi 15)🟡
 
@@ -113,7 +133,7 @@ FEAT: Cambiare favicon.
 
 
 
-# ELENCO MODIFICHE APPORTATE O SCARTATE
+## ELENCO MODIFICHE APPORTATE O SCARTATE
 
 FEAT: La tastiera deve mostrare i numeri in alto subito. Come quando si inserisce un numero di carta di credito.❌
 
@@ -221,7 +241,7 @@ FEAT: unire barra data corrente e barra selezione settimana, mese, anno, custom.
 
 
 
-# ELENCO MODIFICHE DA APPORTARE (MOLTO POCO PRIORITARIE)
+## ELENCO MODIFICHE DA APPORTARE (MOLTO POCO PRIORITARIE)
 
 FORSE
 Colore della UI che cambia in base a quanto si sta sforando il budget.

@@ -59,6 +59,10 @@ Se si aggiungono campi alle spese, devono avere fallback sensati quando assenti 
 
 Se si modifica una categoria o un metodo di pagamento, considerare che le spese salvate usano gli `id`, non il nome visualizzato.
 
+Se si introduce una sezione di personalizzazione, definire fin dall'inizio quali dati fanno parte del backup completo del dispositivo. Impostazioni e personalizzazioni non devono restare fuori dai flussi di export/import se servono a ricostruire l'esperienza reale dell'utente su un nuovo device.
+
+Se in futuro vengono aggiunte icone, immagini o colori personalizzabili per categoria, documentare dove vivono quei riferimenti e come vengono serializzati nei backup. Evitare soluzioni che rompano il deploy statico o rendano fragile il ripristino locale.
+
 ## Linee Guida UI
 
 - L'app deve restare rapida da usare con una mano.

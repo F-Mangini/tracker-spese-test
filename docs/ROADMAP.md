@@ -55,6 +55,7 @@ Priorita legate ai dati locali:
 - Definire una policy per id duplicati in import aggiuntivi: rigenerare id in conflitto o normalizzare con riepilogo prima del commit.
 - Unificare import/export in un flusso UI unico con scelta successiva tra formati disponibili, invece di avere pulsanti separati per ogni formato.
 - Aggiungere formati copia/esportazione rapida per spese selezionate o filtrate: JSON, CSV/TSV e tabella Markdown.
+- Estendere il concetto di backup completo anche a impostazioni e future personalizzazioni, cosi il passaggio a un nuovo dispositivo puo ripristinare non solo le spese ma anche il modo in cui l'app e configurata.
 
 ## Offline e Installazione
 
@@ -94,6 +95,7 @@ Idee future:
 - Filtri negativi con toggle a tre stati: includi, escludi, neutro.
 - Filtri tag con selezione di tutti i tag, spese senza tag e ricerca tag.
 - Filtri preimpostati salvabili da futura sezione personalizzazione.
+- Correggere l'empty state della pagina statistiche quando non ci sono spese: il tip iniziale non deve finire sotto l'effetto di trasparenza.
 
 ## Categorie, Metodi e Personalizzazione
 
@@ -102,7 +104,10 @@ Da sviluppare dopo il refactor:
 - Ordinamento alfabetico robusto di categorie e metodi, non dipendente dall'ordine nel codice.
 - Tab o sezione personalizzazione.
 - Customizzazione categorie: nome, colore, keyword, attiva/non attiva, aggiunta e rimozione.
+- Icone di default per categoria ma modificabili dalla personalizzazione.
+- Valutare supporto a immagini specifiche per categoria, riutilizzabili una volta salvate localmente.
 - Colori stabili per categoria.
+- Mostrare il colore categoria anche sulla card della spesa, non solo nei grafici o nei controlli di configurazione.
 - Sostituzione progressiva delle emoji con icone coerenti.
 - Miglioramento estetico generale senza perdere velocita d'uso.
 
@@ -113,8 +118,10 @@ Funzioni previste:
 - Cestino con spese cancellate e ripristinabili.
 - Swipe su spesa per eliminazione rapida.
 - Pressione lunga su spesa per entrare in modalita selezione.
+- In modalita selezione, evidenziare le spese con bordo verde coerente con gli stati attivi dei campi; quando si avvia eliminazione, usare bordo rosso e conferma esplicita.
 - Azioni bulk: elimina, seleziona tutte.
 - In modalita selezione, i filtri attivi restano validi: "seleziona tutte" agisce solo sulle spese visibili/filtrate.
+- Permettere la modifica delle spese anche dalla pagina statistiche, senza obbligare a tornare alla timeline.
 
 ## Statistiche e Grafici
 
@@ -134,6 +141,7 @@ Idee piu grandi o da chiarire:
 - Spese ricorrenti inserite automaticamente alla data prevista.
 - Backup schedulato, con strategia da definire per non accumulare file inutili.
 - Accrediti oltre alle spese.
+- Valutare supporto a piu account indipendenti dentro la stessa app, chiarendo bene isolamento dati, impostazioni condivise o separate e possibile assegnazione di una spesa a piu account.
 - Swipe orizzontale tra timeline, statistiche e impostazioni.
 - Foto scontrini, OCR e parsing automatico.
 - Chatbot per interrogare i dati gia filtrati.
