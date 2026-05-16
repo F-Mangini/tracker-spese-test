@@ -493,15 +493,7 @@ const App = {
     },
 
     getActiveFilterCount() {
-        let n = 0;
-
-        if (this.filters.query) n++;
-        if (this.filters.categories.size > 0) n++;
-        if (this.filters.methods.size > 0) n++;
-        if (this.filters.amountMin > 0 || this.filters.amountMax < Infinity) n++;
-        if (this.filters.dateFrom || this.filters.dateTo) n++;
-
-        return n;
+        return ExpenseFilters.countActive(this.filters);
     },
 
     updateFilterBadge() {
@@ -569,63 +561,15 @@ const App = {
 
     /* --- Apply filters --- */
     applyFilters(spese) {
-        let result = spese;
-
-        if (this.filters.query) {
-            const q = this.filters.query.toLowerCase();
-            result = result.filter(s =>
-                (s.descrizione || '').toLowerCase().includes(q) ||
-                (s.nota || '').toLowerCase().includes(q) ||
-                (s.tags && s.tags.some(t => t.toLowerCase().includes(q)))
-            );
-        }
-
-        if (this.filters.categories.size > 0) {
-            result = result.filter(s => this.filters.categories.has(s.categoria));
-        }
-
-        if (this.filters.methods.size > 0) {
-            result = result.filter(s => this.filters.methods.has(s.metodo));
-        }
-
-        if (this.filters.amountMin > 0) {
-            result = result.filter(s => s.importo >= this.filters.amountMin);
-        }
-
-        if (this.filters.amountMax < Infinity) {
-            result = result.filter(s => s.importo <= this.filters.amountMax);
-        }
-
-        if (this.filters.dateFrom) {
-            const from = new Date(this.filters.dateFrom + 'T00:00:00');
-            result = result.filter(s => new Date(s.data) >= from);
-        }
-
-        if (this.filters.dateTo) {
-            const to = new Date(this.filters.dateTo + 'T23:59:59');
-            result = result.filter(s => new Date(s.data) <= to);
-        }
-
-        return result;
+        return ExpenseFilters.apply(spese, this.filters);
     },
 
     applyNonDateFilters(spese) {
-        const origFrom = this.filters.dateFrom;
-        const origTo = this.filters.dateTo;
-
-        this.filters.dateFrom = '';
-        this.filters.dateTo = '';
-
-        const result = this.applyFilters(spese);
-
-        this.filters.dateFrom = origFrom;
-        this.filters.dateTo = origTo;
-
-        return result;
+        return ExpenseFilters.applyNonDate(spese, this.filters);
     },
 
     hasActiveFilters() {
-        return this.getActiveFilterCount() > 0;
+        return ExpenseFilters.hasActive(this.filters);
     },
 
     updateAppMainPadding() {
@@ -2029,138 +1973,40 @@ const App = {
        STATS
        ============================================= */
     getDataBounds(spese) {
-        if (!spese.length) return null;
-
-        const times = spese
-            .map(s => new Date(s.data).getTime())
-            .filter(t => Number.isFinite(t));
-
-        if (!times.length) return null;
-
-        const start = new Date(Math.min(...times));
-        const end = new Date(Math.max(...times));
-
-        start.setHours(0, 0, 0, 0);
-        end.setHours(23, 59, 59, 999);
-
-        return { start, end };
+        return StatsData.getDataBounds(spese);
     },
 
     getPeriodDates(allSpese = []) {
-        const now = new Date();
-        let start;
-        let end;
-        let label;
-
-        switch (this.statsPeriod) {
-            case 'week': {
-                const ref = new Date(now);
-                ref.setDate(ref.getDate() + this.statsOffset * 7);
-
-                start = this.startOfWeek(ref);
-                end = new Date(start);
-                end.setDate(end.getDate() + 6);
-                end.setHours(23, 59, 59, 999);
-
-                const sl = start.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
-                const el = end.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
-                label = `${sl} — ${el}`;
-                break;
-            }
-
-            case 'month': {
-                const ref = new Date(now.getFullYear(), now.getMonth() + this.statsOffset, 1);
-
-                start = new Date(ref.getFullYear(), ref.getMonth(), 1, 0, 0, 0, 0);
-                end = new Date(ref.getFullYear(), ref.getMonth() + 1, 0, 23, 59, 59, 999);
-                label = ref.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
-                break;
-            }
-
-            case 'year': {
-                const year = now.getFullYear() + this.statsOffset;
-
-                start = new Date(year, 0, 1, 0, 0, 0, 0);
-                end = new Date(year, 11, 31, 23, 59, 59, 999);
-                label = year.toString();
-                break;
-            }
-
-            case 'custom': {
-                const df = this.filters.dateFrom;
-                const dt = this.filters.dateTo;
-                const bounds = this.getDataBounds(allSpese);
-
-                if (df) {
-                    start = new Date(df + 'T00:00:00');
-                } else if (bounds) {
-                    start = new Date(bounds.start);
-                } else {
-                    start = new Date();
-                    start.setHours(0, 0, 0, 0);
-                }
-
-                if (dt) {
-                    end = new Date(dt + 'T23:59:59');
-                } else if (bounds) {
-                    end = new Date(bounds.end);
-                } else {
-                    end = new Date();
-                    end.setHours(23, 59, 59, 999);
-                }
-
-                if (df && dt) {
-                    const sl = start.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' });
-                    const el = end.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' });
-                    label = `${sl} — ${el}`;
-                } else if (df) {
-                    label = 'Dal ' + start.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' });
-                } else if (dt) {
-                    label = 'Fino al ' + end.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' });
-                } else {
-                    label = 'Tutto il periodo';
-                }
-
-                break;
-            }
-
-            default: {
-                start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-                end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-                label = now.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
-            }
-        }
-
-        return { start, end, label };
+        return StatsData.getPeriodDates({
+            period: this.statsPeriod,
+            offset: this.statsOffset,
+            filters: this.filters,
+            spese: allSpese
+        });
     },
 
     getActualPeriodEnd(end) {
-        return new Date(Math.min(end.getTime(), Date.now()));
+        return StatsData.getActualPeriodEnd(end);
     },
 
     getRangeDays(start, end) {
-        const actualEnd = this.getActualPeriodEnd(end);
-        const diff = actualEnd.getTime() - start.getTime();
-        if (diff < 0) return 1;
-        return Math.max(1, Math.floor(diff / 86400000) + 1);
+        return StatsData.getRangeDays(start, end);
     },
 
     getBarAggregation(start, end) {
-        if (this.statsPeriod === 'year') return 'month';
-
-        const rangeDays = this.getRangeDays(start, end);
-
-        if (rangeDays > 365) return 'month';
-        if (rangeDays > 90) return 'week';
-        return 'day';
+        return StatsData.getBarAggregation({
+            period: this.statsPeriod,
+            start,
+            end
+        });
     },
 
     getBarChartTitle(start, end) {
-        const aggregation = this.getBarAggregation(start, end);
-
-        if (aggregation === 'month') return 'Andamento mensile';
-        if (aggregation === 'week') return 'Andamento settimanale';
-        return 'Andamento giornaliero';
+        return StatsData.getBarChartTitle({
+            period: this.statsPeriod,
+            start,
+            end
+        });
     },
 
     renderStats() {
@@ -2183,18 +2029,12 @@ const App = {
 
         filtered = this.applyNonDateFilters(filtered);
 
-        const total = filtered.reduce((sum, x) => sum + x.importo, 0);
-        const days = this.getRangeDays(start, end);
-        const avg = total / days;
-
-        const byCat = {};
-        filtered.forEach(s => {
-            byCat[s.categoria] = (byCat[s.categoria] || 0) + s.importo;
-        });
-
-        const catSorted = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
-        const maxCat = catSorted.length > 0 ? catSorted[0][1] : 1;
-        const topSpese = [...filtered].sort((a, b) => b.importo - a.importo).slice(0, 5);
+        const summary = StatsData.summarizeExpenses(filtered, start, end);
+        const total = summary.total;
+        const avg = summary.avg;
+        const catSorted = summary.categoryTotals;
+        const maxCat = summary.maxCategory;
+        const topSpese = summary.topExpenses;
 
         const canGoNext = this.statsOffset < 0;
         const isCustom = this.statsPeriod === 'custom';
@@ -2338,12 +2178,7 @@ const App = {
 
         const tc = this.getChartThemeColors();
 
-        const byCat = {};
-        filtered.forEach(s => {
-            byCat[s.categoria] = (byCat[s.categoria] || 0) + s.importo;
-        });
-
-        const catSorted = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+        const catSorted = StatsData.getSortedCategoryTotals(filtered);
 
         const ctxD = document.getElementById('chart-doughnut');
         if (ctxD) {
@@ -2391,11 +2226,7 @@ const App = {
         }
 
         const aggregation = this.getBarAggregation(start, end);
-        let bar;
-
-        if (aggregation === 'month') bar = this.buildMonthlyBarData(filtered, start, end);
-        else if (aggregation === 'week') bar = this.buildWeeklyBarData(filtered, start, end);
-        else bar = this.buildDailyBarData(filtered, start, end);
+        const bar = StatsData.buildBarData(filtered, start, end, { aggregation });
 
         const ctxB = document.getElementById('chart-bar');
         if (ctxB) {
@@ -2454,131 +2285,19 @@ const App = {
     },
 
     buildDailyBarData(filtered, start, end) {
-        const dayMap = new Map();
-        const cur = new Date(start);
-        const actualEnd = this.getActualPeriodEnd(end);
-
-        cur.setHours(0, 0, 0, 0);
-
-        while (cur <= actualEnd) {
-            dayMap.set(this.dateKey(cur), 0);
-            cur.setDate(cur.getDate() + 1);
-        }
-
-        filtered.forEach(s => {
-            const key = this.dateKey(new Date(s.data));
-            if (dayMap.has(key)) dayMap.set(key, dayMap.get(key) + s.importo);
-        });
-
-        const labels = [];
-        const data = [];
-        const numDays = dayMap.size;
-
-        for (const [key, val] of dayMap) {
-            const d = new Date(key + 'T12:00:00');
-
-            if (numDays <= 14) {
-                labels.push(d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric' }));
-            } else if (numDays <= 62) {
-                labels.push(d.getDate().toString());
-            } else {
-                labels.push(d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' }));
-            }
-
-            data.push(Math.round(val * 100) / 100);
-        }
-
-        return { labels, data };
+        return StatsData.buildDailyBarData(filtered, start, end);
     },
 
     startOfWeek(date) {
-        const d = new Date(date);
-        const day = (d.getDay() + 6) % 7;
-        d.setDate(d.getDate() - day);
-        d.setHours(0, 0, 0, 0);
-        return d;
+        return StatsData.startOfWeek(date);
     },
 
     buildWeeklyBarData(filtered, start, end) {
-        const weekMap = new Map();
-        const actualEnd = this.getActualPeriodEnd(end);
-
-        let cur = this.startOfWeek(start);
-        const last = this.startOfWeek(actualEnd);
-
-        while (cur <= last) {
-            weekMap.set(this.dateKey(cur), 0);
-            cur.setDate(cur.getDate() + 7);
-        }
-
-        filtered.forEach(s => {
-            const weekStart = this.startOfWeek(new Date(s.data));
-            const key = this.dateKey(weekStart);
-            if (weekMap.has(key)) weekMap.set(key, weekMap.get(key) + s.importo);
-        });
-
-        const labels = [];
-        const data = [];
-        const multiYear = start.getFullYear() !== actualEnd.getFullYear();
-
-        for (const [key, val] of weekMap) {
-            const ws = new Date(key + 'T12:00:00');
-            const we = new Date(ws);
-            we.setDate(we.getDate() + 6);
-            if (we > actualEnd) we.setTime(actualEnd.getTime());
-
-            const labelStart = ws.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
-            const labelEnd = we.toLocaleDateString(
-                'it-IT',
-                multiYear
-                    ? { day: 'numeric', month: 'short', year: '2-digit' }
-                    : { day: 'numeric', month: 'short' }
-            );
-
-            labels.push(`${labelStart}–${labelEnd}`);
-            data.push(Math.round(val * 100) / 100);
-        }
-
-        return { labels, data };
+        return StatsData.buildWeeklyBarData(filtered, start, end);
     },
 
     buildMonthlyBarData(filtered, start, end) {
-        const monthMap = new Map();
-        const actualEnd = this.getActualPeriodEnd(end);
-
-        let cur = new Date(start.getFullYear(), start.getMonth(), 1);
-        const last = new Date(actualEnd.getFullYear(), actualEnd.getMonth(), 1);
-
-        while (cur <= last) {
-            const key = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`;
-            monthMap.set(key, 0);
-            cur.setMonth(cur.getMonth() + 1);
-        }
-
-        filtered.forEach(s => {
-            const d = new Date(s.data);
-            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-            if (monthMap.has(key)) monthMap.set(key, monthMap.get(key) + s.importo);
-        });
-
-        const labels = [];
-        const data = [];
-        const multiYear = start.getFullYear() !== actualEnd.getFullYear();
-
-        for (const [key, val] of monthMap) {
-            const [y, m] = key.split('-');
-            const d = new Date(Number(y), Number(m) - 1, 1);
-
-            labels.push(
-                d.toLocaleDateString(
-                    'it-IT',
-                    multiYear ? { month: 'short', year: '2-digit' } : { month: 'short' }
-                )
-            );
-            data.push(Math.round(val * 100) / 100);
-        }
-
-        return { labels, data };
+        return StatsData.buildMonthlyBarData(filtered, start, end);
     },
 
     getChartThemeColors() {
@@ -2882,31 +2601,11 @@ const App = {
     },
 
     groupByDay(spese) {
-        const groups = {};
-
-        spese.forEach(s => {
-            const key = this.dateKey(new Date(s.data));
-            if (!groups[key]) groups[key] = [];
-            groups[key].push(s);
-        });
-
-        return Object.keys(groups)
-            .sort()
-            .reverse()
-            .map(date => ({
-                date,
-                spese: groups[date].sort((a, b) => new Date(b.data) - new Date(a.data))
-            }));
+        return StatsData.groupByDay(spese);
     },
 
     dateKey(d) {
-        return (
-            d.getFullYear() +
-            '-' +
-            String(d.getMonth() + 1).padStart(2, '0') +
-            '-' +
-            String(d.getDate()).padStart(2, '0')
-        );
+        return StatsData.dateKey(d);
     },
 
     formatDayLabel(dateKey) {

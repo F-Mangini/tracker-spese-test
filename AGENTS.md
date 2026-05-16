@@ -90,6 +90,8 @@ Non creare altri file di documentazione senza una ragione chiara. Se serve un nu
 - `app/js/storage.js`: rischio dati; ogni modifica deve rispettare backup/import.
 - `Storage.KEY`: se si pubblica una versione dev sullo stesso dominio della stabile, non deve usare la stessa chiave dati della stabile.
 - Configurazione runtime minima: `app/js/config.js`, caricato prima di `storage.js`.
+- `app/js/filters.js`: logica pura dei filtri condivisi tra timeline e statistiche; mantenere allineata ai test.
+- `app/js/stats.js`: logica pura per date, riepiloghi e aggregazioni statistiche; mantenere allineata ai test.
 - Workflow Pages: `.github/workflows/pages.yml` assembla stabile da `main` e dev da `codex/refactor`.
 - Manifest stabile: `app/manifest.json`; manifest dev: `app/manifest.dev.json`, copiato dal workflow in `public/dev/manifest.json`.
 - Icone stabili: `app/icons/stable/`; icone dev: `app/icons/dev/`.

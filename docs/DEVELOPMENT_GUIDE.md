@@ -123,4 +123,4 @@ Il test runner leggero attuale non richiede dipendenze:
 node tests/run-tests.js
 ```
 
-Copre i primi guardrail su storage e parser. I prossimi test ad alto valore sono filtri e aggregazioni statistiche.
+Copre i primi guardrail su storage, parser, filtri e aggregazioni statistiche giornaliere, settimanali e mensili. I prossimi test ad alto valore riguardano history/back button, modali, tastiera mobile e interazioni DOM complesse.

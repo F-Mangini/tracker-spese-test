@@ -11,10 +11,12 @@ Where's My Money? e una web app statica, senza build system e senza framework.
 - `app/js/config.js` contiene configurazione runtime minima, inclusa la chiave `localStorage`.
 - `app/js/categories.js` contiene categorie e metodi di pagamento statici.
 - `app/js/parser.js` interpreta l'input testuale e crea una spesa.
+- `app/js/filters.js` contiene la logica pura dei filtri condivisi da timeline e statistiche.
+- `app/js/stats.js` contiene date, riepiloghi e aggregazioni statistiche testabili senza DOM.
 - `app/js/storage.js` gestisce persistenza, import/export e utility dati.
-- `app/js/app.js` contiene lo stato UI e quasi tutta la logica applicativa.
+- `app/js/app.js` contiene lo stato UI, rendering, eventi e orchestrazione dei moduli.
 
-La struttura attuale e intenzionalmente semplice ma `app.js` e diventato il centro di molte responsabilita: navigazione, filtri, input, modal, tag, statistiche, import/export e gestione mobile.
+La struttura attuale resta intenzionalmente semplice. `app.js` e ancora il centro di molte responsabilita UI: navigazione, input, modal, tag, import/export e gestione mobile. La prima estrazione di logica pura ha pero spostato filtri, date e aggregazioni statistiche in moduli separati.
 
 Per la mappa dettagliata dei rischi tecnici e dell'ordine consigliato del refactor, vedere `docs/CODE_REVIEW.md`.
 
@@ -100,6 +102,8 @@ I filtri sono condivisi tra timeline e statistiche:
 
 Il pannello filtri ha una sezione base e una sezione avanzata. Il badge nel pulsante filtri conta i filtri attivi.
 
+La valutazione dei filtri e centralizzata in `app/js/filters.js`, cosi timeline e statistiche usano lo stesso comportamento testabile.
+
 ### Modifica spesa
 
 La modale permette di modificare importo, descrizione, data, ora, categoria, metodo, tag e nota. Include conferma di eliminazione.
@@ -139,6 +143,8 @@ Le statistiche usano Chart.js e includono:
 
 I filtri non-data vengono applicati anche alle statistiche.
 
+I calcoli di periodo, totale, media giornaliera, dettaglio categorie, top spese e dati per grafici a barre sono centralizzati in `app/js/stats.js`.
+
 Oggi la pagina statistiche e di sola lettura: da li non si apre direttamente la modale di modifica di una spesa.
 
 ### Impostazioni
@@ -173,4 +179,4 @@ Il toggle tema nell'header e pensato come cambio temporaneo; la preferenza stabi
 - Il CSV preserva i campi principali attuali, inclusi tag e timestamp, ma resta meno adatto del JSON come backup completo per futuri dati complessi.
 - La compatibilita iOS ha problemi UI noti ed e priorita bassa rispetto ad Android.
 - Il browser desktop e usabile ma non e ancora rifinito quanto l'esperienza mobile.
-- Esiste un primo test runner Node (`node tests/run-tests.js`) per storage e parser; mancano ancora test su filtri, aggregazioni statistiche e UI mobile.
+- Esiste un test runner Node (`node tests/run-tests.js`) per storage, parser, filtri e aggregazioni statistiche; mancano ancora test automatici su UI mobile, history/back button e interazioni DOM complesse.

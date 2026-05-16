@@ -50,7 +50,18 @@ La prima parte della Fase 1 e stata implementata:
 - Il CSV esporta anche `id`, `tags`, `creatoIl` e `modificatoIl`, e l'import gestisce delimiter comma/punto e virgola/tab, quote, newline nei campi e decimali italiani.
 - E stato aggiunto `tests/run-tests.js` con copertura iniziale per storage e parser.
 
-Restano aperti, per le fasi successive: test su filtri e aggregazioni, refactor del monolite `app.js`, UI stack/back button e review privacy dedicata.
+Restano aperti, per le fasi successive: refactor del monolite `app.js`, UI stack/back button e review privacy dedicata.
+
+## Aggiornamento 2026-05-16 - Estrazione filtri e statistiche
+
+La prima parte della Fase 2 e stata implementata:
+
+- `app/js/filters.js` contiene logica pura per contare filtri attivi, applicare filtri completi e applicare filtri non-data alle statistiche.
+- `app/js/stats.js` contiene logica pura per date, periodi, totali rapidi, riepiloghi categoria/top spese e aggregazioni giornaliere, settimanali e mensili.
+- `app.js` delega filtri e calcoli statistici ai nuovi moduli e resta responsabile di stato UI, rendering, eventi e grafici Chart.js.
+- `tests/run-tests.js` copre ora storage, parser, filtri e aggregazioni statistiche.
+
+Restano aperti: parsing importo piu robusto, UI stack/back button, separazione progressiva di modali, navigazione, impostazioni e rendering timeline.
 
 ## Findings Principali
 
@@ -440,8 +451,9 @@ Stato: completata il 2026-05-15.
 
 ### Fase 2 - Estrazione logica pura
 
-- Estrarre filtri, date, aggregazioni statistiche e parsing importo.
-- Coprire con test.
+- Completato parzialmente il 2026-05-16: estratti filtri, date e aggregazioni statistiche in `app/js/filters.js` e `app/js/stats.js`.
+- Completato parzialmente il 2026-05-16: aggiunti test per filtri e aggregazioni statistiche.
+- Restano da estrarre/parzialmente rafforzare parsing importo e altre funzioni pure ancora immerse nei flussi UI.
 - Ridurre letture ripetute di `localStorage`.
 
 ### Fase 3 - UI stack e mobile behavior

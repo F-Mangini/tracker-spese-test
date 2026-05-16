@@ -9,11 +9,12 @@ Stato della fase iniziale:
 - Completato: canale stabile/dev sicuro con `/` e `/stable/` da `main`, `/dev/` da `codex/refactor` e storage key separata per la dev.
 - Completato il 2026-05-16: primo refactor dati con guardrail su `localStorage`, schema versionato, normalizzazione, import/export con preview e snapshot prima delle operazioni distruttive.
 - Completato il 2026-05-16: primo test runner Node per storage e parser.
+- Completato il 2026-05-16: test minimi estesi a filtri e aggregazioni statistiche.
+- In corso dal 2026-05-16: separazione progressiva di `app.js`, con logica filtri in `app/js/filters.js` e logica statistiche/date/aggregazioni in `app/js/stats.js`.
 
 Priorita della fase attuale:
 
 - Usare `docs/CODE_REVIEW.md` come mappa iniziale dei rischi tecnici.
-- Estendere i test minimi a filtri e aggregazioni statistiche.
 - Pulire la codebase senza cambiare comportamento percepito.
 - Separare progressivamente logica dati, rendering e gestione UI oggi concentrate in `app.js`.
 - Rendere piu leggibili filtri, modali, navigazione e statistiche.

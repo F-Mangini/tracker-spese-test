@@ -59,6 +59,26 @@ function loadParser() {
     return context.Parser;
 }
 
+function loadFilters() {
+    const context = { console };
+    vm.createContext(context);
+
+    const filtersCode = fs.readFileSync(path.join(root, 'app/js/filters.js'), 'utf8');
+    vm.runInContext(`${filtersCode}\nglobalThis.ExpenseFilters = ExpenseFilters;`, context);
+
+    return context.ExpenseFilters;
+}
+
+function loadStats() {
+    const context = { console };
+    vm.createContext(context);
+
+    const statsCode = fs.readFileSync(path.join(root, 'app/js/stats.js'), 'utf8');
+    vm.runInContext(`${statsCode}\nglobalThis.StatsData = StatsData;`, context);
+
+    return context.StatsData;
+}
+
 function expense(overrides = {}) {
     return {
         id: 'expense-1',
@@ -214,6 +234,154 @@ test('Parser conserva il flusso base di inserimento rapido', () => {
     assert.equal(result.metodo, 'contanti');
     assert.deepEqual(result.tags, ['colazione']);
     assert.equal(result.categoria, 'bar');
+});
+
+test('Filtri combinano ricerca, categoria, metodo, importo e date', () => {
+    const ExpenseFilters = loadFilters();
+    const spese = [
+        expense({
+            id: 'match',
+            importo: 12,
+            descrizione: 'Pizza margherita',
+            categoria: 'ristorante',
+            metodo: 'carta',
+            data: '2026-05-10T12:00:00.000Z',
+            tags: ['amici']
+        }),
+        expense({
+            id: 'wrong-category',
+            importo: 12,
+            descrizione: 'Pizza surgelata',
+            categoria: 'supermercato',
+            metodo: 'carta',
+            data: '2026-05-10T12:00:00.000Z'
+        }),
+        expense({
+            id: 'wrong-amount',
+            importo: 4,
+            descrizione: 'Pizza piccola',
+            categoria: 'ristorante',
+            metodo: 'carta',
+            data: '2026-05-10T12:00:00.000Z'
+        }),
+        expense({
+            id: 'wrong-date',
+            importo: 12,
+            descrizione: 'Pizza vecchia',
+            categoria: 'ristorante',
+            metodo: 'carta',
+            data: '2026-04-30T12:00:00.000Z'
+        })
+    ];
+
+    const result = ExpenseFilters.apply(spese, {
+        query: 'pizza',
+        categories: new Set(['ristorante']),
+        methods: new Set(['carta']),
+        amountMin: 10,
+        amountMax: 15,
+        dateFrom: '2026-05-01',
+        dateTo: '2026-05-31'
+    });
+
+    assert.deepEqual(result.map(s => s.id), ['match']);
+});
+
+test('Filtri non-data ignorano il periodo ma mantengono gli altri vincoli', () => {
+    const ExpenseFilters = loadFilters();
+    const spese = [
+        expense({
+            id: 'old-restaurant',
+            importo: 20,
+            descrizione: 'Cena',
+            categoria: 'ristorante',
+            metodo: 'contanti',
+            data: '2026-04-01T12:00:00.000Z',
+            nota: 'rimborso viaggio'
+        }),
+        expense({
+            id: 'card-payment',
+            importo: 20,
+            descrizione: 'Cena',
+            categoria: 'ristorante',
+            metodo: 'carta',
+            data: '2026-04-01T12:00:00.000Z',
+            nota: 'rimborso viaggio'
+        })
+    ];
+
+    const filters = {
+        query: 'rimborso',
+        categories: new Set(['ristorante']),
+        methods: new Set(['contanti']),
+        amountMin: 10,
+        amountMax: 30,
+        dateFrom: '2026-05-01',
+        dateTo: '2026-05-31'
+    };
+
+    assert.deepEqual(ExpenseFilters.apply(spese, filters).map(s => s.id), []);
+    assert.deepEqual(ExpenseFilters.applyNonDate(spese, filters).map(s => s.id), ['old-restaurant']);
+    assert.equal(ExpenseFilters.countActive(filters), 5);
+});
+
+test('Statistiche aggregano dati giornalieri includendo giorni vuoti', () => {
+    const StatsData = loadStats();
+    const spese = [
+        expense({ id: 'a', importo: 10.25, data: '2026-05-01T10:00:00' }),
+        expense({ id: 'b', importo: 4.75, data: '2026-05-03T10:00:00' })
+    ];
+
+    const result = StatsData.buildDailyBarData(
+        spese,
+        new Date('2026-05-01T00:00:00'),
+        new Date('2026-05-03T23:59:59'),
+        { now: new Date('2026-05-03T12:00:00') }
+    );
+
+    assert.deepEqual(result.data, [10.25, 0, 4.75]);
+});
+
+test('Statistiche aggregano dati settimanali dal lunedi alla domenica', () => {
+    const StatsData = loadStats();
+    const spese = [
+        expense({ id: 'a', importo: 10, data: '2026-04-28T10:00:00' }),
+        expense({ id: 'b', importo: 5, data: '2026-05-05T10:00:00' }),
+        expense({ id: 'c', importo: 2, data: '2026-05-17T10:00:00' })
+    ];
+
+    const result = StatsData.buildWeeklyBarData(
+        spese,
+        new Date('2026-04-28T00:00:00'),
+        new Date('2026-05-17T23:59:59'),
+        { now: new Date('2026-05-17T12:00:00') }
+    );
+
+    assert.deepEqual(result.data, [10, 5, 2]);
+});
+
+test('Statistiche aggregano dati mensili e riepilogo categorie/top spese', () => {
+    const StatsData = loadStats();
+    const spese = [
+        expense({ id: 'a', importo: 10, categoria: 'bar', data: '2026-01-10T10:00:00' }),
+        expense({ id: 'b', importo: 7, categoria: 'ristorante', data: '2026-03-10T10:00:00' }),
+        expense({ id: 'c', importo: 3, categoria: 'bar', data: '2026-03-11T10:00:00' })
+    ];
+    const start = new Date('2026-01-01T00:00:00');
+    const end = new Date('2026-03-31T23:59:59');
+
+    const bars = StatsData.buildMonthlyBarData(spese, start, end, {
+        now: new Date('2026-03-31T12:00:00')
+    });
+    const summary = StatsData.summarizeExpenses(spese, start, end, {
+        now: new Date('2026-03-31T12:00:00'),
+        topLimit: 2
+    });
+
+    assert.deepEqual(bars.data, [10, 0, 10]);
+    assert.equal(summary.total, 20);
+    assert.deepEqual(summary.categoryTotals, [['bar', 13], ['ristorante', 7]]);
+    assert.deepEqual(summary.topExpenses.map(s => s.id), ['a', 'b']);
 });
 
 let failed = 0;
