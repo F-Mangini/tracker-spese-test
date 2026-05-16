@@ -43,6 +43,8 @@ Non e ancora una PWA completamente offline: Chart.js viene caricato da CDN e non
 |   +-- ROADMAP.md
 +-- note/
 |   +-- note_di_progetto.txt
++-- tests/
+|   +-- run-tests.js
 +-- app/
     +-- index.html
     +-- manifest.json
@@ -81,6 +83,12 @@ python -m http.server 8000
 ```
 
 Poi aprire `http://localhost:8000`.
+
+Test leggeri disponibili:
+
+```powershell
+node tests/run-tests.js
+```
 
 ## Deploy
 

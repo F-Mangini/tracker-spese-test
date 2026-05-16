@@ -52,8 +52,17 @@ Se invece solo alcune modifiche sono pronte, usare cherry-pick o un branch dedic
 - formato attuale di `spese`;
 - comportamento di `importJSON`;
 - comportamento di `exportJSON`;
-- perdita di informazioni in `exportCSV`;
+- comportamento di `previewImportJSON`, `previewImportCSV`, `importCSV` ed `exportCSV`;
 - impatto su dati gia presenti nel browser.
+
+Dal refactor dati del 2026-05-16:
+
+- lo schema corrente e `schemaVersion: 1`;
+- le scritture storage devono restituire risultati espliciti e la UI deve controllare `success` prima di mostrare conferme positive;
+- i dati letti o importati devono passare dalla normalizzazione centralizzata in `storage.js`;
+- un JSON locale corrotto deve bloccare i nuovi salvataggi finche il maintainer non esporta o risolve il raw;
+- le operazioni distruttive come import in sostituzione e cancellazione completa devono creare uno snapshot locale prima del commit;
+- import JSON e CSV devono mantenere preview/validazione separata dal commit.
 
 Se si aggiungono campi alle spese, devono avere fallback sensati quando assenti nei vecchi backup.
 
@@ -106,4 +115,12 @@ Per ogni modifica non banale:
 6. Aggiornare documentazione e roadmap se il significato del progetto cambia.
 7. Spiegare in chat cosa e stato cambiato, perche e quali test o verifiche sono stati eseguiti.
 
-Per ora non c'e una suite automatica. Quando si introduce testing, partire da parser, storage e funzioni di aggregazione statistiche: sono aree ad alto valore e basso costo rispetto alla UI mobile.
+## Test
+
+Il test runner leggero attuale non richiede dipendenze:
+
+```powershell
+node tests/run-tests.js
+```
+
+Copre i primi guardrail su storage e parser. I prossimi test ad alto valore sono filtri e aggregazioni statistiche.

@@ -1461,6 +1461,7 @@ body.expense-input-active #input-bar {
 
 .confirm-buttons {
     display: flex;
+    flex-wrap: wrap;
     gap: 12px;
     justify-content: center;
 }

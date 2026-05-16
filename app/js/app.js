@@ -74,6 +74,13 @@ const App = {
         this.renderTimeline();
         this._lastViewportHeight = this.getViewportHeight();
 
+        const storageStatus = Storage.getStatus();
+        if (!storageStatus.ok) {
+            setTimeout(() => {
+                this.showToast('Dati locali non leggibili: esporta i dati grezzi dalle impostazioni.', 'error');
+            }, 300);
+        }
+
         const header = document.getElementById('app-header');
         if (header) {
             header.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
@@ -918,7 +925,13 @@ const App = {
             return;
         }
 
-        const spesa = Storage.addSpesa(parsed);
+        const result = Storage.addSpesa(parsed);
+        if (!result.success) {
+            this.showToast(result.error || 'Salvataggio non riuscito', 'error');
+            return;
+        }
+
+        const spesa = result.spesa;
         this.newCardId = spesa.id;
         input.value = '';
         try { input.blur(); } catch (_) { }
@@ -1310,7 +1323,11 @@ const App = {
 
         document.getElementById('btn-delete').addEventListener('click', () => {
             this.showConfirm('Eliminare questa spesa?', () => {
-                Storage.deleteSpesa(this.editingId);
+                const result = Storage.deleteSpesa(this.editingId);
+                if (!result.success) {
+                    this.showToast(result.error || 'Eliminazione non riuscita', 'error');
+                    return;
+                }
 
                 if (this.filterOpen) this.recalcSliderMax();
 
@@ -1927,7 +1944,7 @@ const App = {
     },
 
     saveEdit() {
-        const importo = parseFloat(document.getElementById('edit-importo').value);
+        const importo = this.parseAmountInput(document.getElementById('edit-importo').value);
 
         if (!importo || importo <= 0) {
             this.showToast('Importo non valido', 'error');
@@ -1940,7 +1957,7 @@ const App = {
         const catValue = this._sdInstances['sd-categoria'] ? this._sdInstances['sd-categoria'].getValue() : 'altro';
         const metValue = this._sdInstances['sd-metodo'] ? this._sdInstances['sd-metodo'].getValue() : 'carta';
 
-        Storage.updateSpesa(this.editingId, {
+        const result = Storage.updateSpesa(this.editingId, {
             importo: Math.round(importo * 100) / 100,
             descrizione: document.getElementById('edit-descrizione').value || 'Spesa',
             categoria: catValue,
@@ -1949,6 +1966,11 @@ const App = {
             nota: document.getElementById('edit-nota').value,
             tags: [...this._editTags]
         });
+
+        if (!result.success) {
+            this.showToast(result.error || 'Salvataggio non riuscito', 'error');
+            return;
+        }
 
         if (this.filterOpen) this.recalcSliderMax();
 
@@ -1966,35 +1988,33 @@ const App = {
         return !!overlay && !overlay.classList.contains('hidden');
     },
 
-    showConfirm(msg, onYes, yesText = null, noText = null, yesClass = 'btn-danger') {
+    showChoices(msg, choices) {
         document.getElementById('confirm-message').innerHTML = msg;
         document.getElementById('confirm-overlay').classList.remove('hidden');
 
         try { history.pushState({ panel: 'confirm' }, ''); } catch (_) { }
 
-        const yesBtn = document.getElementById('confirm-yes');
-        const noBtn = document.getElementById('confirm-no');
+        const buttons = document.querySelector('#confirm-dialog .confirm-buttons');
+        buttons.innerHTML = '';
 
-        const newYes = yesBtn.cloneNode(true);
-        const newNo = noBtn.cloneNode(true);
-
-        if (yesText) newYes.textContent = yesText;
-        else newYes.textContent = 'Elimina';
-
-        if (noText) newNo.textContent = noText;
-        else newNo.textContent = 'Annulla';
-
-        newYes.className = `btn ${yesClass}`;
-
-        yesBtn.replaceWith(newYes);
-        noBtn.replaceWith(newNo);
-
-        newYes.addEventListener('click', () => {
-            this.closeConfirm();
-            onYes();
+        choices.forEach(choice => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `btn ${choice.className || 'btn-secondary'}`;
+            btn.textContent = choice.text;
+            btn.addEventListener('click', () => {
+                this.closeConfirm();
+                if (typeof choice.onClick === 'function') choice.onClick();
+            });
+            buttons.appendChild(btn);
         });
+    },
 
-        newNo.addEventListener('click', () => this.closeConfirm());
+    showConfirm(msg, onYes, yesText = null, noText = null, yesClass = 'btn-danger') {
+        this.showChoices(msg, [
+            { text: noText || 'Annulla', className: 'btn-secondary' },
+            { text: yesText || 'Elimina', className: yesClass, onClick: onYes }
+        ]);
     },
 
     closeConfirm(fromPopstate = false) {
@@ -2592,6 +2612,7 @@ const App = {
         const settings = Storage.getSettings();
         const spese = Storage.getSpese();
         const sizeKB = Storage.getStorageSizeKB();
+        const storageStatus = Storage.getStatus();
         const container = document.getElementById('settings-content');
 
         let dateRange = '—';
@@ -2599,6 +2620,14 @@ const App = {
             const dates = spese.map(s => new Date(s.data)).sort((a, b) => a - b);
             dateRange = `${dates[0].toLocaleDateString('it-IT')} — ${dates[dates.length - 1].toLocaleDateString('it-IT')}`;
         }
+
+        const storageGuardSection = storageStatus.ok ? '' : `
+            <div class="settings-section danger-zone">
+                <h3>Guardrail dati</h3>
+                <p class="settings-hint">I dati locali non sono leggibili. I nuovi salvataggi sono bloccati per evitare sovrascritture.</p>
+                <button id="btn-export-raw" class="btn btn-warning btn-block">Esporta dati grezzi</button>
+            </div>
+        `;
 
         container.innerHTML = `
             <div class="settings-section">
@@ -2612,19 +2641,20 @@ const App = {
 
             <div class="settings-section">
                 <h3>📤 Esporta dati</h3>
-                <p class="settings-hint">JSON per backup completo, CSV per Excel/Sheets.</p>
+                <p class="settings-hint">Scegli JSON per backup completo o CSV per fogli di calcolo.</p>
                 <div class="settings-buttons">
-                    <button id="btn-export-json" class="btn btn-secondary">📋 JSON</button>
-                    <button id="btn-export-csv" class="btn btn-secondary">📄 CSV</button>
+                    <button id="btn-export" class="btn btn-secondary btn-block">Scegli formato...</button>
                 </div>
             </div>
 
             <div class="settings-section">
                 <h3>📥 Importa dati</h3>
-                <p class="settings-hint">JSON sostituisce i dati, CSV li aggiunge.</p>
+                <p class="settings-hint">Prima del salvataggio puoi scegliere se aggiungere o sostituire.</p>
                 <input type="file" id="import-file" accept=".json,application/json,.csv,text/csv,application/csv,text/comma-separated-values" hidden>
                 <button id="btn-import" class="btn btn-secondary btn-block">📁 Scegli file...</button>
             </div>
+
+            ${storageGuardSection}
 
             <div class="settings-section">
                 <h3>📊 Informazioni</h3>
@@ -2649,21 +2679,23 @@ const App = {
 
         container.querySelectorAll('.theme-btn').forEach(btn => {
             btn.addEventListener('click', () => {
+                const result = Storage.updateSettings({ tema: btn.dataset.theme });
+                if (!result.success) {
+                    this.showToast(result.error || 'Salvataggio impostazioni non riuscito', 'error');
+                    return;
+                }
+
                 this.applyTheme(btn.dataset.theme);
-                Storage.updateSettings({ tema: btn.dataset.theme });
                 this.renderSettings();
             });
         });
 
-        container.querySelector('#btn-export-json').addEventListener('click', () => {
-            this.download(Storage.exportJSON(), `spese_backup_${this.dateStamp()}.json`, 'application/json');
-            this.showToast('Download JSON avviato...', 'info');
-        });
+        container.querySelector('#btn-export').addEventListener('click', () => this.showExportChoice());
 
-        container.querySelector('#btn-export-csv').addEventListener('click', () => {
-            this.download('\uFEFF' + Storage.exportCSV(), `spese_${this.dateStamp()}.csv`, 'text/csv;charset=utf-8');
-            this.showToast('Download CSV avviato...', 'info');
-        });
+        const rawBtn = container.querySelector('#btn-export-raw');
+        if (rawBtn) {
+            rawBtn.addEventListener('click', () => this.downloadRawData());
+        }
 
         const fileInput = container.querySelector('#import-file');
 
@@ -2684,41 +2716,21 @@ const App = {
                 const isJson = fileName.endsWith('.json') || fileType.includes('json');
                 const isCsv = fileName.endsWith('.csv') || fileType.includes('csv') || fileType.includes('comma-separated-values');
 
+                let preview;
                 if (isJson) {
-                    let msg = 'Importare backup JSON?';
-                    const hasSpese = Storage.getSpese().length > 0;
-                    let yesText = 'Importa';
-                    let yesClass = 'btn-primary';
-
-                    if (hasSpese) {
-                        msg += '<br><span style="font-size: 0.85rem; color: var(--text-tertiary);">⚠️ I dati attuali andranno persi.</span>';
-                        yesText = 'Sostituisci';
-                        yesClass = 'btn-warning';
-                    }
-
-                    this.showConfirm(msg, () => {
-                        const r = Storage.importJSON(content);
-
-                        if (r.success) {
-                            this.showToast(`Importate ${r.count} spese ✓`, 'success');
-                            this.renderTimeline();
-                            this.renderSettings();
-                        } else {
-                            this.showToast('Errore: ' + r.error, 'error');
-                        }
-                    }, yesText, 'Annulla', yesClass);
+                    preview = Storage.previewImportJSON(content);
                 } else if (isCsv) {
-                    const r = Storage.importCSV(content);
-
-                    if (r.success) {
-                        this.showToast(`Importate ${r.count} spese ✓`, 'success');
-                        this.renderTimeline();
-                        this.renderSettings();
-                    } else {
-                        this.showToast('Errore: ' + r.error, 'error');
-                    }
+                    preview = Storage.previewImportCSV(content);
                 } else {
                     this.showToast('Usa .json o .csv', 'error');
+                    fileInput.value = '';
+                    return;
+                }
+
+                if (!preview.success) {
+                    this.showToast('Errore: ' + preview.error, 'error');
+                } else {
+                    this.showImportChoice(preview, content);
                 }
 
                 fileInput.value = '';
@@ -2729,12 +2741,105 @@ const App = {
 
         container.querySelector('#btn-clear-all').addEventListener('click', () => {
             this.showConfirm('Eliminare TUTTI i dati?', () => {
-                Storage.clearAll();
+                const result = Storage.clearAll();
+                if (!result.success) {
+                    this.showToast(result.error || 'Cancellazione non riuscita', 'error');
+                    return;
+                }
+
                 this.renderTimeline();
                 this.renderSettings();
                 this.showToast('Dati eliminati', 'info');
             });
         });
+    },
+
+    showExportChoice() {
+        this.showChoices('Esportare i dati in quale formato?', [
+            { text: 'Annulla', className: 'btn-secondary' },
+            { text: 'JSON backup', className: 'btn-primary', onClick: () => this.downloadExport('json') },
+            { text: 'CSV tabella', className: 'btn-secondary', onClick: () => this.downloadExport('csv') }
+        ]);
+    },
+
+    downloadExport(format) {
+        const result = format === 'json' ? Storage.exportJSON() : Storage.exportCSV();
+        if (!result.success) {
+            this.showToast(result.error || 'Export non riuscito', 'error');
+            return;
+        }
+
+        if (format === 'json') {
+            this.download(result.content, `spese_backup_${this.dateStamp()}.json`, 'application/json');
+            this.showToast('Download JSON avviato...', 'info');
+        } else {
+            this.download('\uFEFF' + result.content, `spese_${this.dateStamp()}.csv`, 'text/csv;charset=utf-8');
+            this.showToast('Download CSV avviato...', 'info');
+        }
+    },
+
+    downloadRawData() {
+        const result = Storage.exportRaw();
+        if (!result.success) {
+            this.showToast(result.error || 'Export grezzo non riuscito', 'error');
+            return;
+        }
+
+        this.download(result.content, `spese_raw_${this.dateStamp()}.txt`, 'text/plain;charset=utf-8');
+        this.showToast('Download dati grezzi avviato...', 'info');
+    },
+
+    showImportChoice(preview, content) {
+        const hasSpese = Storage.getSpese().length > 0;
+        const msg = this.importPreviewMessage(preview, hasSpese);
+
+        const choices = [{ text: 'Annulla', className: 'btn-secondary' }];
+
+        if (hasSpese) {
+            choices.push(
+                { text: 'Aggiungi', className: 'btn-primary', onClick: () => this.commitImport(preview, content, 'append') },
+                { text: 'Sostituisci', className: 'btn-warning', onClick: () => this.commitImport(preview, content, 'replace') }
+            );
+        } else {
+            choices.push({ text: 'Importa', className: 'btn-primary', onClick: () => this.commitImport(preview, content, 'replace') });
+        }
+
+        this.showChoices(msg, choices);
+    },
+
+    importPreviewMessage(preview, hasSpese) {
+        const format = preview.format === 'json' ? 'JSON' : 'CSV';
+        const settings = preview.settingsIncluded ? ' con impostazioni' : '';
+        const warnings = (preview.warnings || []).slice(0, 3);
+        const warningsHtml = warnings.length
+            ? `<br><span style="font-size: 0.85rem; color: var(--warning);">${warnings.map(w => this.esc(w)).join('<br>')}</span>`
+            : '';
+        const modeHint = hasSpese
+            ? '<br><span style="font-size: 0.85rem; color: var(--text-tertiary);">Aggiungi mantiene i dati attuali. Sostituisci crea prima uno snapshot locale.</span>'
+            : '';
+
+        return `Importare file ${format}?<br><span style="font-size: 0.9rem; color: var(--text-secondary);">${preview.count} spese valide${settings}.</span>${modeHint}${warningsHtml}`;
+    },
+
+    commitImport(preview, content, mode) {
+        const result = preview.format === 'json'
+            ? Storage.importJSON(content, { mode })
+            : Storage.importCSV(content, { mode });
+
+        if (!result.success) {
+            this.showToast('Errore: ' + result.error, 'error');
+            return;
+        }
+
+        this.renderTimeline();
+        if (this.currentPage === 'stats') this.renderStats();
+        this.renderSettings();
+
+        const suffix = result.regeneratedIds
+            ? `, ${result.regeneratedIds} id rigenerati`
+            : '';
+        const modeLabel = mode === 'replace' ? 'sostituite' : 'aggiunte';
+        this.showToast(`${result.count} spese ${modeLabel}${suffix} ✓`, 'success');
     },
 
     /* =====================
@@ -2849,6 +2954,27 @@ const App = {
         document.body.removeChild(a);
 
         URL.revokeObjectURL(url);
+    },
+
+    parseAmountInput(value) {
+        let text = String(value || '').trim();
+        text = text.replace(/\s/g, '').replace(/€/g, '').replace(/euro/gi, '');
+
+        const lastComma = text.lastIndexOf(',');
+        const lastDot = text.lastIndexOf('.');
+
+        if (lastComma !== -1 && lastDot !== -1) {
+            if (lastComma > lastDot) {
+                text = text.replace(/\./g, '').replace(',', '.');
+            } else {
+                text = text.replace(/,/g, '');
+            }
+        } else if (lastComma !== -1) {
+            text = text.replace(',', '.');
+        }
+
+        const amount = Number(text);
+        return Number.isFinite(amount) ? amount : NaN;
     },
 
     esc(str) {

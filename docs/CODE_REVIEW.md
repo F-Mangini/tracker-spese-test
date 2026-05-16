@@ -37,6 +37,21 @@ Non sono stati trovati errori di sintassi JavaScript. Non ci sono backend, chiam
 
 Nota privacy: questa osservazione non sostituisce una review privacy dedicata. La roadmap prevede di verificare in modo esplicito dati salvati nel browser, asset caricati da rete, backup esportati, uso su device condivisi e possibilita/limiti di una eventuale cifratura locale.
 
+## Aggiornamento 2026-05-16 - Avvio refactor dati
+
+La prima parte della Fase 1 e stata implementata:
+
+- `Storage` usa risultati espliciti per salvataggi, modifiche, cancellazioni, import ed export.
+- I dati locali hanno `schemaVersion: 1`; i backup legacy senza versione restano trattati come schema 1.
+- Lettura e import passano da normalizzazione centralizzata di spese, impostazioni, importi, date, tag e id duplicati.
+- Se il JSON in `localStorage` e corrotto o incompatibile, i salvataggi vengono bloccati e la UI permette l'export del raw.
+- Import JSON e CSV sono separati in preview/validazione e commit, con scelta esplicita tra aggiungere e sostituire.
+- Le sostituzioni e la cancellazione completa creano uno snapshot locale best-effort obbligatorio prima dell'operazione distruttiva.
+- Il CSV esporta anche `id`, `tags`, `creatoIl` e `modificatoIl`, e l'import gestisce delimiter comma/punto e virgola/tab, quote, newline nei campi e decimali italiani.
+- E stato aggiunto `tests/run-tests.js` con copertura iniziale per storage e parser.
+
+Restano aperti, per le fasi successive: test su filtri e aggregazioni, refactor del monolite `app.js`, UI stack/back button e review privacy dedicata.
+
 ## Findings Principali
 
 | ID | Problema | Gravita | Difficolta | Area |
@@ -418,10 +433,10 @@ Stato: completata il 2026-05-15.
 
 ### Fase 1 - Protezione dati
 
-- Rendere `Storage` esplicito nei successi/fallimenti.
-- Validare import JSON/CSV.
-- Introdurre schema versionato e normalizzazione.
-- Aggiungere test storage/parser.
+- Completato il 2026-05-16: rendere `Storage` esplicito nei successi/fallimenti.
+- Completato il 2026-05-16: validare import JSON/CSV con preview prima del commit.
+- Completato il 2026-05-16: introdurre schema versionato e normalizzazione.
+- Completato il 2026-05-16: aggiungere test storage/parser.
 
 ### Fase 2 - Estrazione logica pura
 

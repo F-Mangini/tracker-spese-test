@@ -28,6 +28,7 @@ La struttura principale e:
 
 ```js
 {
+  schemaVersion: 1,
   spese: [],
   impostazioni: {
     tema: "auto",
@@ -37,6 +38,8 @@ La struttura principale e:
   }
 }
 ```
+
+`schemaVersion` e stato introdotto all'avvio del refactor dati. I backup senza `schemaVersion` vengono trattati come schema `1`, cosi i backup esistenti restano importabili.
 
 Una spesa contiene normalmente:
 
@@ -50,7 +53,11 @@ Una spesa contiene normalmente:
 - `nota`: testo libero;
 - `creatoIl` e `modificatoIl`: date ISO gestite dallo storage.
 
-JSON e il formato di backup completo dello stato oggi esistente, incluse le `impostazioni`. CSV e pensato per interoperabilita con fogli di calcolo, ma non conserva tutta la ricchezza del modello dati, per esempio i tag non vengono esportati nel CSV attuale.
+`storage.js` normalizza le spese lette o importate prima di salvarle: importi numerici, date valide, tag senza `#`, impostazioni con fallback e id duplicati rigenerati. Le operazioni di scrittura ritornano risultati espliciti `{ success, ... }`; la UI mostra successo solo se il commit in `localStorage` e riuscito.
+
+Se il JSON salvato in `localStorage` e corrotto o incompatibile, i nuovi salvataggi vengono bloccati per evitare sovrascritture silenziose. In impostazioni compare un guardrail per esportare i dati grezzi prima di intervenire.
+
+JSON e il formato di backup completo dello stato oggi esistente, incluse le `impostazioni`. CSV e pensato per interoperabilita con fogli di calcolo; ora esporta anche `id`, `tags`, `creatoIl` e `modificatoIl`, pur restando meno espressivo del JSON per futuri dati complessi.
 
 ## Funzioni Implementate
 
@@ -139,14 +146,14 @@ Oggi la pagina statistiche e di sola lettura: da li non si apre direttamente la 
 La pagina impostazioni include:
 
 - tema chiaro, scuro o automatico;
-- export JSON;
-- export CSV;
-- import JSON, che sostituisce i dati dopo conferma se ci sono spese esistenti;
-- import CSV, che aggiunge le spese importate;
+- export con scelta formato JSON o CSV;
+- import JSON e CSV con preview e scelta esplicita tra aggiungere e sostituire;
+- snapshot locale automatico prima di sostituire o cancellare i dati;
+- esportazione dei dati grezzi quando lo storage locale non e leggibile;
 - informazioni su numero spese, periodo coperto e spazio usato;
 - cancellazione completa dei dati con conferma.
 
-La roadmap prevede di rendere import/export piu coerenti: un solo flusso UI, scelta del formato dopo il comando, possibilita di aggiungere o sostituire sia per JSON sia per CSV e gestione esplicita degli id duplicati.
+Negli import aggiuntivi, gli id duplicati o mancanti vengono rigenerati e riepilogati. Negli import JSON in modalita aggiungi, le impostazioni del backup non sovrascrivono quelle correnti; in modalita sostituisci vengono invece importate insieme alle spese.
 
 La roadmap prevede anche che eventuali personalizzazioni future, oltre alle impostazioni gia presenti, entrino nello stesso perimetro di backup/import per facilitare cambio dispositivo e ripristino completo.
 
@@ -163,7 +170,7 @@ Il toggle tema nell'header e pensato come cambio temporaneo; la preferenza stabi
 - Non esiste ancora una modalita selezione con evidenza visiva dedicata e azioni bulk sulle spese.
 - Non esiste ancora supporto multi-account: tutto vive in un unico contenitore dati locale.
 - Nella pagina statistiche esiste almeno un problema noto di resa dell'empty state: il tip iniziale puo risultare coperto dall'effetto di trasparenza quando non ci sono spese.
-- Il CSV non preserva tutti i campi del modello dati.
+- Il CSV preserva i campi principali attuali, inclusi tag e timestamp, ma resta meno adatto del JSON come backup completo per futuri dati complessi.
 - La compatibilita iOS ha problemi UI noti ed e priorita bassa rispetto ad Android.
 - Il browser desktop e usabile ma non e ancora rifinito quanto l'esperienza mobile.
-- Non esiste ancora una suite di test automatizzata.
+- Esiste un primo test runner Node (`node tests/run-tests.js`) per storage e parser; mancano ancora test su filtri, aggregazioni statistiche e UI mobile.

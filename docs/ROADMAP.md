@@ -7,12 +7,13 @@ Questa roadmap ordina gli appunti grezzi in `note/note_di_progetto.txt`. Non sos
 Stato della fase iniziale:
 
 - Completato: canale stabile/dev sicuro con `/` e `/stable/` da `main`, `/dev/` da `codex/refactor` e storage key separata per la dev.
+- Completato il 2026-05-16: primo refactor dati con guardrail su `localStorage`, schema versionato, normalizzazione, import/export con preview e snapshot prima delle operazioni distruttive.
+- Completato il 2026-05-16: primo test runner Node per storage e parser.
 
 Priorita della fase attuale:
 
 - Usare `docs/CODE_REVIEW.md` come mappa iniziale dei rischi tecnici.
-- Affrontare prima guardrail dati, import/export e salvataggi.
-- Aggiungere test minimi su parser, storage, filtri e aggregazioni.
+- Estendere i test minimi a filtri e aggregazioni statistiche.
 - Pulire la codebase senza cambiare comportamento percepito.
 - Separare progressivamente logica dati, rendering e gestione UI oggi concentrate in `app.js`.
 - Rendere piu leggibili filtri, modali, navigazione e statistiche.
@@ -51,9 +52,9 @@ Priorita legate ai dati locali:
 - Eseguire una review privacy esplicita: quali dati restano nel browser, quali asset o librerie vengono caricati da rete e quali rischi esistono in caso di device condiviso o backup esportati.
 - Valutare se e quando introdurre cifratura locale dei dati, chiarendo impatto su recupero dati, backup e usabilita quotidiana.
 - Riflettere su strutture dati alternative prima di estendere molto il modello attuale, soprattutto per categorie personalizzabili, tag, cestino, ricorrenze e versioni schema.
-- Per import JSON, CSV e futuri TSV/Markdown, offrire scelta esplicita tra aggiungere ai dati esistenti e sostituire i dati esistenti.
-- Definire una policy per id duplicati in import aggiuntivi: rigenerare id in conflitto o normalizzare con riepilogo prima del commit.
-- Unificare import/export in un flusso UI unico con scelta successiva tra formati disponibili, invece di avere pulsanti separati per ogni formato.
+- Completato per JSON e CSV: offrire scelta esplicita tra aggiungere ai dati esistenti e sostituire i dati esistenti. Da riprendere se arriveranno TSV/Markdown.
+- Completato per import aggiuntivi: gli id duplicati o mancanti vengono rigenerati e riepilogati.
+- Completato per i formati attuali: import/export usano un comando unico con scelta successiva tra JSON e CSV.
 - Aggiungere formati copia/esportazione rapida per spese selezionate o filtrate: JSON, CSV/TSV e tabella Markdown.
 - Estendere il concetto di backup completo anche a impostazioni e future personalizzazioni, cosi il passaggio a un nuovo dispositivo puo ripristinare non solo le spese ma anche il modo in cui l'app e configurata.
 
